@@ -1,0 +1,31 @@
+# 05 — Roadmap
+
+## Fase 0 — Passo zero (atual)
+Protótipo offline, causal, em Python. Áudio sintético com verdade-base, 12 cenários, métricas, baseline. Entregável: números honestos sobre onde a ideia funciona e onde falha.
+
+## Fase 1 — Refinamento
+- Atacar os 3 maiores problemas do baseline (ver `resultados.md`).
+- Calibrar o equilíbrio "seguir o que ouve × seguir o que aprendeu" (risco 7).
+- Cenário de trocas a cada 2 tempos (risco 8) e power chords (risco 6).
+- Cancelamento do próprio sinal (NLMS) para o cenário de realimentação.
+- Estimar compasso 3/4 e 6/8, não só 4/4.
+
+## Fase 2 — Gravações reais
+- Gravações no celular: C–G–Am–F no tempo, acelerando, com metrônomo; com e sem capotraste; violão de aço e nylon; guitarra limpa.
+- Anotar verdade-base de algumas à mão para medir.
+- Ajustar parâmetros de onset/chroma para áudio real (ruído de sala, compressão do celular).
+
+## Fase 3 — Tempo real (C++/JUCE)
+- Portar `params.py` e os módulos um a um, com os mesmos testes (vetores de entrada/saída gerados pelo Python).
+- Baixa latência: bloco de 128–256 amostras, análise harmônica em thread separada.
+- Entrada de interface de áudio, saída MIDI e/ou sintetizador interno.
+
+## Fase 4 — Extras (ideias registradas)
+- **Passagens inteligentes** do baixo entre acordes (walking simples, aproximação cromática).
+- **Footswitch / "congelar acorde"** para permitir solos sem o sistema seguir as notas.
+- **Nível fixo vs. seguir dinâmica** (configurável; padrão segue dinâmica).
+- **Guitarra elétrica** (entrada limpa, antes dos efeitos).
+- **VST/AU** para usar dentro de uma DAW ou de um host ao vivo.
+- **ML leve** (ex.: classificador de acordes pequeno) só se medir ganho nos cenários e nas gravações.
+- **UI** para escolher modo, tom principal, progressão decorada, e ver o estado.
+- Salvar progressões por música ("setlist").

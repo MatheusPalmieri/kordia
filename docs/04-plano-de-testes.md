@@ -1,0 +1,60 @@
+# 04 — Plano de testes
+
+## Cenários sintéticos
+
+Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, voicings abertos, batida com espalhamento entre cordas, jitter humano de tempo e intensidade). Todos começam com ~1 s de silêncio e terminam com o último acorde soando um compasso, seguido de silêncio. Cada um tem semente fixa e gera WAV + JSON de verdade-base (`dados/<nome>.wav|.json`).
+
+| Nome | O que testa | Modo de execução |
+|---|---|---|
+| `estavel_120` | C–G–Am–F em loop, 120 BPM, baixo-cima | livre, tom C |
+| `acelerando` | 100 → 125 BPM gradual | livre, tom C |
+| `desacelerando_final` | 110 BPM e ritardando até ~70 no final | livre, tom C |
+| `dinamica` | crescendo e diminuendo | livre, tom C |
+| `pausa_e_fim` | pausa de ½ compasso (só abaixa), silêncio longo (encerra e esquece), depois outra progressão | livre, tom C |
+| `nota_de_passagem` | Am com baixo em Sol e notas soltas que **não** devem trocar o acorde | livre, tom C |
+| `troca_de_tom` | Dó → (silêncio) → Ré com capotraste → (sem silêncio) → Sol | livre, tom C |
+| `acorde_fora_do_tom` | Em, E, Bb no lugar do esperado | **decorado** `C G Am F`, tom C |
+| `batida_abafada` | palhetadas percussivas sem nota intercaladas | livre, tom C |
+| `ruido` | ruído de fundo + "voz" senoidal | livre, tom C |
+| `realimentacao` | a saída do próprio sistema volta na entrada (laço fechado, 30 ms, −6 dB) | livre, tom C |
+| `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
+
+## Verdade-base (JSON)
+
+`tempo` (curva de BPM), `beats`, `downbeats`, `chords` (segmentos `[início, fim, rótulo]`, com `N` = silêncio e `P` = pausa), `changes` (com flag `surpresa` para trocas inesperadas), `ends` (instante em que o músico terminou), `run` (modo, bpm, tom, progressão para a execução).
+
+## Métricas (`acompanhante/metrics.py`)
+
+| Métrica | Definição |
+|---|---|
+| `acc_total` | % do tempo com acorde na verdade-base em que o pad toca exatamente o acorde certo |
+| `acc_confiante` | mesma coisa, restrita aos quadros em que o sistema estava no nível CONFIANTE |
+| `cobertura` | % do tempo com acorde em que o sistema toca alguma coisa |
+| `tempo_fallback` | % do tempo com acorde em que o sistema estava em DÚVIDA/PERDIDO |
+| `lat_media_ms`, `lat_p95_ms`, `lat_media_pulso` | atraso entre a troca real e a troca do acompanhamento para o acorde certo (negativo = adiantado); procura de −1 a +2 pulsos |
+| `trocas_perdidas` | trocas reais sem correspondência nessa janela |
+| `bpm_erro_medio` | média de \|BPM estimado − real\| enquanto o músico toca (só modo livre) |
+| `t_trava_tempo_s` | tempo do primeiro onset até o erro ficar < 4 % por 2 s seguidos |
+| `falso_disparo_s`, `falso_disparo_n` | segundos e número de notas tocando onde não devia (silêncio, fim, depois do fim; tolerância de fim de compasso + fade) |
+| `errado_confiante_n` | episódios ≥ ½ pulso em que tocou acorde errado no nível CONFIANTE |
+| `parada_s` | para cada fim: tempo entre o fim do último compasso e o silêncio total do acompanhamento |
+| `recuperacao_pulsos` | maior latência entre as trocas marcadas como `surpresa` |
+| `corr_dinamica` | correlação entre intensidade real e velocity do acompanhamento |
+
+Os resultados vão para `resultados/<versao>/metricas.csv` e `.json`, com relatórios PNG em `resultados/<versao>/relatorios/`.
+
+## Critérios de aceitação (limiares de regressão)
+
+Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
+
+- `estavel_120`: `acc_total` ≥ 80 %, `falso_disparo_s` ≤ 1 s, erro de BPM ≤ 5.
+- Todo cenário: `falso_disparo_s` ≤ 2 s e `parada_s` ≤ 1 compasso + 1 s.
+- `modo_metronomo`: latência média dentro de ±½ pulso.
+
+## Testes unitários
+
+`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido).
+
+## Gravações reais
+
+Sem verdade-base: `rodar` gera só o relatório visual e o WAV renderizado. A avaliação é de ouvido e pela figura. Gravações previstas: C–G–Am–F no tempo, acelerando e com metrônomo.

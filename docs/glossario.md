@@ -1,0 +1,28 @@
+# Glossário
+
+- **Onset:** início de um evento sonoro; aqui, cada palhetada.
+- **Fluxo espectral (spectral flux):** soma dos aumentos de magnitude entre dois espectros seguidos; sobe muito num onset.
+- **Limiar adaptativo:** limiar de detecção que acompanha o nível recente do sinal (mediana móvel), para funcionar tanto forte quanto fraco.
+- **Período refratário:** tempo mínimo entre dois onsets detectados.
+- **Pulso / tempo (beat):** a batida que se marcaria com o pé. **BPM:** pulsos por minuto.
+- **Tempo forte / downbeat:** o tempo 1 do compasso.
+- **Beat tracking:** estimar andamento e fase do pulso a partir do áudio.
+- **ACF (autocorrelação):** mede o quanto um sinal se parece com ele mesmo deslocado; picos indicam o período do pulso.
+- **PLL (phase-locked loop):** laço que ajusta fase e período de um oscilador interno para alinhar com eventos externos (os onsets).
+- **Chromagram / chroma:** energia do espectro dobrada em 12 classes de notas (Dó, Dó#, …, Si), ignorando a oitava.
+- **Template matching:** comparar o chroma com modelos ideais de cada acorde (similaridade de cosseno).
+- **HMM (modelo oculto de Markov):** modelo com estados escondidos (o acorde) e observações (o chroma). O **algoritmo forward** atualiza a probabilidade de cada acorde só com o passado (causal).
+- **Persistência / histerese:** exigir evidência sustentada antes de trocar de estado, para não oscilar.
+- **Causal / streaming:** processar bloco a bloco usando só o passado, como em tempo real.
+- **Tônica:** a nota que dá nome ao tom (Dó em Dó maior).
+- **Diatônico:** que pertence ao tom. Em Dó: C, Dm, Em, F, G, Am (e Bdim, fora do vocabulário).
+- **Prior (probabilidade a priori):** o quanto algo é provável antes de ouvir (ex.: acordes do tom).
+- **Fundamental:** a nota que dá nome ao acorde (Lá em Lá menor). **Terça:** define maior/menor. **Quinta:** neutra.
+- **Fallback / modo de segurança:** saída conservadora quando o sistema não tem confiança.
+- **Voicing:** a forma concreta de montar o acorde no instrumento (quais notas, em que oitava).
+- **Capotraste:** braçadeira que transpõe todas as cordas; mesma forma, outro tom.
+- **Pad:** som de teclado sustentado, de ataque lento, que preenche a harmonia.
+- **Karplus-Strong:** síntese de corda dedilhada com ruído filtrado numa linha de atraso realimentada.
+- **Velocity:** intensidade de uma nota MIDI (0–127). **CC11 (expression):** controle MIDI de volume contínuo.
+- **Verdade-base (ground truth):** o que realmente acontece no áudio sintético, usado para medir.
+- **Realimentação:** o som do próprio acompanhamento voltando na entrada do sistema.
