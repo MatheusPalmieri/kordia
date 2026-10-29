@@ -18,6 +18,8 @@ class ProgressionMemory:
 
     def push(self, idx, beat):
         """A chord was confirmed starting at beat index `beat`."""
+        if self.seq and beat - self.seq[-1][1] < 1 and not self.locked:
+            self.seq.pop()   # the previous chord lasted less than a beat: a blip, not part of the progression
         if self.seq and self.seq[-1][0] == idx:
             return
         self.seq.append([idx, beat])

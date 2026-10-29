@@ -1,7 +1,7 @@
 """Compare a pipeline Result against the scenario ground truth."""
 import numpy as np
 
-from .engine import CONFIANTE, OCIOSO, STATES
+from .engine import CONFIANTE, OCIOSO, STATES, TRAVADO
 
 DT = 0.01
 END_TOL = 0.3      # s of grace after a true end (note-off lands on the bar line, +/- tracking error)
@@ -52,7 +52,7 @@ def evaluate(res, truth):
     m["tempo_nao_confiante"] = (~conf)[is_chord].mean()
 
     # change latency
-    lats, lat_beats, missed = [], [], 0
+    lats, lat_beats, missed, locked = [], [], 0, []
     for c in truth["changes"]:
         b = 60.0 / np.interp(c["t"], tt, tb)
         cand = [ct for ct, l, md in res.changes if c["t"] - b <= ct <= c["t"] + 2 * b and l == c["to"] and md == "full"]
@@ -60,11 +60,15 @@ def evaluate(res, truth):
             missed += 1
             continue
         lats.append(cand[0] - c["t"])
+        locked.append(res.log["state"][min(np.searchsorted(res.log["t"], cand[0]), len(res.log["t"]) - 1)] == STATES.index(TRAVADO))
         lat_beats.append((cand[0] - c["t"]) / b)
     lats = np.array(lats) * 1000
     m["lat_media_ms"] = lats.mean() if len(lats) else np.nan
     m["lat_p95_ms"] = np.percentile(lats, 95) if len(lats) else np.nan
     m["lat_media_pulso"] = np.mean(lat_beats) if lat_beats else np.nan
+    locked = np.array(locked, bool)
+    m["lat_reativo_ms"] = lats[~locked].mean() if (~locked).any() else np.nan
+    m["lat_travado_ms"] = lats[locked].mean() if locked.any() else np.nan
     m["trocas_perdidas"] = missed
     m["trocas_total"] = len(truth["changes"])
 

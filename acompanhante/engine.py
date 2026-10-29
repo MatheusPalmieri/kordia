@@ -35,7 +35,8 @@ class Engine:
         self.pending = None          # metronome mode: (chord, time)
         self.doubt_since = None
         self.confirm_at = 0.0
-        self.expected = None
+        self.expected = self.prev_chord = None
+        self.changed_at = 0.0
         self.misses = 0
         self.stop_at = None
         self.memory.reset()
@@ -126,7 +127,9 @@ class Engine:
             self.pending = None
             return self._set(chord, "full", max(t, when))
         if self.level == CONFIANTE:
-            if self.cur != (idx, "full") and not (self.pending and self.pending[0] == idx):
+            # a chord change is born from a strum: ignore drifts between strums (noise, voice, decay)
+            fresh = self.last_onset is not None and t - self.last_onset < P.CHANGE_AFTER_ONSET
+            if fresh and self.cur != (idx, "full") and not (self.pending and self.pending[0] == idx):
                 return self._reactive_change(t, idx)
             return None
         # major/minor ambiguity on the same root: play root + fifth, no third
@@ -165,16 +168,20 @@ class Engine:
         if pred:
             nxt, beat = pred
             tc = self.tracker.time_of_beat(beat)
-            early = self.level == CONFIANTE and idx == nxt and self.cur[0] != nxt and t >= self.confirm_at
+            # the musician changed early: follow (except in metronome mode, where the grid rules)
+            early = (not self.metronome and self.level == CONFIANTE and idx == nxt and self.cur[0] != nxt
+                     and t >= self.confirm_at)
             if t + FRAME >= tc or early:
                 when = t if early else max(t, tc)
                 self.memory.advance(beat)
                 self.confirm_at = when + P.LOCK_CONFIRM_BEATS * period + 0.1
-                self.expected = nxt
+                self.expected, self.prev_chord, self.changed_at = nxt, self.cur[0], when
                 return self._set(nxt, "full", when)
         if t < self.confirm_at:
             return None
-        if self.level == CONFIANTE and (idx, "full") != self.cur:
+        # still hearing the previous chord shortly after a predicted change = musician is late, not a contradiction
+        late = idx == self.prev_chord and t < self.changed_at + P.LOCK_LATE_BEATS * period
+        if self.level == CONFIANTE and (idx, "full") != self.cur and not late:
             # strong disagreement: the audio wins, forget the lock and relearn
             self.memory.correct(idx)
             self.memory.unlock()
@@ -184,7 +191,7 @@ class Engine:
         if self.expected is not None:
             if idx == self.expected:
                 self.misses = 0
-            else:
+            elif not late:
                 self.misses += 1
                 if self.misses >= P.LOCK_MAX_MISSES:
                     self.memory.unlock()

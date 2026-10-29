@@ -51,7 +51,8 @@ def cmd_rodar(a):
     print(f"saídas em {Path(a.saida).resolve()}")
 
 
-COLS = ["acc_total", "acc_confiante", "cobertura", "lat_media_ms", "lat_p95_ms", "lat_media_pulso", "trocas_perdidas",
+COLS = ["acc_total", "acc_confiante", "cobertura", "lat_media_ms", "lat_p95_ms", "lat_media_pulso", "lat_reativo_ms",
+        "lat_travado_ms", "trocas_perdidas",
         "bpm_erro_medio", "t_trava_tempo_s", "falso_disparo_s", "errado_confiante_n", "parada_s", "esqueceu",
         "recuperacao_pulsos", "corr_dinamica"]
 
@@ -87,7 +88,7 @@ def aggregate(rows):
 
 def print_table(rows):
     short = {"acc_total": "acc", "acc_confiante": "acc_conf", "cobertura": "cobert", "lat_media_ms": "lat_ms",
-             "lat_p95_ms": "lat95", "lat_media_pulso": "lat_pul", "trocas_perdidas": "perd", "bpm_erro_medio": "bpm_err",
+             "lat_p95_ms": "lat95", "lat_media_pulso": "lat_pul", "lat_reativo_ms": "lat_reat", "lat_travado_ms": "lat_trav", "trocas_perdidas": "perd", "bpm_erro_medio": "bpm_err",
              "t_trava_tempo_s": "trava_s", "falso_disparo_s": "falso_s", "errado_confiante_n": "err_conf",
              "parada_s": "parada", "esqueceu": "esqueceu", "recuperacao_pulsos": "recup", "corr_dinamica": "dyn"}
     head = f"{'cenario':22s}" + "".join(f"{short[c]:>9s}" for c in COLS)

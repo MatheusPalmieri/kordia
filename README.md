@@ -2,7 +2,7 @@
 
 Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os acordes **que estão soando**, não uma cifra pré-programada. Pensado para banda de igreja, onde não há clique, o tom muda na hora e o andamento oscila.
 
-**Status:** passo zero, um protótipo offline em Python, causal (streaming), testado em áudio sintético com verdade-base. Veja os números em [`docs/resultados.md`](docs/resultados.md).
+**Status:** passo zero, um protótipo offline em Python, causal (streaming), testado em áudio sintético com verdade-base. Baseline: 88 % do tempo com o acorde certo, zero falso disparo, trocas a ~30 ms do tempo quando o ciclo está travado (~260 ms reagindo). Detalhes e falhas conhecidas em [`docs/resultados.md`](docs/resultados.md).
 
 ## Instalação
 

@@ -30,8 +30,9 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `acc_total` | % do tempo com acorde na verdade-base em que o pad toca exatamente o acorde certo |
 | `acc_confiante` | mesma coisa, restrita aos quadros em que o sistema estava no nível CONFIANTE |
 | `cobertura` | % do tempo com acorde em que o sistema toca alguma coisa |
-| `tempo_fallback` | % do tempo com acorde em que o sistema estava em DÚVIDA/PERDIDO |
+| `acc_nao_confiante`, `tempo_nao_confiante` | acurácia e % do tempo com acorde fora do nível CONFIANTE (dúvida/perdido/fallback) |
 | `lat_media_ms`, `lat_p95_ms`, `lat_media_pulso` | atraso entre a troca real e a troca do acompanhamento para o acorde certo (negativo = adiantado); procura de −1 a +2 pulsos |
+| `lat_reativo_ms`, `lat_travado_ms` | a mesma latência separada pelo estado no momento da troca (OUVINDO × TRAVADO): mede o ganho da previsão |
 | `trocas_perdidas` | trocas reais sem correspondência nessa janela |
 | `bpm_erro_medio` | média de \|BPM estimado − real\| enquanto o músico toca (só modo livre) |
 | `t_trava_tempo_s` | tempo do primeiro onset até o erro ficar < 4 % por 2 s seguidos |
@@ -39,6 +40,7 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `errado_confiante_n` | episódios ≥ ½ pulso em que tocou acorde errado no nível CONFIANTE |
 | `parada_s` | para cada fim: tempo entre o fim do último compasso e o silêncio total do acompanhamento |
 | `recuperacao_pulsos` | maior latência entre as trocas marcadas como `surpresa` |
+| `parou_no_compasso`, `esqueceu` | parou entre −0,25 s e +0,35 s da barra final; passou por OCIOSO entre um fim e a música seguinte |
 | `corr_dinamica` | correlação entre intensidade real e velocity do acompanhamento |
 
 Os resultados vão para `resultados/<versao>/metricas.csv` e `.json`, com relatórios PNG em `resultados/<versao>/relatorios/`.
@@ -50,10 +52,12 @@ Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
 - `estavel_120`: `acc_total` ≥ 80 %, `falso_disparo_s` ≤ 1 s, erro de BPM ≤ 5.
 - Todo cenário: `falso_disparo_s` ≤ 2 s e `parada_s` ≤ 1 compasso + 1 s.
 - `modo_metronomo`: latência média dentro de ±½ pulso.
+- `estavel_120`: latência travada < metade da reativa (a previsão tem que ajudar).
+- `dinamica`: correlação ≥ 0,7. `pausa_e_fim` e `troca_de_tom`: esqueceu a progressão.
 
 ## Testes unitários
 
-`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido).
+`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
 
 ## Gravações reais
 

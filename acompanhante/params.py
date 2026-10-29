@@ -13,7 +13,7 @@ ONSET_FMIN, ONSET_FMAX = 150.0, 5000.0   # ignores our own bass attacks (feedbac
 ONSET_MEDIAN_FRAMES = 32                 # adaptive threshold history (~0.75 s)
 ONSET_K = 1.5                            # threshold = median * K + DELTA
 ONSET_DELTA = 0.6                        # absolute floor (flux units, log-magnitude)
-ONSET_REFRACTORY = 0.08                  # min gap between onsets
+ONSET_REFRACTORY = 0.10                  # min gap between onsets (a 6-string strum spreads ~70 ms; 16ths at 130 BPM = 115 ms)
 SILENCE_DB = -55.0                       # frame RMS below this = silence
 
 # --- tempo (free mode) ---
@@ -46,8 +46,9 @@ CONF_BETA = 25.0              # confidence = smoothed per-frame softmax(CONF_BET
 CONF_SMOOTH = 0.3             #   the HMM posterior itself saturates at ~1.0 and is useless as confidence
 
 # --- decision ---
-CONF_HIGH = 0.70              # posterior to accept a chord (CONFIANTE)
+CONF_HIGH = 0.70              # confidence to accept a chord (CONFIANTE)
 CONF_LOW = 0.45               # below this: DUVIDA
+CHANGE_AFTER_ONSET = 0.35     # reactive change only this soon after a strum
 DOUBT_TO_FALLBACK_BARS = 1.0  # doubt longer than this -> FALLBACK
 STOP_BEATS = 1.5              # no onset for max(STOP_BEATS beats, STOP_IOI_FACTOR*max recent IOI) -> stopped
 STOP_IOI_FACTOR = 1.25
@@ -56,6 +57,7 @@ FORGET_BARS = 2.0             # silence longer than this -> forget progression a
 FADE_TIME = 0.4
 LOCK_CONFIRM_BEATS = 0.5      # after a predicted change, wait this before checking the audio
 LOCK_MAX_MISSES = 2           # weak disagreements in a row before unlocking
+LOCK_LATE_BEATS = 1.0         # hearing the previous chord up to 1 beat after a predicted change = musician late
 CYCLE_MIN, CYCLE_MAX = 2, 8   # cycle length in chords
 METRO_LATE_BEATS = 0.5        # metronome mode: change heard up to this after a strong beat applies now
 
