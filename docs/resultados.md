@@ -57,3 +57,11 @@ Outros: tempo até travar o andamento ≈ 1,5 s em todos os cenários livres; `c
 | atraso do músico ≠ contradição; sem troca antecipada no metrônomo | `modo_metronomo` acc 0,87 → 0,92 |
 | troca reativa só logo após palhetada; memória descarta acordes < 1 pulso | `ruido` acc 0,77 → 0,84 e passou a travar |
 | período refratário 80 → 100 ms | removeu dupla detecção no espalhamento da batida |
+
+### Os 3 maiores problemas e o próximo passo
+
+1. **Realimentação**: o sistema se ouve e segura o acorde antigo. Próximo passo: cancelar o próprio sinal (temos a saída exata, amostra a amostra; um filtro adaptativo NLMS estima o caminho acústico), e enquanto isso recomendar DI + retorno em fone.
+2. **Latência e aprendizado antes de travar**: ~½ pulso de atraso nas 2 primeiras voltas e depois de cada surpresa; blips atrasam o travamento. Próximo passo: travar com 1,5 volta quando a confiança for alta e usar a fase do compasso para agendar até as trocas reativas no próximo tempo, em vez de tocar quando detecta.
+3. **Ritardando e terça errada (Am → A)**: o tempo se perde em desacelerações fortes; Lá menor aberto vira Lá maior com confiança alta. Próximo passo: ACF com janela menor/ponderada no recente + PLL que aceita erro maior quando a tendência é consistente; para a terça, usar o chroma da região grave (fundamental) e tratar maior × menor da mesma fundamental como dúvida (tocar sem terça) até haver evidência sustentada.
+
+**Recomendação imediata:** antes de otimizar mais o sintético, rodar as primeiras gravações reais do celular (`rodar`), porque elas vão dizer qual desses três dói mais na prática.
