@@ -20,7 +20,7 @@ def _save_outputs(res, out_dir, name, truth=None, title="", audio_dir=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     audio_dir = audio_dir or out_dir
     audio_dir.mkdir(parents=True, exist_ok=True)
-    mix = res.audio + res.accomp
+    mix = res.audio[:, None] + res.accomp
     sf.write(audio_dir / f"{name}_render.wav", (mix / max(1.0, np.max(np.abs(mix)))).astype(np.float32), P.SR)
     write_midi(res.events, audio_dir / f"{name}.mid")
     (audio_dir / f"{name}_eventos.json").write_text(json.dumps({"changes": res.changes, "events": res.events}))
@@ -38,11 +38,19 @@ def cmd_gerar(a):
 
 
 def cmd_rodar(a):
-    audio = load_wav(a.entrada)
-    cfg = RunConfig(modo=a.modo, tom=a.tom, bpm=a.bpm, progressao=a.progressao)
+    lookahead = 0.0
+    if a.sessao:
+        from .session import load
+        audio, run_cfg, lookahead = load(a.sessao)
+        cfg = RunConfig.from_dict(run_cfg)
+        name = "replay_" + Path(a.sessao).name
+        a.modo = cfg.modo
+    else:
+        audio = load_wav(a.entrada)
+        cfg = RunConfig(modo=a.modo, tom=a.tom, bpm=a.bpm, progressao=a.progressao)
+        name = Path(a.entrada).stem
     t0 = time.time()
-    res = run(audio, cfg)
-    name = Path(a.entrada).stem
+    res = run(audio, cfg, lookahead=lookahead)
     truth = json.loads(Path(a.verdade).read_text()) if a.verdade else None
     _save_outputs(res, Path(a.saida), name, truth, f"{name} — modo {a.modo}")
     print(f"{name}: {len(audio) / P.SR:.1f} s processados em {time.time() - t0:.1f} s; {len(res.changes)} trocas")
@@ -116,7 +124,8 @@ def main(argv=None):
     g.add_argument("--todos", action="store_true")
     g.add_argument("--saida", default="dados")
     r = sub.add_parser("rodar", help="roda o acompanhante num WAV")
-    r.add_argument("--entrada", required=True)
+    r.add_argument("--entrada")
+    r.add_argument("--sessao", help="pasta de uma sessão ao vivo (sessoes/...): reproduz exatamente o que aconteceu")
     r.add_argument("--modo", choices=["livre", "metronomo", "decorado"], default="livre")
     r.add_argument("--bpm", type=float)
     r.add_argument("--tom")
@@ -127,11 +136,13 @@ def main(argv=None):
     v.add_argument("--todos", action="store_true")
     v.add_argument("--cenario", choices=list(scenarios.SCENARIOS))
     v.add_argument("--versao", default="dev")
-    sub.add_parser("interface", help="abre a interface gráfica ao vivo (microfone -> baixo + pad)")
+    sub.add_parser("interface", help="abre o app ao vivo (entrada de áudio -> baixo + pad)")
     a = p.parse_args(argv)
     if a.cmd == "interface":
-        from .gui import main as gui_main
-        return gui_main()
+        from .app import main as app_main
+        return app_main()
+    if a.cmd == "rodar" and not (a.entrada or a.sessao):
+        p.error("rodar: use --entrada ARQUIVO.wav ou --sessao PASTA")
     if a.cmd == "gerar" and not (a.todos or a.cenario):
         p.error("gerar: use --cenario NOME ou --todos")
     {"gerar": cmd_gerar, "rodar": cmd_rodar, "avaliar": cmd_avaliar}[a.cmd](a)

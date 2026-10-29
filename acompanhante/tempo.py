@@ -93,9 +93,12 @@ class _Grid:
 
 class TempoTracker(_Grid):
     def __init__(self):
+        self.frozen = False   # live "fixar BPM": keep period and phase, stop following the strums
         self.reset()
 
     def reset(self):
+        if self.frozen:
+            return            # a fixed BPM survives the end of a song
         super().reset()
         self.env = deque(maxlen=int(P.TEMPO_ENV_SECONDS / FRAME))
         self.frame = 0
@@ -110,9 +113,9 @@ class TempoTracker(_Grid):
             if self.first_onset is None:
                 self.first_onset = onset.t
             self.onsets.append(onset.t)
-            if self.period:
+            if self.period and not self.frozen:
                 self._pll(onset.t)
-        if self.frame % P.TEMPO_ACF_EVERY == 0 and len(self.onsets) >= P.TEMPO_MIN_ONSETS:
+        if not self.frozen and self.frame % P.TEMPO_ACF_EVERY == 0 and len(self.onsets) >= P.TEMPO_MIN_ONSETS:
             self._acf()
         return self._advance(t)
 
@@ -175,15 +178,22 @@ class TempoTracker(_Grid):
 
 
 class FixedGrid(_Grid):
-    """Metronome mode: fixed BPM, grid starts at the first onset (musician starts on beat 1)."""
+    """Metronome mode: fixed BPM. The grid starts at the first onset (musician starts on beat 1), or at
+    `start` when the click is audible (the musician follows it)."""
 
-    def __init__(self, bpm):
+    def __init__(self, bpm, start=None):
         self.fixed_period = 60.0 / bpm
+        self.start = start
+        self.now = 0.0
         self.reset()
 
     def reset(self):
         super().reset()
-        self.now = 0.0
+        if self.start is not None:   # anchored: the grid keeps its phase across songs
+            self.first_onset = self.start
+            self.period = self.fixed_period
+            k = max(0, int(np.ceil((self.now - self.start) / self.period)))
+            self.next_beat, self.next_index = self.start + k * self.period, k
 
     @property
     def confidence(self):

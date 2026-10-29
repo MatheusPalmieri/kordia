@@ -16,7 +16,7 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `acorde_fora_do_tom` | Em, E, Bb no lugar do esperado | **decorado** `C G Am F`, tom C |
 | `batida_abafada` | palhetadas percussivas sem nota intercaladas | livre, tom C |
 | `ruido` | ruído de fundo + "voz" senoidal | livre, tom C |
-| `realimentacao` | a saída do próprio sistema volta na entrada (laço fechado, 30 ms, −6 dB) | livre, tom C |
+| `realimentacao` | a saída do próprio sistema volta na entrada (laço fechado, 30 ms, ~6 dB abaixo do violão) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 
 ## Verdade-base (JSON)
@@ -57,8 +57,12 @@ Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
 
 ## Testes unitários
 
-`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
+`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), clique (segue o andamento; com BPM fixo começa no Iniciar), gravação/reprodução de sessão, compensação de latência, e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
 
 ## Gravações reais
 
 Sem verdade-base: `rodar` gera só o relatório visual e o WAV renderizado. A avaliação é de ouvido e pela figura. Gravações previstas: C–G–Am–F no tempo, acelerando e com metrônomo.
+
+## Sessões reais
+
+Cada sessão ao vivo (`sessoes/<data-hora>/`) é reproduzível offline com resultado idêntico (`rodar --sessao`). Fluxo: o Matheus relata um problema e indica a sessão e o horário; reproduzimos, achamos a causa no `decisoes.jsonl` e no `quadros.csv`, corrigimos e, quando possível, transformamos o trecho num cenário ou teste de regressão.

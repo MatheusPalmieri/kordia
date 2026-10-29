@@ -16,10 +16,10 @@ class ProgressionMemory:
         self.locked = False
         self.pos = None        # index in `known` of the chord currently playing
 
-    def push(self, idx, beat):
-        """A chord was confirmed starting at beat index `beat`."""
-        if self.seq and beat - self.seq[-1][1] < 1 and not self.locked:
-            self.seq.pop()   # the previous chord lasted less than a beat: a blip, not part of the progression
+    def push(self, idx, beat, blip=False):
+        """A chord was confirmed starting at beat index `beat`. blip: the previous one lasted < 1 beat."""
+        if self.seq and (blip or beat - self.seq[-1][1] < 1) and not self.locked:
+            self.seq.pop()   # the previous chord was a blip, not part of the progression
         if self.seq and self.seq[-1][0] == idx:
             return
         self.seq.append([idx, beat])
@@ -30,6 +30,8 @@ class ProgressionMemory:
         """The last pushed (predicted) chord was actually `idx`."""
         if self.seq:
             self.seq[-1][0] = idx
+            if len(self.seq) > 1 and self.seq[-2][0] == idx:
+                self.seq.pop()   # it was the same chord all along
 
     def _lens(self, items):
         """Durations in beats of closed entries, rounded to half bars (min 2 beats)."""
@@ -49,16 +51,18 @@ class ProgressionMemory:
         if self.fixed and len(labels) == 1 and labels[0] in self.known:
             self.locked, self.pos = True, self.known.index(labels[0])
             return
-        # 3) learn: the last p chords repeat the p before (smallest p wins)
+        # 3) learn: a lap of p chords came back (its first k chords repeat); smallest p wins
         for p in range(P.CYCLE_MIN, P.CYCLE_MAX + 1):
-            if len(labels) >= 2 * p and labels[-p:] == labels[-2 * p:-p]:
-                if len(set(labels[-p:])) < 2:
-                    continue
-                self.known = labels[-p:]
-                # lengths from the previous occurrence (all closed); the current chord is known[-1]
-                self.lengths = self._lens(self.seq[-2 * p:-p + 1 or None])[:p]
-                self.locked, self.pos = True, p - 1
-                return
+            k = max(P.CYCLE_MIN, (p + 1) // 2)   # how much of the second lap must match before locking
+            if len(labels) < p + k or labels[-k:] != labels[-k - p:-p]:
+                continue
+            cyc = labels[-k - p:-k]               # one complete (closed) lap
+            if len(set(cyc)) < 2:
+                continue
+            self.known = cyc
+            self.lengths = self._lens(self.seq[-k - p:-k + 1])
+            self.locked, self.pos = True, k - 1  # the current chord is cyc[k-1]
+            return
 
     def predict(self):
         """(next chord idx, beat index where it starts) or None."""

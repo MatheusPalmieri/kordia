@@ -14,14 +14,15 @@ Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad segu
 
 - Documentação em português do Brasil; código e identificadores em inglês.
 - Todos os parâmetros numéricos em `acompanhante/params.py`, com unidade e motivo (é a especificação para o port em C++/JUCE).
-- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest, sounddevice (+ tkinter da stdlib).
+- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest, sounddevice; interface em HTML/CSS/JS puro (sem framework).
 - Commits pequenos, mensagens claras.
 
 ## Comandos
 
 ```bash
 python -m venv .venv && .venv/Scripts/pip install -e .   # ou .venv/bin/pip no Linux/macOS
-python -m acompanhante.gui            # interface ao vivo (ou Acompanhante.bat / python tasks.py interface)
+python -m acompanhante.app            # app ao vivo (ou Acompanhante.bat / python tasks.py interface)
+python -m acompanhante.cli rodar --sessao sessoes/<pasta>   # reproduz uma sessão ao vivo exatamente
 python tasks.py test                  # pytest (unitários + regressão dos cenários)
 python tasks.py avaliar [versao]      # roda os 12 cenários, salva métricas e relatórios
 python -m acompanhante.cli gerar --cenario acelerando --saida dados/
@@ -44,4 +45,20 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 
 ## Ao vivo × arquivo
 
-`pipeline.Processor` é o sistema inteiro bloco a bloco; `run()` (arquivos, métricas) e `gui.py` (callback de áudio) usam o mesmo objeto. Nunca duplique lógica entre os dois. O callback de áudio não pode bloquear: nada de I/O, prints ou alocação grande lá dentro.
+`pipeline.Processor` é o sistema inteiro bloco a bloco; `run()` (arquivos, métricas) e `app.py` (callback de áudio) usam o mesmo objeto. Nunca duplique lógica entre os dois. O callback de áudio não pode bloquear: nada de I/O, prints ou alocação grande lá dentro.
+
+## Regras de trabalho combinadas com o Matheus
+
+- **A cada interação: commit e `git push origin main`** (repositório privado github.com/MatheusPalmieri/kordia). Sem branches nem PRs, salvo pedido.
+- **Documentação sempre completa e atual.** Toda mudança relevante atualiza README, docs/ e este arquivo na mesma rodada.
+- **Toda regra nova que ele disser vai para esta seção.**
+- **Melhorar o harness junto com o código:** bug achado ao vivo vira cenário ou teste; sessões gravadas (`sessoes/`) são a fonte de verdade sobre o violão real.
+- **Linguagem não é dogma:** ele aceita C++, Rust ou C# se for melhor para latência e qualidade de som. Decisões de stack ficam registradas em `docs/decisoes.md` com números.
+- **Qualidade de produto:** interface moderna e apresentável (referência: apps da Apple), pad de worship (não órgão), volume alto o bastante.
+- **Logs para iterar juntos:** cada decisão do motor tem um motivo legível (`engine.reason`), mostrado no diário da interface e gravado na sessão.
+
+## App ao vivo
+
+- `app.py`: servidor HTTP local (127.0.0.1) + fluxo de áudio duplex; `ui/index.html`: interface (HTML/CSS/JS sem dependências), aberta no Edge em modo app. A mesma interface poderá ser reaproveitada no port C++ (JUCE 8 tem WebView).
+- `session.py`: grava cada sessão; a escrita é numa thread, o callback só enfileira.
+- `?snapshot` na URL fecha o fluxo de eventos após a primeira atualização (para capturas headless).

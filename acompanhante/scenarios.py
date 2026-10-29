@@ -225,8 +225,10 @@ SCENARIOS = {
     "batida_abafada": ("palhetadas abafadas nos tempos 2 e 4", lambda r: loop(PROG, 4, bpm=110, pattern="DUxUDUxU") + final(bpm=110),
                        {}, LIVRE_C),
     "ruido": ("ruído rosa + 'voz' senoidal", lambda r: loop(PROG, 4, bpm=100) + final(bpm=100), {"noise_db": -20, "voice_db": -6}, LIVRE_C),
-    "realimentacao": ("a saída do sistema volta na entrada (30 ms, -6 dB)", lambda r: loop(PROG, 4, bpm=110) + final(bpm=110), {},
-                      {"modo": "livre", "tom": "C", "feedback": {"gain": 0.5, "delay": 0.03}}),
+    # gain 0.1: with the accompaniment ~14 dB above the guitar, the return arrives ~6 dB below the guitar
+    "realimentacao": ("a saída do sistema volta na entrada (30 ms, ~6 dB abaixo do violão)",
+                      lambda r: loop(PROG, 4, bpm=110) + final(bpm=110), {},
+                      {"modo": "livre", "tom": "C", "feedback": {"gain": 0.1, "delay": 0.03}}),
     "modo_metronomo": ("trocas adiantadas/atrasadas contra um clique fixo de 110 BPM", _metro_bars, {"jitter": 0.02},
                        {"modo": "metronomo", "tom": "C", "bpm": 110}),
 }

@@ -12,22 +12,36 @@ python -m venv .venv
 # .venv/bin/pip install -e .          # Linux/macOS
 ```
 
-Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest, sounddevice (áudio ao vivo) e tkinter (vem com o Python).
+Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest, sounddevice (áudio ao vivo) e o Microsoft Edge (já vem no Windows) para a janela do app.
 
-## Uso ao vivo (interface)
+## Uso ao vivo (app)
 
-Dê dois cliques em **`Acompanhante.bat`** (ou rode `python -m acompanhante.gui`).
+Dê dois cliques em **`Acompanhante.bat`** (ou `python -m acompanhante.app`). Abre uma janela própria (Edge em modo app, sem barras de navegador), com tema claro/escuro automático.
 
-1. Escolha a **entrada** (microfone, interface de áudio, saída da mesa) e a **saída** (já vem o alto-falante padrão).
-2. Toque um pouco e ajuste o **ganho da entrada** até a barra de nível ficar verde e passar da marca cinza quando você bate.
-3. Opcional: **tom principal**, **BPM fixo** (se a igreja usa metrônomo) e **progressão conhecida** (ex.: `C G Am F`). Sem nada disso ele só ouve e segue.
-4. Clique em **Iniciar** e toque. A janela mostra o acorde que ele está tocando, o que está ouvindo (com a confiança), o estado, o BPM com o pulso do compasso e o padrão aprendido.
+1. **Áudio:** escolha a entrada (microfone, interface, mesa) e a saída (já vem o alto-falante padrão). Toque e ajuste o **ganho** até a barra passar da marca cinza na batida.
+2. **Música (opcional):** tom principal, **BPM fixo** e **progressão conhecida** (ex.: `C G Am F`). Sem nada, ele só ouve e segue.
+3. **Iniciar** e toque.
 
-Volume do acompanhamento e "ouvir também o violão na saída" mudam com ele tocando; tom, BPM e progressão valem a partir do próximo Iniciar.
+Ao vivo (mudam sem parar):
+- **Volume** do acompanhamento (até 200 %), **dinâmica fixa** ou seguindo a sua batida, **ouvir o violão** na saída.
+- **Clique:** ouve o metrônomo. Com BPM fixo, o clique começa no Iniciar e você segue ele. No modo livre, o clique segue o andamento que ele detectou.
+- **Fixar BPM:** congela o andamento detectado agora; daí em diante você segue o clique.
 
-> **Importante:** com microfone e alto-falante no mesmo ambiente, o sistema ouve o próprio baixo/pad e se confunde (é o pior cenário medido, ver resultados). Prefira **fone de ouvido** ou o violão **ligado direto** (cabo/interface).
+A janela mostra o acorde tocado (grande), o que está ouvindo e a confiança, o **próximo acorde** previsto, o estado, o BPM com o pulso do compasso, o **padrão aprendido** e um **diário** com cada decisão e o motivo.
 
-A latência do driver de áudio é medida ao iniciar e compensada nas trocas previstas e no pulso do baixo. As trocas reativas (antes de ele aprender o padrão) continuam chegando ~½ pulso atrasadas.
+> **Importante:** microfone + caixa de som no mesmo ambiente fazem o sistema ouvir o próprio baixo/pad (pior cenário medido). Prefira **fone** ou o violão **ligado direto**.
+
+### Logs de cada sessão
+
+Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar. "Abrir pasta" no rodapé leva até ela.
+
+O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
+
+```bash
+python -m acompanhante.cli rodar --sessao sessoes/2026-10-29_20-40-00
+```
+
+Para eu analisar um problema que você ouviu ao vivo, basta mandar a pasta da sessão (ou dizer o horário em que aconteceu).
 
 ## Uso em arquivos e avaliação
 
@@ -57,10 +71,11 @@ python -m acompanhante.cli avaliar --todos --versao baseline
 ## Estrutura
 
 ```
-acompanhante/   código (um módulo por camada; parâmetros em params.py)
+acompanhante/   código (um módulo por camada; parâmetros em params.py; ui/ = interface do app)
 tests/          pytest
 docs/           visão, requisitos, arquitetura, riscos, testes, roadmap, decisões, resultados, glossário
 dados/          cenários gerados (ignorado pelo git)
+sessoes/        gravações e logs das sessões ao vivo (ignorado pelo git)
 resultados/     métricas e relatórios por versão (só o CSV/JSON vai para o git)
 ```
 

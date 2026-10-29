@@ -3,8 +3,12 @@
 ## Fase 0 — Passo zero (atual)
 Protótipo offline, causal, em Python. Áudio sintético com verdade-base, 12 cenários, métricas, baseline. Entregável: números honestos sobre onde a ideia funciona e onde falha.
 
-## Fase 0.5 — Interface ao vivo (feito)
-Janela em Python: escolher entrada e saída, tom, BPM fixo, progressão; Iniciar e tocar. Mesmo processador dos testes, com compensação da latência do driver. Serve para testar com o violão de verdade antes do port.
+## Fase 0.5 — App ao vivo (feito)
+App com interface web moderna, entrada/saída de áudio, tom, BPM fixo, progressão, clique, fixar BPM, volume, dinâmica fixa; Iniciar e tocar. Mesmo processador dos testes, com compensação da latência do driver. Cada sessão é gravada e pode ser reproduzida offline. Serve para testar com o violão de verdade antes do port.
+
+## Fase 0.6 — Iterar com sessões reais (agora)
+- Matheus toca e manda as pastas de `sessoes/`; cada problema ouvido vira cenário ou teste de regressão.
+- Prioridades: travamento e manutenção do padrão com violão real, latência reativa, confusão de terça.
 
 ## Fase 1 — Refinamento
 - Atacar os 3 maiores problemas do baseline (ver `resultados.md`).
@@ -18,7 +22,9 @@ Janela em Python: escolher entrada e saída, tom, BPM fixo, progressão; Iniciar
 - Anotar verdade-base de algumas à mão para medir.
 - Ajustar parâmetros de onset/chroma para áudio real (ruído de sala, compressão do celular).
 
-## Fase 3 — Tempo real (C++/JUCE)
+## Fase 3 — Tempo real (C++/JUCE) — linguagem escolhida (decisão 37)
+- Pré-requisito: Visual Studio Build Tools (C++) + CMake.
+- Motor em C++ (ASIO/WASAPI, bloco 128–256), interface reaproveitada via WebView do JUCE 8, Python mantido como laboratório e gerador de vetores de teste.
 - Portar `params.py` e os módulos um a um, com os mesmos testes (vetores de entrada/saída gerados pelo Python).
 - Baixa latência: bloco de 128–256 amostras, análise harmônica em thread separada.
 - Entrada de interface de áudio, saída MIDI e/ou sintetizador interno.
@@ -30,6 +36,5 @@ Janela em Python: escolher entrada e saída, tom, BPM fixo, progressão; Iniciar
 - **Guitarra elétrica** (entrada limpa, antes dos efeitos).
 - **VST/AU** para usar dentro de uma DAW ou de um host ao vivo.
 - **ML leve** (ex.: classificador de acordes pequeno) só se medir ganho nos cenários e nas gravações.
-- **UI** melhor que o protótipo tkinter: salvar configurações e setlist, modo palco (tela grande), atalhos de pedal.
-- **Clique de metrônomo na saída** (opcional) para quem não tem metrônomo na igreja.
+- **UI:** salvar configurações e setlist, modo palco (tela grande), atalhos de pedal.
 - Salvar progressões por música ("setlist").

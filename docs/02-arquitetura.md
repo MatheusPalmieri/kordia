@@ -37,12 +37,14 @@ flowchart LR
 | `memory.py` | sequência de acordes, detecção de ciclo, previsão | `ProgressionMemory.push/predict/unlock` |
 | `engine.py` | máquina de estados, escada de confiança, parada, dinâmica | `Engine.step(...) -> decisão` |
 | `accomp.py` | transforma decisões em eventos de nota (baixo/pad) | `Accompanist.update(...) -> [Event]` |
-| `synth.py` | sintetizador streaming de baixo/pad; escrita MIDI | `Synth.render(n)`, `write_midi` |
+| `synth.py` | sintetizador streaming estéreo: pad worship (serras + passa-baixa + reverb), baixo, clique, limitador; escrita MIDI | `Synth.render(t0, n) -> (n, 2)`, `write_midi` |
 | `pipeline.py` | `Processor`: o sistema inteiro, um bloco por vez; `run()` para arquivos | `Processor.process(bloco) -> saída`; `run(audio, cfg) -> Result` |
 | `metrics.py` | compara resultado com verdade-base | `evaluate(result, truth) -> dict` |
 | `report.py` | figura PNG por cenário | `plot(result, truth, path)` |
 | `cli.py` | `gerar`, `rodar`, `avaliar`, `interface` | — |
-| `gui.py` | interface ao vivo (tkinter) + fluxo de áudio duplex (sounddevice) | `python -m acompanhante.gui` |
+| `app.py` | app ao vivo: servidor HTTP local + fluxo de áudio duplex (sounddevice) | `python -m acompanhante.app` |
+| `ui/index.html` | interface (HTML/CSS/JS), aberta no Edge em modo app | `GET /`, `/api/*` |
+| `session.py` | gravação e reprodução de sessões ao vivo | `SessionRecorder`, `load()` |
 
 ## Fluxo por bloco
 
@@ -99,11 +101,17 @@ Todos em `acompanhante/params.py`, com unidade e motivo. Ao portar para C++, ess
 flowchart LR
     MIC[Entrada<br/>mic / interface] -->|bloco 512 @ 22 050 Hz| CB[callback de áudio]
     CB -->|× ganho| PR[Processor.process]
-    PR -->|baixo + pad × volume| OUT[Saída<br/>alto-falante / fone]
-    PR -. estado, acorde, BPM .-> UI[Janela tkinter<br/>atualiza a cada 50 ms]
-    UI -->|ganho, volume, monitor| CB
+    PR -->|baixo + pad + clique, estéreo × volume| OUT[Saída<br/>alto-falante / fone]
+    CB -->|fila| REC[SessionRecorder<br/>thread de escrita]
+    REC --> DISK[(sessoes/data-hora)]
+    PR -. estado .-> API[app.py<br/>HTTP 127.0.0.1]
+    API -->|SSE 20 Hz| UI[ui/index.html<br/>janela Edge --app]
+    UI -->|start / stop / ajustes ao vivo| API
 ```
 
-- O fluxo duplex é aberto a 22 050 Hz com bloco de 512 no host API padrão (MME no Windows reamostra sozinho). Pior caso medido: 11 ms de processamento por bloco de 23 ms.
-- **Compensação de latência (`lookahead`):** a latência informada pelo driver (entrada + saída, ~115 ms no MME) é passada ao `Processor`. O sintetizador renderiza esse tanto à frente do áudio de entrada, e o motor emite as trocas previstas, a parada e os ataques do baixo nesse mesmo adiantamento, para soarem no tempo. Trocas reativas não têm como ser adiantadas: começam na hora em que são decididas.
-- Sem log por quadro no modo ao vivo (memória limitada).
+- O fluxo duplex é aberto a 22 050 Hz com bloco de 512 no host API padrão (MME no Windows reamostra sozinho). Medido: ~1 ms de processamento por bloco de 23 ms (pico de 3,6 ms).
+- **Compensação de latência (`lookahead`):** a latência informada pelo driver (entrada + saída, ~115 ms no MME) é passada ao `Processor`. O sintetizador renderiza esse tanto à frente; trocas previstas, fim do compasso, ataques do baixo e **cliques** são emitidos com esse adiantamento para soarem no tempo. Trocas reativas não têm como ser adiantadas.
+- **Clique:** agendado no tempo previsto do rastreador (mesmo mecanismo do baixo). Com BPM fixo + clique, a `FixedGrid` é ancorada no Iniciar (0,5 s + latência), e não na primeira palhetada, e mantém a fase entre músicas. "Fixar BPM" congela o `TempoTracker` (sem PLL nem ACF).
+- **Sessões:** o callback só enfileira (bloco de entrada + linha de estado + decisões novas); uma thread grava WAV, CSV e JSONL. Ao parar, outra thread reproduz a sessão offline (`run(..., lookahead)`) e salva `relatorio.png`.
+- **Janela:** `app.py` abre o Edge com `--app=` e um perfil próprio (`%LOCALAPPDATA%/kordia/edge`). Um watchdog encerra o áudio e o processo quando a janela fecha (nenhum cliente de eventos por 6 s).
+- Sem log por quadro em memória no modo ao vivo (memória limitada); o log vai para o disco.

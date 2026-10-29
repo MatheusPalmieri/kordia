@@ -10,12 +10,13 @@ class Dynamics:
 
     def __init__(self):
         self.level = None
+        self.fixed = False   # live option: constant level instead of following the strums
 
     def strum(self, db):
         self.level = db if self.level is None else self.level + P.DYN_SMOOTH * (db - self.level)
 
     def velocity(self):
-        if self.level is None:
+        if self.fixed or self.level is None:
             return P.DYN_VEL_HIGH
         x = np.clip((self.level - P.DYN_DB_LOW) / (P.DYN_DB_HIGH - P.DYN_DB_LOW), 0, 1)
         return int(round(P.DYN_VEL_LOW + x * (P.DYN_VEL_HIGH - P.DYN_VEL_LOW)))
@@ -28,18 +29,22 @@ class Dynamics:
 
 
 def voice(chord, mode, key):
-    """(bass MIDI note or None, pad MIDI notes) for an engine output."""
+    """(bass MIDI note or None, [(pad MIDI note, velocity scale)]) for an engine output.
+    Open worship voicing: root, fifth, octave, third an octave up (tenth), quiet shimmer two octaves up."""
     if mode is None:
         return None, []
     if mode == "tonic":
-        r = theory.note_pc(key)
-        pcs, bass = [r, (r + 7) % 12], None
+        root, third, bass = theory.note_pc(key), None, None
     else:
-        pcs = theory.chord_pcs(chord)
-        if mode == "root5":
-            pcs = [pcs[0], pcs[2]]
-        bass = P.BASS_LOW + pcs[0]
-    return bass, [P.PAD_LOW + (pc - P.PAD_LOW) % 12 for pc in pcs]
+        root, third_pc, _ = theory.chord_pcs(chord)
+        third = None if mode == "root5" else (third_pc - root) % 12
+        bass = P.BASS_LOW + root
+    r = P.PAD_ROOT_LOW + root
+    pad = [(r, 1.0), (r + 7, 0.9), (r + 12, 0.8)]
+    if third is not None:
+        pad.append((r + 12 + third, 0.8))
+    pad.append((r + 24, P.PAD_SHIMMER))
+    return bass, pad
 
 
 class Accompanist:
@@ -62,9 +67,13 @@ class Accompanist:
             new.append(self._ev(out.t, "off", "pad", p))
         if self.bass is not None:
             new.append(self._ev(out.t, "off", "bass", self.bass))
-        self.bass, self.pad = voice(out.chord, out.mode, self.key)
-        for p in self.pad:
-            new.append(self._ev(out.t, "on", "pad", p, vel))
+        if out.mode is None:            # the musician stopped: short fade, not the long crossfade release
+            for e in new:
+                e["rel"] = P.STOP_FADE
+        self.bass, pad = voice(out.chord, out.mode, self.key)
+        self.pad = [p for p, _ in pad]
+        for p, scale in pad:
+            new.append(self._ev(out.t, "on", "pad", p, max(1, round(vel * scale))))
         if self.bass is not None:
             new.append(self._ev(out.t, "on", "bass", self.bass, vel))
             self.last_bass_t = out.t
@@ -78,6 +87,9 @@ class Accompanist:
             return []
         self.last_bass_t = t
         return [self._ev(t, "off", "bass", self.bass), self._ev(t, "on", "bass", self.bass, vel)]
+
+    def click(self, t, accent, vel):
+        return [self._ev(t, "on", "click", 77 if accent else 76, vel)]
 
     def expression(self, t, value):
         if abs(value - self.expr) < 0.03 and not (value == 1.0 and self.expr != 1.0):

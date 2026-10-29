@@ -5,7 +5,7 @@ import sys
 cmd = sys.argv[1] if len(sys.argv) > 1 else "test"
 py = sys.executable
 if cmd == "interface":
-    sys.exit(subprocess.call([py, "-m", "acompanhante.gui"]))
+    sys.exit(subprocess.call([py, "-m", "acompanhante.app"]))
 if cmd == "test":
     sys.exit(subprocess.call([py, "-m", "pytest", "-q"]))
 elif cmd == "avaliar":

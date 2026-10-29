@@ -56,17 +56,31 @@ STOP_DEFAULT_SECONDS = 1.0    # stop timeout when tempo is unknown
 FORGET_BARS = 2.0             # silence longer than this -> forget progression and tempo
 FADE_TIME = 0.4
 LOCK_CONFIRM_BEATS = 0.5      # after a predicted change, wait this before checking the audio
-LOCK_MAX_MISSES = 2           # weak disagreements in a row before unlocking
+LOCK_MAX_MISSES = 3           # weak disagreements (another real chord, low confidence) in a row before unlocking
+LOCK_CONTRA_BEATS = 0.5       # a confident disagreement must last this long to override the learned pattern
 LOCK_LATE_BEATS = 1.0         # hearing the previous chord up to 1 beat after a predicted change = musician late
 CYCLE_MIN, CYCLE_MAX = 2, 8   # cycle length in chords
 METRO_LATE_BEATS = 0.5        # metronome mode: change heard up to this after a strong beat applies now
 
 # --- dynamics ---
 DYN_DB_LOW, DYN_DB_HIGH = -45.0, -12.0   # strum loudness mapped to velocity range
-DYN_VEL_LOW, DYN_VEL_HIGH = 35, 115
+DYN_VEL_LOW, DYN_VEL_HIGH = 60, 120    # floor raised: soft playing must still be clearly audible
 DYN_SMOOTH = 0.25             # EMA weight per strum (smoothing over ~4 strums)
 DYN_SILENCE_DECAY = 1.5       # expression decay time constant while not strumming (pause "abaixa")
 
 # --- accompaniment ---
 BASS_LOW = 36                 # bass root in MIDI 36..47 (C2..B2)
-PAD_LOW = 55                  # pad triad voiced from G3 upward
+PAD_ROOT_LOW = 48             # pad open voicing: root in C3..B3, fifth, octave, tenth (third + 12), shimmer (+24)
+PAD_SHIMMER = 0.35            # relative velocity of the +2-octave shimmer note
+
+# --- sound (synth.py) ---
+PAD_ATTACK = 0.9              # s, smooth swell
+PAD_RELEASE = 2.2             # s: chords crossfade into each other (worship pad)
+PAD_CUTOFF = 1800.0           # Hz, low-pass on the pad bus (warm, not organ-bright)
+PAD_LEVEL = 0.16              # per note (3 detuned saws averaged)
+PAD_DRY, PAD_WET = 0.75, 0.6  # reverb mix
+REVERB_ROOM, REVERB_DAMP = 0.86, 0.35
+BASS_LEVEL = 0.45
+BASS_RELEASE = 0.15
+CLICK_LEVEL = 0.5
+STOP_FADE = 0.6               # s: release used when the musician stops (short, not the long pad release)

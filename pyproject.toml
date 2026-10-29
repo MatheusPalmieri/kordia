@@ -8,5 +8,8 @@ dependencies = ["numpy", "scipy", "soundfile", "matplotlib", "pytest", "sounddev
 [tool.setuptools]
 packages = ["acompanhante"]
 
+[tool.setuptools.package-data]
+acompanhante = ["ui/*.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

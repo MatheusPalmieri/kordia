@@ -61,7 +61,20 @@
 ### RF9 — Uso ao vivo por interface gráfica
 - Escolher dispositivo de **entrada** (microfone, interface, mesa) e de **saída** (padrão: alto-falante do sistema).
 - Configurar, todos opcionais: tom principal, BPM fixo (liga/desliga o modo metrônomo), progressão conhecida (liga/desliga o modo decorado). BPM e progressão podem ser usados juntos.
-- Ajustar ganho de entrada (com medidor de nível), volume do acompanhamento e monitorar o violão na saída.
+- Ajustar ganho de entrada (com medidor de nível), volume do acompanhamento (até 200 %), dinâmica fixa ou seguindo a batida, e monitorar o violão na saída.
+- **Clique audível** (liga/desliga e volume ao vivo). Com BPM fixo, a grade e o clique começam no Iniciar. No modo livre, o clique segue o andamento detectado.
+- **Fixar BPM detectado** ao vivo (o músico passa a seguir o clique).
 - Botão **Iniciar/Parar**. Ao iniciar, o sistema ouve a entrada e toca baixo + pad em tempo real.
-- Mostrar ao vivo: acorde tocado, acorde ouvido e confiança, estado (em linguagem simples), BPM e pulso no compasso, padrão aprendido.
+- Mostrar ao vivo: acorde tocado, acorde ouvido e confiança, próximo acorde previsto, estado (em linguagem simples), BPM e pulso no compasso, padrão aprendido, diário de decisões com motivo, latência, custo de processamento e falhas de áudio.
+- Interface moderna e apresentável (referência: apps da Apple), tema claro/escuro.
 - Compensar a latência de saída do driver nas trocas previstas e no pulso do baixo.
+
+### RF10 — Logs e reprodução de sessões
+- Cada sessão ao vivo grava entrada, configuração, estado por bloco, decisões com motivo e resumo, sem I/O no callback de áudio.
+- Ao parar, gera o relatório visual da sessão.
+- Qualquer sessão pode ser reproduzida offline com resultado idêntico (`rodar --sessao`).
+
+### RF11 — Som
+- Pad de worship: serras desafinadas, voicing aberto (fundamental, quinta, oitava, décima, shimmer), passa-baixa, ataque ~0,9 s, liberação ~2,2 s (acordes se fundem), reverb estéreo grande. Ao parar, fade curto (0,6 s).
+- Baixo audível também em alto-falante pequeno (senoide saturada).
+- Volume alto o bastante sem distorcer (limitador suave na saída).

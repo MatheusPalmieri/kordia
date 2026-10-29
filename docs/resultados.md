@@ -5,6 +5,32 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v2 — 2026-10-29 (depois do primeiro teste ao vivo)
+
+Mudanças: travamento mais rápido e mais teimoso (decisões 38–44), som novo e mais alto (45–46), cenário de realimentação recalibrado (47).
+
+| métrica (média dos 12) | baseline | v2 |
+|---|---|---|
+| acerto do acorde (`acc_total`) | 0,88 | **0,89** |
+| latência média das trocas | 160 ms | **128 ms** |
+| latência travada | 58 ms | **47 ms** |
+| falso disparo | 0 s | 0 s |
+| errado com confiança (episódios) | 0,42 | **1,25** ⚠ |
+| recuperação após surpresa | 1,57 pulso | 2,42 pulsos ⚠ |
+| `corr_dinamica` | 0,96 | 0,75 ⚠ |
+| volume do acompanhamento | −26,0 dBFS | **−11,9 dBFS** |
+
+Por cenário, o que mudou de verdade:
+- **`ruido` 0,84 → 0,91** e passou a travar cedo (blips não quebram mais o ciclo).
+- `acelerando` 0,94 → 0,96, `batida_abafada` 0,95 → 0,96, `modo_metronomo` latência média 120 → 82 ms: travam antes.
+- `estavel_120` igual (0,93 → 0,94), trava no 6º acorde em vez do 8º.
+- **Piorou:** erros confiantes subiram (0,42 → 1,25 episódio por cenário). Em boa parte é o custo deliberado da decisão 39: durante o ½ pulso de persistência o sistema ainda toca o acorde previsto enquanto o violão já mudou, e a métrica conta isso. Em `desacelerando_final` (4) e `realimentacao` (4), os dois problemas conhecidos pioram com o pad longo.
+- `realimentacao` 0,66 → 0,62 com o retorno no mesmo nível relativo: a cauda longa do pad e o reverb voltam na entrada e seguram o acorde antigo.
+
+Leitura honesta: no sintético, a v2 é melhor na média e em ruído, e pior em surpresas e em realimentação. A mudança foi guiada pelo que o Matheus ouviu ao vivo (padrão que não se mantinha, troca para nota errada), que o sintético não reproduzia. As sessões gravadas vão dizer se o equilíbrio está certo.
+
+---
+
 ## baseline — 2026-10-29 (passo zero)
 
 Áudio **sintético** (Karplus-Strong), 12 cenários, tudo causal e em streaming. Processa ~40 s de áudio em ~1 s.

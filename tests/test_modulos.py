@@ -106,13 +106,15 @@ def test_fixed_grid():
 def test_memory_learns_cycle_and_predicts():
     m = ProgressionMemory()
     prog = [theory.chord_index(c) for c in "C G Am F".split()]
-    for i, c in enumerate(prog * 2):
+    for i, c in enumerate((prog * 2)[:5]):
         m.push(c, 4 * i)
+    assert not m.locked          # C G Am F C: one chord of the second lap is not enough
+    m.push(prog[1], 20)          # ... G: the lap came back
     assert m.locked
-    assert m.predict() == (prog[0], 32)
+    assert m.predict() == (prog[2], 24)
     m.unlock()
-    m.push(prog[0], 32)          # F -> C are consecutive in the known cycle: re-lock
-    assert m.locked and m.predict() == (prog[1], 36)
+    m.push(prog[2], 24)          # G -> Am are consecutive in the known cycle: re-lock
+    assert m.locked and m.predict() == (prog[3], 28)
 
 
 def test_memory_decorated_aligns_on_first_chord():
@@ -171,3 +173,31 @@ def test_lookahead_emits_predicted_changes_early():
             early.append(last[0] - proc.s / P.SR)       # due time minus decision time
     assert len(early) >= 4
     assert np.median(early) >= L - 2 * P.HOP / P.SR
+
+
+def test_click_follows_tempo_and_fixed_grid_starts_at_start():
+    """Click: free mode clicks on the tracked beats once the tempo is known; with a fixed BPM + click the grid
+    starts at Iniciar (the musician follows the click), not at the first strum."""
+    from acompanhante.pipeline import Processor
+    audio, _ = scenarios.build("estavel_120")
+    proc = Processor(RunConfig(tom="C", clique=True), keep_log=False)
+    for k in range(int(10 * P.SR) // P.HOP):
+        proc.process(audio[k * P.HOP:(k + 1) * P.HOP].astype(np.float64))
+    clicks = [e["t"] for e in proc.acc.events if e["inst"] == "click"]
+    assert len(clicks) >= 8 and abs(np.median(np.diff(clicks)) - 0.5) < 0.02     # 120 BPM
+    grid = Processor(RunConfig(modo="metronomo", bpm=100, clique=True), keep_log=False)
+    for _ in range(int(2 * P.SR) // P.HOP):
+        grid.process(np.zeros(P.HOP))                                              # silence: still clicks
+    clicks = [e for e in grid.acc.events if e["inst"] == "click"]
+    assert abs(clicks[0]["t"] - 0.5) < 1e-6 and clicks[0]["pitch"] == 77 and len(clicks) == 3
+
+
+def test_session_records_and_replays(tmp_path):
+    from acompanhante.session import SessionRecorder, load
+    rec = SessionRecorder({"run": {"modo": "livre", "tom": "C"}, "lookahead": 0.1}, root=tmp_path)
+    block = np.full(P.HOP, 0.1)
+    rec.feed(block, {k: 0 for k in __import__("acompanhante.session", fromlist=["x"]).FIELDS}, [{"t": 0, "motivo": "x"}])
+    folder = rec.stop({"ok": True})
+    audio, cfg, la = load(folder)
+    assert len(audio) == P.HOP and abs(audio[0] - 0.1) < 1e-3 and cfg["tom"] == "C" and la == 0.1
+    assert (folder / "decisoes.jsonl").read_text(encoding="utf-8").strip()

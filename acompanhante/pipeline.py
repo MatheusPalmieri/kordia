@@ -7,7 +7,7 @@ from . import params as P
 from . import theory
 from .accomp import Accompanist, Dynamics
 from .chords import ChordTracker
-from .engine import STATES, TRAVADO, OUVINDO, Engine
+from .engine import FALLBACK, OUVINDO, STATES, TRAVADO, Engine
 from .memory import ProgressionMemory
 from .onsets import OnsetDetector
 from .synth import Synth
@@ -21,6 +21,7 @@ class RunConfig:
     bpm: float | None = None      # metronome mode
     progressao: str | None = None # decorated mode, e.g. 'C G Am F'
     feedback: dict | None = None  # test only: {'gain': 0.5, 'delay': 0.03} closed loop output -> input
+    clique: bool = False          # audible metronome click (in metronome mode the grid then starts at Iniciar)
 
     @classmethod
     def from_dict(cls, d):
@@ -30,7 +31,7 @@ class RunConfig:
 @dataclass
 class Result:
     audio: np.ndarray             # input as heard (including feedback)
-    accomp: np.ndarray            # synthesized bass + pad
+    accomp: np.ndarray            # synthesized bass + pad, stereo (n, 2)
     log: dict                     # per-frame arrays
     events: list
     changes: list                 # (t, chord label or None, mode)
@@ -53,7 +54,15 @@ class Processor:
             raise ValueError("modo metronomo exige bpm")
         if cfg.modo == "decorado" and not cfg.progressao:
             raise ValueError("modo decorado exige progressao")
-        self.tracker = FixedGrid(cfg.bpm) if cfg.modo == "metronomo" else TempoTracker()
+        # with an audible click the musician follows the click, so the grid starts right away (count-in of 1 bar
+        # at most), not at the first strum
+        start = 0.5 + lookahead if cfg.clique else None
+        self.tracker = FixedGrid(cfg.bpm, start) if cfg.modo == "metronomo" else TempoTracker()
+        self.click = cfg.clique
+        self.click_vel = 100
+        self.last_click_t = -np.inf
+        self.decisions = []             # (t, state, chord label or None, mode, reason) per accompaniment change
+        self.n_decisions = 0            # total ever (the live list is trimmed)
         # a progression also works together with a fixed BPM (metronome + decorated)
         self.memory = ProgressionMemory(cfg.progressao)
         self.lookahead = lookahead
@@ -100,12 +109,23 @@ class Processor:
         evs = []
         if decision is not None:
             evs += acc.apply(decision, vel)
+            label = None if decision.chord is None else theory.LABELS[decision.chord]
+            self.decisions.append((round(decision.t, 3), engine.state, label, decision.mode, engine.reason))
+            self.n_decisions += 1
         if engine.state in (OUVINDO, TRAVADO) and tracker.confidence >= 0.5:
             # bass re-attack on the predicted beat that falls in the next rendered block
             bi = int(np.ceil(tracker.beat_phase(t + self.lookahead)))
             tb = tracker.time_of_beat(bi)
             if tb < t + self.lookahead + P.HOP / P.SR:
                 evs += acc.beat(tb, tracker.bar_pos(bi) % 2 == 0, tracker.period, vel)
+        if self.click and tracker.period:
+            guide = isinstance(tracker, FixedGrid) or tracker.frozen   # the click is the guide: always on
+            if guide or (engine.state in (OUVINDO, TRAVADO, FALLBACK) and tracker.confidence >= 0.5):
+                bi = int(np.ceil(tracker.beat_phase(t + self.lookahead)))
+                tb = tracker.time_of_beat(bi)
+                if tb < t + self.lookahead + P.HOP / P.SR and tb > self.last_click_t + 0.5 * tracker.period:
+                    self.last_click_t = tb
+                    evs += acc.click(tb, tracker.bar_pos(bi) == 0, self.click_vel)
         expr = dyn.expression(t, engine.last_onset, tracker.period)
         evs += acc.expression(t, expr)
         for e in evs:
@@ -118,12 +138,22 @@ class Processor:
                                                 engine.level, expr, vel]):
                 self.log[key].append(val)
         else:
-            del acc.events[:-64], acc.changes[:-64], self.onset_list[:-64]   # live: bounded memory
+            del acc.events[:-64], acc.changes[:-64], self.onset_list[:-64], self.decisions[:-64]   # live: bounded
 
     def process(self, x):
         out = self.render()
         self.analyze(x)
         return out
+
+    def freeze_tempo(self, on):
+        """Live: keep the detected BPM fixed (the musician follows the click) or go back to following."""
+        if isinstance(self.tracker, TempoTracker):
+            self.tracker.frozen = bool(on) and self.tracker.period is not None
+        return getattr(self.tracker, "frozen", False)
+
+    def next_chord(self):
+        pred = self.memory.predict() if self.memory.locked else None
+        return theory.LABELS[pred[0]] if pred else None
 
     def beat_in_bar(self):
         """1..4 for the beat currently sounding, or None if the tempo is unknown."""
@@ -132,16 +162,17 @@ class Processor:
         return self.tracker.bar_pos(int(np.floor(self.tracker.beat_phase(self.s / P.SR)))) + 1
 
 
-def run(audio, cfg: RunConfig):
+def run(audio, cfg: RunConfig, lookahead=0.0):
+    """Offline run. lookahead: only to replay a live session exactly (same decisions, same timing)."""
     audio = np.asarray(audio, dtype=np.float64).copy()
-    proc = Processor(cfg)
-    out = np.zeros(len(audio))
+    proc = Processor(cfg, lookahead=lookahead)
+    out = np.zeros((len(audio), 2))
     fb_gain, fb_delay = (cfg.feedback["gain"], int(cfg.feedback["delay"] * P.SR)) if cfg.feedback else (0.0, 0)
     for k in range(len(audio) // P.HOP):
         s = k * P.HOP
         out[s:s + P.HOP] = proc.render()
         if fb_gain and s >= fb_delay:
-            audio[s:s + P.HOP] += fb_gain * out[s - fb_delay:s - fb_delay + P.HOP]
+            audio[s:s + P.HOP] += fb_gain * out[s - fb_delay:s - fb_delay + P.HOP].mean(axis=1)
         proc.analyze(audio[s:s + P.HOP])
     log = {k: np.asarray(v) for k, v in proc.log.items()}
     return Result(audio, out, log, proc.acc.events, proc.acc.changes, proc.onset_list)
