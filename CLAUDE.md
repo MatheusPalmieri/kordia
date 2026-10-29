@@ -14,7 +14,7 @@ Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad segu
 
 - Documentação em português do Brasil; código e identificadores em inglês.
 - Todos os parâmetros numéricos em `acompanhante/params.py`, com unidade e motivo (é a especificação para o port em C++/JUCE).
-- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest.
+- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest, sounddevice (+ tkinter da stdlib).
 - Commits pequenos, mensagens claras.
 
 ## Comandos
