@@ -21,6 +21,7 @@ Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad segu
 
 ```bash
 python -m venv .venv && .venv/Scripts/pip install -e .   # ou .venv/bin/pip no Linux/macOS
+python -m acompanhante.gui            # interface ao vivo (ou Acompanhante.bat / python tasks.py interface)
 python tasks.py test                  # pytest (unitários + regressão dos cenários)
 python tasks.py avaliar [versao]      # roda os 12 cenários, salva métricas e relatórios
 python -m acompanhante.cli gerar --cenario acelerando --saida dados/
@@ -40,3 +41,7 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 - Antes de otimizar um número, pergunte: "isso deixa o sistema mais propenso a tocar nota errada?" Se sim, não vale.
 - Áudio sintético é otimista. Ganho só no sintético e não explicável musicalmente é suspeito de sobreajuste.
 - O equilíbrio "seguir o que ouve × seguir o que aprendeu" é o principal parâmetro; mexa nele com cenários de variação (`acorde_fora_do_tom`, `troca_de_tom`).
+
+## Ao vivo × arquivo
+
+`pipeline.Processor` é o sistema inteiro bloco a bloco; `run()` (arquivos, métricas) e `gui.py` (callback de áudio) usam o mesmo objeto. Nunca duplique lógica entre os dois. O callback de áudio não pode bloquear: nada de I/O, prints ou alocação grande lá dentro.

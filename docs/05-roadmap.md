@@ -3,6 +3,9 @@
 ## Fase 0 — Passo zero (atual)
 Protótipo offline, causal, em Python. Áudio sintético com verdade-base, 12 cenários, métricas, baseline. Entregável: números honestos sobre onde a ideia funciona e onde falha.
 
+## Fase 0.5 — Interface ao vivo (feito)
+Janela em Python: escolher entrada e saída, tom, BPM fixo, progressão; Iniciar e tocar. Mesmo processador dos testes, com compensação da latência do driver. Serve para testar com o violão de verdade antes do port.
+
 ## Fase 1 — Refinamento
 - Atacar os 3 maiores problemas do baseline (ver `resultados.md`).
 - Calibrar o equilíbrio "seguir o que ouve × seguir o que aprendeu" (risco 7).
@@ -27,5 +30,6 @@ Protótipo offline, causal, em Python. Áudio sintético com verdade-base, 12 ce
 - **Guitarra elétrica** (entrada limpa, antes dos efeitos).
 - **VST/AU** para usar dentro de uma DAW ou de um host ao vivo.
 - **ML leve** (ex.: classificador de acordes pequeno) só se medir ganho nos cenários e nas gravações.
-- **UI** para escolher modo, tom principal, progressão decorada, e ver o estado.
+- **UI** melhor que o protótipo tkinter: salvar configurações e setlist, modo palco (tela grande), atalhos de pedal.
+- **Clique de metrônomo na saída** (opcional) para quem não tem metrônomo na igreja.
 - Salvar progressões por música ("setlist").

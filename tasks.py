@@ -1,9 +1,11 @@
-"""Executor de tarefas (substitui o make no Windows): python tasks.py test|avaliar [versao]|gerar"""
+"""Executor de tarefas (substitui o make no Windows): python tasks.py interface|test|avaliar [versao]|gerar"""
 import subprocess
 import sys
 
 cmd = sys.argv[1] if len(sys.argv) > 1 else "test"
 py = sys.executable
+if cmd == "interface":
+    sys.exit(subprocess.call([py, "-m", "acompanhante.gui"]))
 if cmd == "test":
     sys.exit(subprocess.call([py, "-m", "pytest", "-q"]))
 elif cmd == "avaliar":

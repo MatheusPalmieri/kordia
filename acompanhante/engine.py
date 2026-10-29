@@ -22,8 +22,9 @@ class Output:
 
 
 class Engine:
-    def __init__(self, tracker, memory, key=None, metronome=False):
+    def __init__(self, tracker, memory, key=None, metronome=False, lookahead=0.0):
         self.tracker, self.memory, self.key, self.metronome = tracker, memory, key, metronome
+        self.lookahead = lookahead   # live: audio output latency; scheduled events are emitted this much earlier
         self.cur = (None, None)
         self._forget()
 
@@ -96,7 +97,7 @@ class Engine:
                     out = self._set(None, None, t)
                     self._forget()
                     return out
-                if t >= self.stop_at:
+                if t + self.lookahead >= self.stop_at:
                     return self._set(None, None, max(t, self.stop_at))
                 return None
             self.state = TRAVADO if self.memory.locked else OUVINDO   # resumed: it was a pause
@@ -122,7 +123,7 @@ class Engine:
         return self._reactive(t, idx, evidence)
 
     def _reactive(self, t, idx, evidence):
-        if self.pending and t + FRAME >= self.pending[1]:
+        if self.pending and t + self.lookahead + FRAME >= self.pending[1]:
             chord, when = self.pending
             self.pending = None
             return self._set(chord, "full", max(t, when))
@@ -171,7 +172,7 @@ class Engine:
             # the musician changed early: follow (except in metronome mode, where the grid rules)
             early = (not self.metronome and self.level == CONFIANTE and idx == nxt and self.cur[0] != nxt
                      and t >= self.confirm_at)
-            if t + FRAME >= tc or early:
+            if t + self.lookahead + FRAME >= tc or early:
                 when = t if early else max(t, tc)
                 self.memory.advance(beat)
                 self.confirm_at = when + P.LOCK_CONFIRM_BEATS * period + 0.1

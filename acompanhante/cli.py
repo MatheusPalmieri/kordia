@@ -127,7 +127,11 @@ def main(argv=None):
     v.add_argument("--todos", action="store_true")
     v.add_argument("--cenario", choices=list(scenarios.SCENARIOS))
     v.add_argument("--versao", default="dev")
+    sub.add_parser("interface", help="abre a interface gráfica ao vivo (microfone -> baixo + pad)")
     a = p.parse_args(argv)
+    if a.cmd == "interface":
+        from .gui import main as gui_main
+        return gui_main()
     if a.cmd == "gerar" and not (a.todos or a.cenario):
         p.error("gerar: use --cenario NOME ou --todos")
     {"gerar": cmd_gerar, "rodar": cmd_rodar, "avaliar": cmd_avaliar}[a.cmd](a)

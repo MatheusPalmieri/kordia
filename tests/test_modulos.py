@@ -153,3 +153,21 @@ def test_midi_file_is_valid(tmp_path):
     assert data[:4] == b"MThd" and data[14:18] == b"MTrk"
     assert int.from_bytes(data[18:22], "big") == len(data) - 22
     assert data.endswith(b"\xFF\x2F\x00")
+
+
+def test_lookahead_emits_predicted_changes_early():
+    """Live mode: predicted changes must be decided `lookahead` before they are due, so they sound on time."""
+    from acompanhante.engine import TRAVADO
+    from acompanhante.pipeline import Processor
+    audio, _ = scenarios.build("estavel_120")
+    L = 0.12
+    proc = Processor(RunConfig(tom="C"), keep_log=False, lookahead=L)
+    early = []
+    for k in range(len(audio) // P.HOP):
+        n = len(proc.acc.changes) and proc.acc.changes[-1]
+        proc.process(audio[k * P.HOP:(k + 1) * P.HOP].astype(np.float64))
+        last = proc.acc.changes[-1] if proc.acc.changes else None
+        if last and last != n and proc.engine.state == TRAVADO and last[2] == "full":
+            early.append(last[0] - proc.s / P.SR)       # due time minus decision time
+    assert len(early) >= 4
+    assert np.median(early) >= L - 2 * P.HOP / P.SR

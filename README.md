@@ -12,9 +12,24 @@ python -m venv .venv
 # .venv/bin/pip install -e .          # Linux/macOS
 ```
 
-Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest.
+Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest, sounddevice (áudio ao vivo) e tkinter (vem com o Python).
 
-## Uso
+## Uso ao vivo (interface)
+
+Dê dois cliques em **`Acompanhante.bat`** (ou rode `python -m acompanhante.gui`).
+
+1. Escolha a **entrada** (microfone, interface de áudio, saída da mesa) e a **saída** (já vem o alto-falante padrão).
+2. Toque um pouco e ajuste o **ganho da entrada** até a barra de nível ficar verde e passar da marca cinza quando você bate.
+3. Opcional: **tom principal**, **BPM fixo** (se a igreja usa metrônomo) e **progressão conhecida** (ex.: `C G Am F`). Sem nada disso ele só ouve e segue.
+4. Clique em **Iniciar** e toque. A janela mostra o acorde que ele está tocando, o que está ouvindo (com a confiança), o estado, o BPM com o pulso do compasso e o padrão aprendido.
+
+Volume do acompanhamento e "ouvir também o violão na saída" mudam com ele tocando; tom, BPM e progressão valem a partir do próximo Iniciar.
+
+> **Importante:** com microfone e alto-falante no mesmo ambiente, o sistema ouve o próprio baixo/pad e se confunde (é o pior cenário medido, ver resultados). Prefira **fone de ouvido** ou o violão **ligado direto** (cabo/interface).
+
+A latência do driver de áudio é medida ao iniciar e compensada nas trocas previstas e no pulso do baixo. As trocas reativas (antes de ele aprender o padrão) continuam chegando ~½ pulso atrasadas.
+
+## Uso em arquivos e avaliação
 
 ```bash
 # testes (unitários + regressão dos cenários)

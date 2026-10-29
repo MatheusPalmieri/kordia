@@ -38,10 +38,11 @@ flowchart LR
 | `engine.py` | máquina de estados, escada de confiança, parada, dinâmica | `Engine.step(...) -> decisão` |
 | `accomp.py` | transforma decisões em eventos de nota (baixo/pad) | `Accompanist.update(...) -> [Event]` |
 | `synth.py` | sintetizador streaming de baixo/pad; escrita MIDI | `Synth.render(n)`, `write_midi` |
-| `pipeline.py` | liga tudo, roda bloco a bloco, registra log | `run(audio, cfg) -> Result` |
+| `pipeline.py` | `Processor`: o sistema inteiro, um bloco por vez; `run()` para arquivos | `Processor.process(bloco) -> saída`; `run(audio, cfg) -> Result` |
 | `metrics.py` | compara resultado com verdade-base | `evaluate(result, truth) -> dict` |
 | `report.py` | figura PNG por cenário | `plot(result, truth, path)` |
-| `cli.py` | `gerar`, `rodar`, `avaliar` | — |
+| `cli.py` | `gerar`, `rodar`, `avaliar`, `interface` | — |
+| `gui.py` | interface ao vivo (tkinter) + fluxo de áudio duplex (sounddevice) | `python -m acompanhante.gui` |
 
 ## Fluxo por bloco
 
@@ -91,3 +92,18 @@ Todos em `acompanhante/params.py`, com unidade e motivo. Ao portar para C++, ess
 - `eventos.json` e `.mid` (canal 1 baixo, canal 2 pad, CC11 para expressão);
 - `*_render.wav`: violão original + baixo + pad;
 - log por quadro (tempo, onset, BPM estimado, acorde ouvido, confiança, acorde tocado, estado, nível), usado por métricas e relatórios.
+
+## Modo ao vivo
+
+```mermaid
+flowchart LR
+    MIC[Entrada<br/>mic / interface] -->|bloco 512 @ 22 050 Hz| CB[callback de áudio]
+    CB -->|× ganho| PR[Processor.process]
+    PR -->|baixo + pad × volume| OUT[Saída<br/>alto-falante / fone]
+    PR -. estado, acorde, BPM .-> UI[Janela tkinter<br/>atualiza a cada 50 ms]
+    UI -->|ganho, volume, monitor| CB
+```
+
+- O fluxo duplex é aberto a 22 050 Hz com bloco de 512 no host API padrão (MME no Windows reamostra sozinho). Pior caso medido: 11 ms de processamento por bloco de 23 ms.
+- **Compensação de latência (`lookahead`):** a latência informada pelo driver (entrada + saída, ~115 ms no MME) é passada ao `Processor`. O sintetizador renderiza esse tanto à frente do áudio de entrada, e o motor emite as trocas previstas, a parada e os ataques do baixo nesse mesmo adiantamento, para soarem no tempo. Trocas reativas não têm como ser adiantadas: começam na hora em que são decididas.
+- Sem log por quadro no modo ao vivo (memória limitada).

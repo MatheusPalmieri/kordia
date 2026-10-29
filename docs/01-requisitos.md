@@ -4,7 +4,7 @@
 
 **Dentro (agora):** violão (ou guitarra limpa) tocando acordes completos com batida; saída de baixo + pad seguindo os acordes; andamentos de ≈ 60 a 130 BPM, mas sem quebrar fora disso.
 
-**Fora (por enquanto):** solos, melodias e licks (risco de o sistema tratar notas de solo como acordes; solução futura: footswitch "congelar acorde"); reconhecer a música; acompanhar voz ou bateria; interface gráfica, VST, mobile.
+**Fora (por enquanto):** solos, melodias e licks (risco de o sistema tratar notas de solo como acordes; solução futura: footswitch "congelar acorde"); reconhecer a música; acompanhar voz ou bateria; VST, mobile.
 
 ## Requisitos funcionais
 
@@ -57,3 +57,11 @@
 - **RNF3 Portabilidade:** algoritmos simples e explícitos, portáveis para C++/JUCE. Todos os parâmetros (janelas, limiares) ficam documentados em `acompanhante/params.py`.
 - **RNF4 Mensurabilidade:** toda mudança relevante é avaliada nos cenários e registrada em `docs/resultados.md`.
 - **RNF5 Segurança musical:** falso disparo (tocar quando não devia) é o erro mais caro e tem métrica própria.
+
+### RF9 — Uso ao vivo por interface gráfica
+- Escolher dispositivo de **entrada** (microfone, interface, mesa) e de **saída** (padrão: alto-falante do sistema).
+- Configurar, todos opcionais: tom principal, BPM fixo (liga/desliga o modo metrônomo), progressão conhecida (liga/desliga o modo decorado). BPM e progressão podem ser usados juntos.
+- Ajustar ganho de entrada (com medidor de nível), volume do acompanhamento e monitorar o violão na saída.
+- Botão **Iniciar/Parar**. Ao iniciar, o sistema ouve a entrada e toca baixo + pad em tempo real.
+- Mostrar ao vivo: acorde tocado, acorde ouvido e confiança, estado (em linguagem simples), BPM e pulso no compasso, padrão aprendido.
+- Compensar a latência de saída do driver nas trocas previstas e no pulso do baixo.

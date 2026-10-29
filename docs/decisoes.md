@@ -31,3 +31,13 @@ Formato: data — decisão. **Motivo.** *Alternativas.*
 25. **PLL_BETA mantido em 0,10.** Testado 0,2 e 0,3 para seguir o ritardando: não melhorou `desacelerando_final` e aumentou o jitter de BPM nos outros cenários.
 26. **Latência separada em reativa × travada nas métricas.** A média misturada escondia o efeito da previsão, que é a tese central.
 27. **Teste de causalidade automático** (`test_pipeline_is_causal`): trocar o futuro do áudio não pode mudar nenhum evento nem amostra de saída antes do ponto de troca.
+
+## 2026-10-29 — Interface ao vivo
+
+28. **Interface em tkinter + áudio em sounddevice (PortAudio).** tkinter vem com o Python; sounddevice é a forma mais direta de abrir entrada e saída em tempo real. *Alternativas: PyQt (dependência pesada), app web (latência e acesso a áudio piores), JUCE (fica para a versão C++).*
+29. **Um único `Processor` para arquivo e ao vivo.** O `run()` foi refatorado para usá-lo; as métricas ficaram idênticas ao baseline. Garante que o que é medido nos cenários é o que toca ao vivo.
+30. **Fluxo aberto direto a 22 050 Hz no host API padrão (MME).** O Windows reamostra; evita reamostrar em Python dentro do callback. *Limite: MME tem latência alta (~115 ms medidos); WASAPI/ASIO de baixa latência ficam para o C++/JUCE.*
+31. **Compensação da latência de saída (`lookahead`).** Sem ela, ~115 ms de atraso de driver anulariam o ganho da previsão (~30 ms). Trocas previstas, fim do compasso e ataques do baixo são emitidos adiantados; trocas reativas, não (não dá para prever).
+32. **Ataque do baixo nos tempos 1 e 3 agora é agendado no tempo previsto** (antes era no bloco em que o tempo passava, até 23 ms atrasado). Necessário para o `lookahead` funcionar no baixo.
+33. **Tom, BPM e progressão só mudam ao reiniciar; ganho, volume e monitor mudam ao vivo.** Trocar o modo no meio exigiria recriar o rastreador e a memória; Parar/Iniciar faz isso de forma explícita.
+34. **Monitor do violão desligado por padrão e aviso de realimentação na janela.** Microfone + alto-falante é o pior cenário medido (`realimentacao`).
