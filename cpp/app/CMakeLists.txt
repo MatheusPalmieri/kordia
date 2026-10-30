@@ -49,6 +49,23 @@ if(_patched EQUAL -1)
   message(STATUS "Kordia: patched JUCE WASAPI raw capture")
 endif()
 
+# Patch (JUCE 8.0.15): creating a device probes every channel count up to 36 at every rate and format, about 2000
+# IsFormatSupported calls per device (measured here: 4.4 s frozen on each open). We open 1 input and 2 outputs, which
+# the mix format already covers; the probe only ever matters for channels above it. Same idea as above.
+file(READ ${_wasapi} _src)
+string(FIND "${_src}" "kordia probe" _patched)
+if(_patched EQUAL -1)
+  set(_old_probe "static constexpr auto maxNumChannelsToQuery = static_cast<int> (AudioChannelSet::maxChannelsOfNamedLayout);")
+  set(_new_probe "static constexpr auto maxNumChannelsToQuery = 1; /* kordia probe */")
+  string(FIND "${_src}" "${_old_probe}" _found)
+  if(_found EQUAL -1)
+    message(FATAL_ERROR "JUCE WASAPI probe patch no longer applies: check juce_WASAPI_windows.cpp (queryMaxNumChannels) after a JUCE upgrade")
+  endif()
+  string(REPLACE "${_old_probe}" "${_new_probe}" _src "${_src}")
+  file(WRITE ${_wasapi} "${_src}")
+  message(STATUS "Kordia: patched JUCE WASAPI channel probe")
+endif()
+
 # WebView2 SDK (NuGet package) for the UI; downloaded once into the build tree
 set(WEBVIEW2_VERSION 1.0.2210.55)
 set(WEBVIEW2_DIR ${CMAKE_BINARY_DIR}/webview2/Microsoft.Web.WebView2.${WEBVIEW2_VERSION})

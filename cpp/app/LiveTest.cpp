@@ -26,14 +26,20 @@ int main(int argc, char** argv) {
         q->setProperty("clique", true);
     }
     q->setProperty("contagem", env("KORDIA_FIXED_BPM").isNotEmpty());
-    auto err = engine.start(request, true);   // as the app opens: only listens
+    auto timed = [](const char* what, auto&& f) {
+        auto t0 = juce::Time::getMillisecondCounterHiRes();
+        f();
+        std::cout << "  " << what << ": " << juce::roundToInt(juce::Time::getMillisecondCounterHiRes() - t0) << " ms" << std::endl;
+    };
+    juce::String err;
+    timed("abrir ouvindo", [&] { err = engine.start(request, true); });   // as the app opens: only listens
     if (err.isNotEmpty()) return std::cout << "listen: " << err << std::endl, 1;
     juce::Thread::sleep(500);
     auto heard = engine.snapshot();
     std::cout << "ouvindo: running " << heard["running"].toString() << " listening " << heard["listening"].toString() << " db "
               << heard["db"].toString() << " nota " << heard["note"].toString() << " sessao " << engine.sessionDir().getFullPathName() << std::endl;
 
-    err = engine.start(request);
+    timed("iniciar", [&] { err = engine.start(request); });
     std::cout << "driver " << request["type"].toString() << " | start: " << (err.isEmpty() ? "ok" : err) << std::endl;
     if (err.isNotEmpty()) return 1;
 
@@ -55,7 +61,8 @@ int main(int argc, char** argv) {
               << " | latency_ms " << (int)s["latency_ms"] << " | xruns " << (int)s["xruns"] << " | bpm "
               << s["bpm"].toString() << " | error " << s["error"].toString() << std::endl;
     std::cout << "  out " << juce::JSON::toString(s["out"], true) << std::endl;
-    engine.stop();
+    timed("parar", [&] { engine.stop(); });
+    timed("voltar a ouvir", [&] { engine.start(request, true); });
     std::cout << "  session " << engine.sessionDir().getFullPathName() << std::endl;
     return 0;
 }
