@@ -1,4 +1,4 @@
-// The whole system for one block at a time (Python: pipeline.Processor).
+// The whole system for one block at a time.
 #include <algorithm>
 #include <stdexcept>
 

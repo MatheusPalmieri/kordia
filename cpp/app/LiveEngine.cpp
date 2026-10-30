@@ -11,7 +11,7 @@ static void copyText(char* dst, size_t cap, const std::string& s) {
 }
 
 // ------------------------------------------------------------------ session recording
-// Same folder layout as acompanhante/session.py, so `python -m acompanhante.cli rodar --sessao` replays it.
+// Folder layout documented in cpp/lab/lab.h; `kordia_lab rodar --sessao` replays it.
 // The audio thread only writes into lock-free FIFOs; this thread does all file I/O.
 struct Row {
     double t, db, bpm, tempoConf, conf, procMs;
@@ -330,14 +330,11 @@ void LiveEngine::stop() {
     dm_.closeAudioDevice();
     if (rec_) rec_->finish(juce::var(s));
     rec_.reset();
-    // the report comes from the Python lab replaying the session (same algorithm, offline)
-    auto python = juce::File(KORDIA_REPO_DIR).getChildFile(".venv/Scripts/python.exe");
-    if (python.existsAsFile()) {
-        if (reportProc_.start(juce::StringArray{python.getFullPathName(), "-m", "acompanhante.cli", "rodar", "--sessao",
-                                          session_.getFullPathName(), "--saida", session_.getFullPathName()},
-                        0))
-            report_ = "gerando";
-    }
+    // the report comes from the lab replaying the session (same core, offline)
+    juce::File lab(KORDIA_LAB_EXE);
+    if (lab.existsAsFile() && reportProc_.start(juce::StringArray{lab.getFullPathName(), "rodar", "--sessao", session_.getFullPathName(),
+                                                                  "--saida", session_.getFullPathName()}, 0))
+        report_ = "gerando";
 }
 
 void LiveEngine::setLive(const juce::var& q) {
@@ -560,8 +557,8 @@ juce::var LiveEngine::snapshot() {
         warn = juce::String::fromUTF8("Muitas falhas de áudio: pare e escolha uma latência do driver maior.");
     o->setProperty("warning", warn.isEmpty() ? juce::var() : juce::var(warn));
     o->setProperty("session", session_ == juce::File() ? juce::var() : juce::var(session_.getFullPathName()));
-    if (report_ == "gerando" && session_.getChildFile("replay_" + session_.getFileName() + ".png").existsAsFile())
-        report_ = "pronto";
+    if (report_ == "gerando" && !reportProc_.isRunning())
+        report_ = session_.getChildFile("replay_" + session_.getFileName() + ".svg").existsAsFile() ? "pronto" : "falhou";
     o->setProperty("report", report_.isEmpty() ? juce::var() : juce::var(report_));
     o->setProperty("latency_ms", juce::roundToInt(lookahead_ * 1000));
     o->setProperty("xruns", xruns());

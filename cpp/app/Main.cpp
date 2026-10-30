@@ -1,4 +1,4 @@
-// Kordia live app: one window with the web UI (acompanhante/ui/index.html, embedded) in a WebView2.
+// Kordia live app: one window with the web UI (ui/index.html, embedded) in a WebView2.
 // The page talks to LiveEngine through the WebView resource provider: GET /api/<name>?q=<json>.
 #include <BinaryData.h>
 #include <juce_gui_extra/juce_gui_extra.h>

@@ -1,12 +1,7 @@
-.venv/
-__pycache__/
-*.egg-info/
-.pytest_cache/
 dados/
 saida/
 resultados/*/relatorios/
 resultados/*/audio/
 sessoes/
 cpp/build/
-*.pyd
 /Kordia.lnk

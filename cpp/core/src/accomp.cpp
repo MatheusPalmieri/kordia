@@ -1,4 +1,4 @@
-// Accompaniment generator and dynamics (Python: accomp.py).
+// Accompaniment generator and dynamics.
 #include <algorithm>
 
 #include "kordia/core.h"
@@ -8,7 +8,7 @@ namespace kordia {
 int Dynamics::velocity() const {
     if (fixed || !level_) return P::DYN_VEL_HIGH;
     double x = std::clamp((*level_ - P::DYN_DB_LOW) / (P::DYN_DB_HIGH - P::DYN_DB_LOW), 0.0, 1.0);
-    return (int)pyround(P::DYN_VEL_LOW + x * (P::DYN_VEL_HIGH - P::DYN_VEL_LOW));
+    return (int)round_even(P::DYN_VEL_LOW + x * (P::DYN_VEL_HIGH - P::DYN_VEL_LOW));
 }
 
 double Dynamics::expression(double t, std::optional<double> last_onset, double period) const {
@@ -29,7 +29,7 @@ static void voice(int chord, Mode mode, std::optional<int> key_pc, int& bass,
     } else {
         auto pcs = chord_pcs(chord);
         root = pcs[0];
-        if (mode != Mode::Root5) third = (int)pymod(pcs[1] - root, 12);
+        if (mode != Mode::Root5) third = (int)floor_mod(pcs[1] - root, 12);
         bass = P::BASS_LOW + root;
     }
     int r = P::PAD_ROOT_LOW + root;
@@ -56,7 +56,7 @@ void Accompanist::apply(const Output& out, int vel, std::vector<Event>& evs) {
     pad_.clear();
     for (auto& [p, scale] : pad) {
         pad_.push_back(p);
-        evs.push_back(ev(out.t, EvType::On, Inst::Pad, p, (int)std::max<long long>(1, pyround(vel * scale))));
+        evs.push_back(ev(out.t, EvType::On, Inst::Pad, p, (int)std::max<long long>(1, round_even(vel * scale))));
     }
     if (bass_ >= 0) {
         evs.push_back(ev(out.t, EvType::On, Inst::Bass, bass_, vel));

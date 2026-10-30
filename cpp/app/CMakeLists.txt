@@ -1,4 +1,4 @@
-# Kordia live app (JUCE 8): WASAPI audio, the core from ../core, the web UI from acompanhante/ui in a WebView2.
+# Kordia live app (JUCE 8): WASAPI audio, the core from ../core, the web UI from ui/ in a WebView2.
 FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(JUCE)
 
@@ -38,9 +38,10 @@ juce_add_gui_app(KordiaApp
   ICON_SMALL ${CMAKE_CURRENT_SOURCE_DIR}/../../assets/kordia-32.png
   NEEDS_WEBVIEW2 TRUE)
 
-juce_add_binary_data(KordiaUI SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../../acompanhante/ui/index.html)
+juce_add_binary_data(KordiaUI SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ui/index.html)
 
 target_sources(KordiaApp PRIVATE Main.cpp LiveEngine.cpp)
+add_dependencies(KordiaApp kordia_lab)
 target_compile_definitions(KordiaApp PRIVATE
   JUCE_WEB_BROWSER=1
   JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
@@ -50,7 +51,8 @@ target_compile_definitions(KordiaApp PRIVATE
   JUCE_ASIO=0                      # needs the Steinberg SDK (licence); WASAPI low-latency covers Windows for now
   JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:KordiaApp,JUCE_PRODUCT_NAME>"
   JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:KordiaApp,JUCE_VERSION>"
-  KORDIA_REPO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../..")   # sessions go to <repo>/sessoes, reports use <repo>/.venv
+  KORDIA_REPO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../.."   # sessions go to <repo>/sessoes
+  KORDIA_LAB_EXE="$<TARGET_FILE:kordia_lab>")           # draws the report of a finished session
 target_link_libraries(KordiaApp PRIVATE
   kordia KordiaUI
   juce::juce_gui_extra juce::juce_audio_utils juce::juce_audio_formats
@@ -59,7 +61,8 @@ target_link_libraries(KordiaApp PRIVATE
 # headless smoke test of the live path (real devices, volume 0)
 juce_add_console_app(KordiaLiveTest PRODUCT_NAME "KordiaLiveTest")
 target_sources(KordiaLiveTest PRIVATE LiveTest.cpp LiveEngine.cpp)
+add_dependencies(KordiaLiveTest kordia_lab)
 target_compile_definitions(KordiaLiveTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_WASAPI=1 JUCE_ASIO=0
-  KORDIA_REPO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../..")
+  KORDIA_REPO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../.." KORDIA_LAB_EXE="$<TARGET_FILE:kordia_lab>")
 target_link_libraries(KordiaLiveTest PRIVATE kordia juce::juce_audio_utils juce::juce_audio_formats
   juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)

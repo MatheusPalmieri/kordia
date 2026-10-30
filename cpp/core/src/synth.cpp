@@ -1,4 +1,4 @@
-// Streaming stereo synth: worship pad, bass, click, Freeverb-style reverb, soft limiter (Python: synth.py).
+// Streaming stereo synth: worship pad, bass, click, Freeverb-style reverb, soft limiter.
 // Real-time safe after construction: tables are precomputed, voices are reserved, no allocation in render().
 #include <algorithm>
 

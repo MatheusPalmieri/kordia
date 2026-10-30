@@ -1,7 +1,5 @@
-// Kordia core: the whole accompaniment system, one block at a time.
-// Line-by-line port of the Python reference in acompanhante/ (same names, same order of operations).
-// The Python package stays the lab: scenarios, metrics and reports run this core through the
-// kordia_core bindings and must give the same numbers (tests/test_cpp.py).
+// Kordia core: the whole accompaniment system, one block at a time. It has no JUCE dependency: the live app
+// (cpp/app) and the lab (cpp/lab: scenarios, metrics, exam, reports) both run this code.
 #pragma once
 
 #include <array>
@@ -19,48 +17,113 @@
 namespace kordia {
 
 // ------------------------------------------------------------------ parameters
-// Mirrors acompanhante/params.py (checked by tests/test_cpp.py::test_params_match).
+// All tunable numbers in one place, with unit and reason. Times in seconds unless noted.
 namespace P {
-constexpr int HOP = 512, ONSET_WIN = 1024, CHROMA_WIN = 4096;
-constexpr double AGC_TARGET_DB = -28.0, AGC_UP = 0.05, AGC_DOWN = 0.01, AGC_MIN_DB = -6.0, AGC_MAX_DB = 24.0;
-constexpr double ONSET_FMIN = 150.0, ONSET_FMAX = 5000.0;
-constexpr int ONSET_MEDIAN_FRAMES = 32;
-constexpr double ONSET_K = 1.5, ONSET_DELTA = 0.25, ONSET_REFRACTORY = 0.10, SILENCE_DB = -55.0;
-constexpr double ONSET_MASK = 0.25, ONSET_MASK_TIME = 0.3;
-constexpr double TEMPO_ENV_SECONDS = 8.0;
-constexpr int TEMPO_ACF_EVERY = 10;
-constexpr double TEMPO_BPM_MIN = 50.0, TEMPO_BPM_MAX = 200.0, TEMPO_PRIOR_BPM = 105.0, TEMPO_PRIOR_OCTAVES = 0.7;
-constexpr int TEMPO_MIN_ONSETS = 6;
-constexpr double PLL_WINDOW = 0.2, PLL_ALPHA = 0.35, PLL_BETA = 0.10, TEMPO_RESET_DEV = 0.12;
-constexpr int TEMPO_CONF_BEATS = 8, BEATS_PER_BAR = 4;
-constexpr double CHROMA_FMIN = 60.0, CHROMA_FMAX = 2500.0, CHROMA_GAMMA = 100.0;
+constexpr int HOP = 512;               // block size = analysis hop (~23 ms at 22.05 kHz)
+constexpr int ONSET_WIN = 1024;        // FFT for onset flux (~46 ms): time resolution
+constexpr int CHROMA_WIN = 4096;       // FFT for chroma (~186 ms): ~5.4 Hz/bin, enough for low E (82 Hz)
+
+// --- input level (automatic gain before analysis) ---
+// Flux and chroma compression depend on level: a quiet mic (-45 dB, 3rd live session) lost 3/4 of the strums.
+// It only adapts on blocks above SILENCE_DB: room noise never pumps the gain up.
+constexpr double AGC_TARGET_DB = -28.0;   // playing level the analysis was calibrated for (synthetic scenarios ~ -28 dB)
+constexpr double AGC_UP = 0.05, AGC_DOWN = 0.01;   // per-block tracking rates: louder fast (~0.5 s), softer slow (~2.3 s)
+constexpr double AGC_MIN_DB = -6.0, AGC_MAX_DB = 24.0;
+
+// --- onsets ---
+constexpr double ONSET_FMIN = 150.0, ONSET_FMAX = 5000.0;   // Hz; ignores our own bass attacks (feedback risk)
+constexpr int ONSET_MEDIAN_FRAMES = 32;      // adaptive threshold history (~0.75 s)
+constexpr double ONSET_K = 1.5;              // threshold = median * K + DELTA
+constexpr double ONSET_DELTA = 0.25;         // absolute floor (flux units); 0.6 missed half the strums of a real mic (2026-10-29)
+constexpr double ONSET_MASK = 0.25, ONSET_MASK_TIME = 0.3;   // after a strum the threshold is >= 25% of its flux for 0.3 s (its own ringing is not a strum)
+constexpr double ONSET_REFRACTORY = 0.10;    // min gap between onsets (a 6-string strum spreads ~70 ms; 16ths at 130 BPM = 115 ms)
+constexpr double SILENCE_DB = -55.0;         // frame RMS below this = silence
+
+// --- tempo (free mode) ---
+constexpr double TEMPO_ENV_SECONDS = 8.0;    // onset envelope history for autocorrelation
+constexpr int TEMPO_ACF_EVERY = 10;          // frames between ACF re-estimates (~0.23 s)
+constexpr double TEMPO_BPM_MIN = 50.0, TEMPO_BPM_MAX = 200.0;
+constexpr double TEMPO_PRIOR_BPM = 105.0;    // log-normal prior center (resolves 8ths vs quarters)
+constexpr double TEMPO_PRIOR_OCTAVES = 0.7;  // prior width (std, in octaves)
+constexpr int TEMPO_MIN_ONSETS = 6;          // onsets needed before first estimate
+constexpr double PLL_WINDOW = 0.2;           // onset within +/-20% of a period corrects the PLL
+constexpr double PLL_ALPHA = 0.35;           // phase correction gain
+constexpr double PLL_BETA = 0.10;            // period correction gain
+constexpr double TEMPO_RESET_DEV = 0.12;     // ACF disagrees with PLL period by >12% for a while -> reset period
+constexpr int TEMPO_CONF_BEATS = 8;          // confidence = share of last N beats with an aligned onset
+constexpr int BEATS_PER_BAR = 4;
+
+// --- chords ---
+constexpr double CHROMA_FMIN = 60.0, CHROMA_FMAX = 2500.0;   // Hz
+constexpr double CHROMA_GAMMA = 100.0;       // log compression log(1 + gamma*mag)
 constexpr int TEMPLATE_HARMONICS = 6;
-constexpr double TEMPLATE_DECAY = 0.6;
-constexpr double HMM_BETA = 18.0, HMM_N_SCORE = 0.55, HMM_P_CHANGE = 0.002, HMM_P_CHANGE_ONSET = 0.02,
-                 HMM_P_CHANGE_STRONG = 0.08, HMM_ONSET_BOOST_TIME = 0.25, KEY_PRIOR_OUT = 0.3;
+constexpr double TEMPLATE_DECAY = 0.6;       // weight of harmonic h = decay^(h-1)
+constexpr double HMM_BETA = 18.0;            // likelihood sharpness exp(beta * cosine)
+constexpr double HMM_N_SCORE = 0.55;         // cosine-equivalent score for "no chord"
+constexpr double HMM_P_CHANGE = 0.002;       // per-frame change probability (persistence)
+constexpr double HMM_P_CHANGE_ONSET = 0.02;  // right after an onset
+constexpr double HMM_P_CHANGE_STRONG = 0.08; // right after an onset on a strong beat (1 or 3)
+constexpr double HMM_ONSET_BOOST_TIME = 0.25;   // how long the boost lasts after the onset
+constexpr double KEY_PRIOR_OUT = 0.3;        // non-diatonic chords: less likely, never blocked
+// confidence = smoothed per-frame softmax(CONF_BETA * cosine) at the HMM's chord; the HMM posterior itself saturates at
+// ~1.0 and is useless as confidence
 constexpr double CONF_BETA = 25.0, CONF_SMOOTH = 0.3;
-constexpr double CONF_HIGH = 0.70, CONF_LOW = 0.45, CHANGE_AFTER_ONSET = 0.35, DOUBT_TO_FALLBACK_BARS = 1.0,
-                 STOP_BEATS = 1.5, STOP_IOI_FACTOR = 1.25, STOP_DEFAULT_SECONDS = 1.0, FORGET_BARS = 2.0;
-constexpr double LOCK_CONFIRM_BEATS = 0.5;
-constexpr int LOCK_MAX_MISSES = 3;
-constexpr double LOCK_CONTRA_BEATS = 0.5, LOCK_LATE_BEATS = 1.0;
-constexpr int CYCLE_MIN = 2, CYCLE_MAX = 8;
-constexpr double HOLD_STOP_BARS = 1.25, HOLD_CONTRA_BARS = 1.5;
-constexpr double KEY_ROLE_WEIGHTS[6] = {1.6, 1.2, 1.2, 1.0, 0.7, 0.7};   // I, IV, V, vi, ii, iii
-constexpr double LEARN_TONIC_SCALE = 0.6;
-constexpr double METRO_LATE_BEATS = 0.5;
-constexpr int SLOT_BEATS = 2;
-constexpr double SLOT_LAG = 0.08, SLOT_SKIP = 0.10;
-constexpr int GRID_MAX_SLOTS = 16, GRID_HISTORY = 64, GRID_TAIL = 3, GRID_LAPS = 3, GRID_MISS = 2;
-constexpr double GRID_MATCH = 0.75, GRID_LOCK_LAPS = 2.0, COUNT_EARLY_BEATS = 0.25;
-constexpr double DYN_DB_LOW = -45.0, DYN_DB_HIGH = -12.0;
-constexpr int DYN_VEL_LOW = 60, DYN_VEL_HIGH = 120;
-constexpr double DYN_SMOOTH = 0.25, DYN_SILENCE_DECAY = 1.5;
-constexpr int BASS_LOW = 36, PAD_ROOT_LOW = 48;
-constexpr double PAD_SHIMMER = 0.35;
-constexpr double PAD_ATTACK = 0.9, PAD_RELEASE = 2.2, PAD_CUTOFF = 1800.0, PAD_LEVEL = 0.16, PAD_DRY = 0.75,
-                 PAD_WET = 0.6, REVERB_ROOM = 0.86, REVERB_DAMP = 0.35, BASS_LEVEL = 0.45, BASS_RELEASE = 0.15,
-                 CLICK_LEVEL = 0.5, STOP_FADE = 0.6;
+
+// --- decision ---
+constexpr double CONF_HIGH = 0.70;           // confidence to accept a chord (CONFIANTE)
+constexpr double CONF_LOW = 0.45;            // below this: DUVIDA
+constexpr double CHANGE_AFTER_ONSET = 0.35;  // reactive change only this soon after a strum
+constexpr double DOUBT_TO_FALLBACK_BARS = 1.0;   // doubt longer than this -> FALLBACK
+constexpr double STOP_BEATS = 1.5;           // no onset for max(STOP_BEATS beats, STOP_IOI_FACTOR*max recent IOI) -> stopped
+constexpr double STOP_IOI_FACTOR = 1.25;
+constexpr double STOP_DEFAULT_SECONDS = 1.0; // stop timeout when tempo is unknown
+constexpr double FORGET_BARS = 2.0;          // silence longer than this -> forget progression and tempo
+constexpr double LOCK_CONFIRM_BEATS = 0.5;   // after a predicted change, wait this before checking the audio
+constexpr int LOCK_MAX_MISSES = 3;           // weak disagreements (another real chord, low confidence) in a row before unlocking
+constexpr double LOCK_CONTRA_BEATS = 0.5;    // a confident disagreement must last this long to override the learned pattern
+constexpr double LOCK_LATE_BEATS = 1.0;      // hearing the previous chord up to 1 beat after a predicted change = musician late
+constexpr int CYCLE_MIN = 2, CYCLE_MAX = 8;  // cycle length in chords
+// "manter o padrão" (hold): once the cycle is locked it is trusted over the audio
+constexpr double HOLD_STOP_BARS = 1.25;      // with a held pattern, stop only after 5 beats of silence (late entries keep playing)
+constexpr double HOLD_CONTRA_BARS = 1.5;     // confident disagreement this long = the musician really changed: relearn (2.0 tested: key change without a pause 0.88 vs 0.90; mistakes scenario equal)
+constexpr double KEY_ROLE_WEIGHTS[6] = {1.6, 1.2, 1.2, 1.0, 0.7, 0.7};   // I, IV, V, vi, ii, iii: key detection from heard chords
+constexpr double LEARN_TONIC_SCALE = 0.6;    // pad level while learning / in fallback (quiet, only the pad)
+constexpr double METRO_LATE_BEATS = 0.5;     // metronome mode: change heard up to this after a strong beat applies now
+
+// --- click grid: with a click the harmony is read per half bar ("when" comes from the click, "which" from the whole
+// half bar). Single frames lost chords and dated them late on the real guitar (sessions of 2026-10-30).
+constexpr int SLOT_BEATS = 2;                // one slot = half a bar: chords change on beats 1 and 3
+constexpr double SLOT_LAG = 0.08;            // strums reach the input this late against the click (median 54-116 ms in the sessions)
+constexpr double SLOT_SKIP = 0.10;           // right after the change the FFT window still holds the previous chord
+constexpr int GRID_MAX_SLOTS = 16;           // longest cycle: 8 bars
+constexpr int GRID_HISTORY = 64;             // slots kept: 3 laps of the longest cycle, and room for a cycle to show itself
+constexpr double GRID_MATCH = 0.75;          // share of one lap's slots that must repeat in the next one (same root)
+constexpr double GRID_LOCK_LAPS = 2.0;       // laps heard before locking
+constexpr int GRID_TAIL = 3;                 // the newest slots must repeat too: a section that just changed is not a cycle
+constexpr int GRID_LAPS = 3;                 // each slot's chord = sum of its last laps: a misheard bar is outvoted
+constexpr int GRID_MISS = 2;                 // consecutive slots against the pattern before it is dropped (hold: 2 * HOLD_CONTRA_BARS)
+constexpr double COUNT_EARLY_BEATS = 0.25;   // a strum this early still belongs to the first bar after the count-in
+
+// --- dynamics ---
+constexpr double DYN_DB_LOW = -45.0, DYN_DB_HIGH = -12.0;   // strum loudness mapped to velocity range
+constexpr int DYN_VEL_LOW = 60, DYN_VEL_HIGH = 120;         // floor raised: soft playing must still be clearly audible
+constexpr double DYN_SMOOTH = 0.25;          // EMA weight per strum (smoothing over ~4 strums)
+constexpr double DYN_SILENCE_DECAY = 1.5;    // expression decay time constant while not strumming (pause "abaixa")
+
+// --- accompaniment ---
+constexpr int BASS_LOW = 36;                 // bass root in MIDI 36..47 (C2..B2)
+constexpr int PAD_ROOT_LOW = 48;             // pad open voicing: root in C3..B3, fifth, octave, tenth (third + 12), shimmer (+24)
+constexpr double PAD_SHIMMER = 0.35;         // relative velocity of the +2-octave shimmer note
+
+// --- sound ---
+constexpr double PAD_ATTACK = 0.9;           // smooth swell
+constexpr double PAD_RELEASE = 2.2;          // chords crossfade into each other (worship pad)
+constexpr double PAD_CUTOFF = 1800.0;        // Hz, low-pass on the pad bus (warm, not organ-bright)
+constexpr double PAD_LEVEL = 0.16;           // per note (3 detuned saws averaged)
+constexpr double PAD_DRY = 0.75, PAD_WET = 0.6;   // reverb mix
+constexpr double REVERB_ROOM = 0.86, REVERB_DAMP = 0.35;
+constexpr double BASS_LEVEL = 0.45, BASS_RELEASE = 0.15, CLICK_LEVEL = 0.5;
+constexpr double STOP_FADE = 0.6;            // release used when the musician stops (short, not the long pad release)
 // pad layers: worship, orgao, piano, guitarra, cordas (every pad note is played by each layer with gain > 0)
 constexpr int N_LAYERS = 5;
 constexpr double ORGAN_LEVEL = 0.13, ORGAN_ATTACK = 0.015, ORGAN_RELEASE = 0.12;
@@ -71,9 +134,9 @@ constexpr double STRINGS_LEVEL = 0.19, STRINGS_ATTACK = 0.6, STRINGS_RELEASE = 1
 
 constexpr double INF = std::numeric_limits<double>::infinity();
 
-// Python semantics helpers: round() is half-to-even, % is always non-negative.
-inline long long pyround(double x) { return (long long)std::nearbyint(x); }
-inline long long pymod(long long a, long long m) { long long r = a % m; return r < 0 ? r + m : r; }
+// round() half to even; % that is never negative.
+inline long long round_even(double x) { return (long long)std::nearbyint(x); }
+inline long long floor_mod(long long a, long long m) { long long r = a % m; return r < 0 ? r + m : r; }
 
 // ------------------------------------------------------------------ theory
 constexpr int N_IDX = 24;  // vocabulary: 0..11 major, 12..23 minor, 24 = no chord
@@ -145,7 +208,7 @@ private:
 };
 
 // ------------------------------------------------------------------ tempo
-class Grid {  // shared beat-grid bookkeeping (Python: tempo._Grid)
+class Grid {  // shared beat-grid bookkeeping
 public:
     virtual ~Grid() = default;
     virtual void reset();
@@ -156,12 +219,12 @@ public:
     std::optional<double> bpm() const { return period > 0 ? std::optional<double>(60.0 / period) : std::nullopt; }
     double beat_phase(double t) const { return next_index - (next_beat - t) / period; }
     double time_of_beat(long long idx) const { return next_beat + (idx - next_index) * period; }
-    long long bar_pos(long long idx) const { return pymod(idx - bar_offset, P::BEATS_PER_BAR); }
+    long long bar_pos(long long idx) const { return floor_mod(idx - bar_offset, P::BEATS_PER_BAR); }
     double next_downbeat(double t) const;
     bool is_strong(double t, double tol = 0.25) const;
     void observe_change(double t);
 
-    double period = 0.0;  // 0 = unknown (Python: None)
+    double period = 0.0;  // 0 = unknown
     double next_beat = 0.0;
     long long next_index = 0, bar_offset = 0;
     std::optional<double> first_onset;
@@ -226,6 +289,7 @@ public:
     int pos = -1;
     std::vector<int> known, lengths;   // empty = none
     std::vector<int> cycle;            // click grid: chord of each slot of the lap (empty = none)
+    bool has_slot() const { return last_slot_.has_value(); }
     bool corrected = false;            // the last push_slot changed the cycle
 private:
     void try_lock();
@@ -248,11 +312,12 @@ enum class Level { Confiante, Duvida, Perdido };
 enum class Mode { Silence, Full, Root5, Tonic };
 const char* state_name(State s);
 const char* level_name(Level l);
-const char* mode_name(Mode m);   // "" for silence (Python: None)
+const char* mode_name(Mode m);   // "" for silence
 
 struct Output { int chord; Mode mode; double t; };   // chord -1 = none
 
 class Engine {
+    friend struct EngineProbe;   // tests reach the safety fallback directly
 public:
     Engine(Grid& tracker, ProgressionMemory& memory, std::optional<int> key_pc, bool metronome, double lookahead);
     using Slot = std::pair<long long, Chroma>;   // half-bar index, chroma sum
@@ -367,7 +432,7 @@ private:
 };
 
 // ------------------------------------------------------------------ processor
-struct Frame {   // per-block log row (Python: Processor.log)
+struct Frame {   // per-block log row
     double t, db, flux;
     bool onset;
     double bpm, tempo_conf;    // bpm NaN when unknown

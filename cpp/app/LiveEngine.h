@@ -1,5 +1,5 @@
 // Live engine: audio device + kordia::Processor + session recording. Everything the UI needs goes through
-// devices() / start() / stop() / setLive() / snapshot(), as the JSON acompanhante/ui/index.html reads.
+// devices() / start() / stop() / setLive() / snapshot(), as the JSON ui/index.html reads.
 #pragma once
 
 #include <juce_audio_devices/juce_audio_devices.h>
@@ -79,7 +79,7 @@ private:
 
     std::string lastReason_;
     int lastXruns_ = 0;
-    juce::ChildProcess reportProc_;   // Python lab replaying the session -> report
+    juce::ChildProcess reportProc_;   // kordia_lab replaying the session -> report
 
     juce::SpinLock snapLock_;
     Snap snap_;

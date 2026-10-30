@@ -1,4 +1,4 @@
-// 'When to change' layer (Python: tempo.py).
+// 'When to change' layer.
 #include <algorithm>
 #include <cctype>
 
@@ -34,16 +34,16 @@ double Grid::next_downbeat(double t) const {
 
 bool Grid::is_strong(double t, double tol) const {
     double ph = beat_phase(t);
-    long long idx = pyround(ph);
+    long long idx = round_even(ph);
     return std::abs(ph - idx) <= tol && bar_pos(idx) % 2 == 0;
 }
 
 void Grid::observe_change(double t) {
     if (!has_period()) return;
     double ph = beat_phase(t);
-    long long idx = pyround(ph);
+    long long idx = round_even(ph);
     if (std::abs(ph - idx) > 0.3) return;
-    votes_.push_back(pymod(idx - bar_offset, P::BEATS_PER_BAR));
+    votes_.push_back(floor_mod(idx - bar_offset, P::BEATS_PER_BAR));
     if (votes_.size() > 8) votes_.pop_front();
     // Counter.most_common(1): highest count, ties broken by first appearance
     long long best = 0;
@@ -56,7 +56,7 @@ void Grid::observe_change(double t) {
         if (n > best_n) best = v, best_n = n;
     }
     if (best != 0 && best_n >= 3) {
-        bar_offset = pymod(bar_offset + best, P::BEATS_PER_BAR);
+        bar_offset = floor_mod(bar_offset + best, P::BEATS_PER_BAR);
         votes_.clear();
     }
 }
@@ -82,7 +82,7 @@ void Grid::start(double t0, double p) {
     period = p;
     long long k = (long long)std::ceil((now - t0) / p);
     next_beat = t0 + k * p;
-    next_index = pyround((next_beat - *first_onset) / p);
+    next_index = round_even((next_beat - *first_onset) / p);
 }
 
 // ------------------------------------------------------------------ TempoTracker
@@ -310,7 +310,7 @@ void ProgressionMemory::try_lock() {
         // (a two-bar tonic that closes the cycle shows up as one bar when the song starts on it)
         for (int j = 0; j < p; ++j) {
             int i = n - 1 - p + (j - k + 1 + p) % p;
-            lengths.push_back((int)std::max<long long>(half, pyround((seq_[i + 1].second - seq_[i].second) / (double)half) * half));
+            lengths.push_back((int)std::max<long long>(half, round_even((seq_[i + 1].second - seq_[i].second) / (double)half) * half));
         }
         locked = true, pos = k - 1;   // the current chord is cyc[k-1]
         return;
@@ -361,7 +361,7 @@ int ProgressionMemory::push_slot(long long slot, const Chroma& chroma, int max_m
     corrected = false;
     int heard = labels_.empty() ? N_IDX : labels_.back();
     if (locked) {
-        bool miss = heard != N_IDX && !same_chord(heard, cycle[(size_t)pymod(slot, (long long)cycle.size())]);
+        bool miss = heard != N_IDX && !same_chord(heard, cycle[(size_t)floor_mod(slot, (long long)cycle.size())]);
         misses_ = miss ? misses_ + 1 : 0;
         if (misses_ >= max_misses) unlock();
         else adopt((int)cycle.size());
@@ -379,7 +379,7 @@ int ProgressionMemory::find_cycle() const {
     int n = (int)labels_.size();
     for (int size = P::BEATS_PER_BAR / P::SLOT_BEATS; size <= P::GRID_MAX_SLOTS; size += P::BEATS_PER_BAR / P::SLOT_BEATS) {
         int tail = std::min(size, n - size);
-        if (tail < pyround((P::GRID_LOCK_LAPS - 1) * size)) continue;
+        if (tail < round_even((P::GRID_LOCK_LAPS - 1) * size)) continue;
         int hits = 0;
         bool recent = true;
         for (int i = 0; i < tail; ++i) {
@@ -403,7 +403,7 @@ bool ProgressionMemory::adopt(int size) {
     std::array<Chroma, P::GRID_MAX_SLOTS> votes{};
     int n = (int)slots_.size();
     for (int back = 0; back < std::min(P::GRID_LAPS * size, n); ++back) {
-        auto& v = votes[(size_t)pymod(*last_slot_ - back, size)];
+        auto& v = votes[(size_t)floor_mod(*last_slot_ - back, size)];
         const Chroma& c = slots_[(size_t)(n - 1 - back)];
         for (int k = 0; k < 12; ++k) v[k] += c[k];
     }
@@ -420,7 +420,7 @@ bool ProgressionMemory::adopt(int size) {
     if (first < 0 || has_n) return false;
     corrected = !cycle.empty() && cycle != next_;
     long long now = *last_slot_ + 1;
-    int offset = (int)pymod(now - first, size), start = 0;
+    int offset = (int)floor_mod(now - first, size), start = 0;
     known.clear();
     lengths.clear();
     for (int k = 0; k < size; ++k) {

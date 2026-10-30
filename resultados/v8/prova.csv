@@ -1,0 +1,853 @@
+caso,progressao,tom,variante,veredito,lock_s,lock_compassos,acc,wrong_s,played
+pop/C/clique,pop,C,clique,ok,21.35,8.0,0.97,0.0,F C G Am F C G Am F C G
+pop/C#/clique,pop,C#,clique,ok,26.68,8.0,0.976,0.0,F# C# Ab Bbm F# C# Ab
+pop/D/clique,pop,D,clique,ok,16.02,8.0,0.96,0.0,G D A Bm G D A Bm G D A
+pop/Eb/clique,pop,Eb,clique,errou,21.93,9.5,0.842,2.71,Cm Ab Eb Bb C Ab Eb Bb
+pop/E/clique,pop,E,clique,ok,20.0,7.5,0.969,0.0,E B C#m A E B C#m A E B
+pop/F/clique,pop,F,clique,ok,26.68,8.0,0.976,0.0,F C Dm Bb F C Dm Bb F C
+pop/F#/clique,pop,F#,clique,errou,16.02,8.0,0.734,6.0,Eb B F# C# Eb B F# C#
+pop/G/clique,pop,G,clique,ok,17.33,7.5,0.964,0.0,C G D Em C G D Em C G D
+pop/Ab/clique,pop,Ab,clique,ok,20.0,7.5,0.969,0.0,Fm C# Ab Eb Fm C# Ab Eb
+pop/A/clique,pop,A,clique,ok,26.68,8.0,0.976,0.0,A E F#m D A E F#m D A E
+pop/Bb/clique,pop,Bb,clique,ok,18.01,9.0,0.96,0.0,F Gm Eb Bb F Gm Eb Bb F
+pop/B/clique,pop,B,clique,ok,18.47,8.0,0.965,0.0,Abm E B F# Abm E B F#
+pop/C/tom_da_forma,pop,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,F C G Am F C G Am F C G
+pop/C#/tom_da_forma,pop,C#,tom_da_forma,ok,25.01,7.5,0.975,0.0,F# C# Ab Bbm F# C# Ab
+pop/D/tom_da_forma,pop,D,tom_da_forma,ok,16.02,8.0,0.96,0.0,G D A Bm G D A Bm G D A
+pop/Eb/tom_da_forma,pop,Eb,tom_da_forma,ok,17.33,7.5,0.964,0.0,Cm Ab Eb Bb Cm Ab Eb Bb
+pop/E/tom_da_forma,pop,E,tom_da_forma,ok,21.35,8.0,0.97,0.0,E B C#m A E B C#m A E B
+pop/F/tom_da_forma,pop,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,F C Dm Bb F C Dm Bb F C
+pop/F#/tom_da_forma,pop,F#,tom_da_forma,errou,15.02,7.5,0.959,2.01,Ebm B F# C# Ebm B F# C#
+pop/G/tom_da_forma,pop,G,tom_da_forma,errou,18.47,8.0,0.877,3.72,G D Em E C G D Em C G D
+pop/Ab/tom_da_forma,pop,Ab,tom_da_forma,ok,21.35,8.0,0.97,0.0,Fm C# Ab Eb Fm C# Ab Eb
+pop/A/tom_da_forma,pop,A,tom_da_forma,ok,26.68,8.0,0.976,0.0,A E F#m D A E F#m D A E
+pop/Bb/tom_da_forma,pop,Bb,tom_da_forma,ok,16.02,8.0,0.96,0.0,F Gm Eb Bb F Gm Eb Bb F
+pop/B/tom_da_forma,pop,B,tom_da_forma,ok,18.47,8.0,0.965,0.0,Abm E B F# Abm E B F#
+pop/C/livre,pop,C,livre,errou,16.23,6.1,0.875,2.77,F C G Am F C G Am F C G
+pop/C#/livre,pop,C#,livre,errou,20.25,6.1,0.532,20.17,F# C# Ab Bbm F# C# Ab
+pop/D/livre,pop,D,livre,errou,18.46,9.2,0.832,2.49,Bm B G D A B Bm B G D A
+pop/Eb/livre,pop,Eb,livre,ok,14.12,6.1,0.993,0.0,Cm Ab Eb Bb Cm Ab Eb Bb
+pop/E/livre,pop,E,livre,ok,17.0,6.4,0.991,0.0,E B C#m A E B C#m A E B
+pop/F/livre,pop,F,livre,ok,20.27,6.1,0.996,0.0,F C Dm Bb F C Dm Bb F C
+pop/F#/livre,pop,F#,livre,errou,13.28,6.6,0.852,1.23,Ebm B F# C# Ebm B F# C#
+pop/G/livre,pop,G,livre,ok,15.04,6.5,0.99,0.0,C G D Em C G D Em C G D
+pop/Ab/livre,pop,Ab,livre,errou,16.74,6.3,0.874,3.16,Fm C# Ab Eb Fm C# Ab Eb
+pop/A/livre,pop,A,livre,ok,20.62,6.2,0.995,0.0,A E F#m D A E F#m D A E
+pop/Bb/livre,pop,Bb,livre,ok,12.31,6.2,0.908,1.32,F Gm Eb Bb F Gm Eb Bb F
+pop/B/livre,pop,B,livre,ok,14.39,6.2,0.994,0.0,Abm E B F# Abm E B F#
+pop/C/real_clique,pop,C,real_clique,errou,22.64,8.0,0.722,9.13,G C F C D G C F C D G C
+pop/C#/real_clique,pop,C#,real_clique,errou,20.03,7.5,0.756,8.0,F# C# Ab C# F# C# Ab C#
+pop/D/real_clique,pop,D,real_clique,errou,18.91,7.5,0.755,7.55,G D A D G D A D G D A D
+pop/Eb/real_clique,pop,Eb,real_clique,errou,20.24,8.5,0.741,7.12,Ab Eb Bb Eb Ab Eb Bb Eb
+pop/E/real_clique,pop,E,real_clique,ok,22.49,7.5,0.983,0.0,C#m A E B C#m A E B C#m
+pop/F/real_clique,pop,F,real_clique,ok,32.53,11.5,0.982,0.0,Dm Bb F C Dm Bb F C Dm
+pop/F#/real_clique,pop,F#,real_clique,ok,25.37,9.5,0.981,0.0,B F# C# Ebm B F# C# Ebm
+pop/G/real_clique,pop,G,real_clique,ok,21.45,8.5,0.98,0.0,D Em C G D Em C G D Em
+pop/Ab/real_clique,pop,Ab,real_clique,ok,19.06,8.0,0.979,0.0,C# Ab Eb Fm C# Ab Eb Fm
+pop/A/real_clique,pop,A,real_clique,errou,23.98,8.0,0.924,3.09,D A E F#m D F#m A E F#m
+pop/Bb/real_clique,pop,Bb,real_clique,errou,24.06,8.5,0.862,5.04,Bb F Gm G Eb Gm Bb F G
+pop/B/real_clique,pop,B,real_clique,errou,20.03,7.5,0.866,5.53,B F# Abm Ab E B F# Abm
+pop/C/real_livre,pop,C,real_livre,ok,20.46,8.1,0.917,0.0,C G Am F G Am F C G Am
+pop/C#/real_livre,pop,C#,real_livre,errou,21.71,8.1,0.752,8.0,C# Ab F# C# Ab F# C# Ab
+pop/D/real_livre,pop,D,real_livre,errou,20.48,8.1,0.754,7.56,G D A G D A G D A G D A
+pop/Eb/real_livre,pop,Eb,real_livre,errou,19.39,8.2,0.754,7.13,Eb Bb Ab Eb Bb Ab Eb Bb
+pop/E/real_livre,pop,E,real_livre,errou,18.27,6.1,0.455,18.32,B C#m A E B C#m A E E B
+pop/F/real_livre,pop,F,real_livre,errou,17.32,6.1,0.849,2.5,F C Dm Bb F C Dm Bb F
+pop/F#/real_livre,pop,F#,real_livre,errou,13.68,5.1,0.487,17.94,C# Ebm Ebm B F# C# Ebm
+pop/G/real_livre,pop,G,real_livre,errou,15.35,6.1,0.606,14.21,Em C G D Em C G D Em C
+pop/Ab/real_livre,pop,Ab,real_livre,errou,17.58,7.4,0.807,7.21,Fm C# Ab Eb Fm C# Ab Eb
+pop/A/real_livre,pop,A,real_livre,errou,33.27,11.1,0.436,14.14,A A F#m A E F#m D A
+pop/Bb/real_livre,pop,Bb,real_livre,errou,25.77,9.1,0.491,16.94,F G Gm Bb F G Gm Bb F G
+pop/B/real_livre,pop,B,real_livre,errou,18.99,7.1,0.717,10.52,F# Ab E B F# Ab E B F#
+sensivel/C/clique,sensivel,C,clique,ok,21.35,8.0,0.97,0.0,Am F C G Am F C G Am F
+sensivel/C#/clique,sensivel,C#,clique,errou,26.68,8.0,0.804,7.5,Ab Bbm F# C# Ab Bbm F#
+sensivel/D/clique,sensivel,D,clique,ok,15.02,7.5,0.959,0.0,Bm G D A Bm G D A Bm G
+sensivel/Eb/clique,sensivel,Eb,clique,ok,18.47,8.0,0.965,0.0,Eb Bb Cm Ab Eb Bb Cm Ab
+sensivel/E/clique,sensivel,E,clique,ok,21.35,8.0,0.97,0.0,A E B C#m A E B C#m A
+sensivel/F/clique,sensivel,F,clique,errou,25.01,7.5,0.947,4.24,Bb F C Dm Bb F C Dm Bb
+sensivel/F#/clique,sensivel,F#,clique,ok,16.02,8.0,0.96,0.0,F# C# Ebm B F# C# Ebm B
+sensivel/G/clique,sensivel,G,clique,ok,18.47,8.0,0.965,0.0,Em C G D Em C G D Em C
+sensivel/Ab/clique,sensivel,Ab,clique,ok,21.35,8.0,0.97,0.0,Ab Eb Fm C# Ab Eb Fm C#
+sensivel/A/clique,sensivel,A,clique,ok,26.68,8.0,0.976,0.0,D A E F#m D A E F#m D
+sensivel/Bb/clique,sensivel,Bb,clique,ok,15.02,7.5,0.959,0.0,Bb F Gm Eb Bb F Gm Eb
+sensivel/B/clique,sensivel,B,clique,ok,17.33,7.5,0.938,1.13,E B F# Abm E B F# Abm E
+sensivel/C/tom_da_forma,sensivel,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,Am F C G Am F C G Am F
+sensivel/C#/tom_da_forma,sensivel,C#,tom_da_forma,errou,26.68,8.0,0.864,3.01,Bbm F# C# Ab Bb Bbm F#
+sensivel/D/tom_da_forma,sensivel,D,tom_da_forma,ok,16.02,8.0,0.96,0.0,Bm G D A Bm G D A Bm G
+sensivel/Eb/tom_da_forma,sensivel,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,Eb Bb Cm Ab Eb Bb Cm Ab
+sensivel/E/tom_da_forma,sensivel,E,tom_da_forma,ok,21.35,8.0,0.942,0.58,E B C#m A E B C# C#m A
+sensivel/F/tom_da_forma,sensivel,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,Bb F C Dm Bb F C Dm Bb
+sensivel/F#/tom_da_forma,sensivel,F#,tom_da_forma,errou,17.02,8.5,0.698,6.99,B F# C# Eb B F# C# Eb B
+sensivel/G/tom_da_forma,sensivel,G,tom_da_forma,ok,18.47,8.0,0.965,0.0,Em C G D Em C G D Em C
+sensivel/Ab/tom_da_forma,sensivel,Ab,tom_da_forma,ok,20.0,7.5,0.969,0.0,Ab Eb Fm C# Ab Eb Fm C#
+sensivel/A/tom_da_forma,sensivel,A,tom_da_forma,ok,25.01,7.5,0.975,0.0,D A E F#m D A E F#m D
+sensivel/Bb/tom_da_forma,sensivel,Bb,tom_da_forma,ok,15.02,7.5,0.959,0.0,Bb F Gm Eb Bb F Gm Eb
+sensivel/B/tom_da_forma,sensivel,B,tom_da_forma,errou,17.33,7.5,0.936,3.56,E B F# Abm E B F# Abm E
+sensivel/C/livre,sensivel,C,livre,errou,16.21,6.1,0.758,7.52,G Am F C G Am F C G Am
+sensivel/C#/livre,sensivel,C#,livre,errou,20.25,6.1,0.873,3.95,Ab Bbm F# C# Ab Bbm F#
+sensivel/D/livre,sensivel,D,livre,ok,14.44,7.2,0.988,0.0,Bm G D A Bm G D A Bm G
+sensivel/Eb/livre,sensivel,Eb,livre,ok,14.14,6.1,0.993,0.0,Eb Bb Cm Ab Eb Bb Cm Ab
+sensivel/E/livre,sensivel,E,livre,ok,16.25,6.1,0.968,0.81,A E B C#m A E B C#m A
+sensivel/F/livre,sensivel,F,livre,ok,20.22,6.1,0.996,0.0,Bb F C Dm Bb F C Dm Bb
+sensivel/F#/livre,sensivel,F#,livre,errou,12.33,6.2,0.725,7.5,F# C# B F# C# B F# C# B
+sensivel/G/livre,sensivel,G,livre,ok,14.07,6.1,0.994,0.0,Em C G D Em C G D Em C
+sensivel/Ab/livre,sensivel,Ab,livre,ok,16.23,6.1,0.996,0.0,Ab Eb Fm C# Ab Eb Fm C#
+sensivel/A/livre,sensivel,A,livre,errou,20.32,6.1,0.543,28.79,D A E F#m D A E F#m D
+sensivel/Bb/livre,sensivel,Bb,livre,errou,14.21,7.1,0.756,6.0,Bb F Gm Bb F Gm Bb F Gm
+sensivel/B/livre,sensivel,B,livre,ok,14.09,6.1,0.995,0.0,E B F# Abm E B F# Abm E
+sensivel/C/real_clique,sensivel,C,real_clique,ok,20.17,8.0,0.923,1.88,F C G Am F C G Am F C
+sensivel/C#/real_clique,sensivel,C#,real_clique,errou,28.04,10.5,0.71,8.0,Ab C# F# C# Ab C# F# C#
+sensivel/D/real_clique,sensivel,D,real_clique,errou,22.7,9.0,0.704,8.14,D G D E A D G D A D G D
+sensivel/Eb/real_clique,sensivel,Eb,real_clique,errou,27.37,11.5,0.505,11.94,F Eb Ab Eb F Eb Ab Eb
+sensivel/E/real_clique,sensivel,E,real_clique,errou,23.98,8.0,0.926,2.25,A E B C#m A E B C#m A E
+sensivel/F/real_clique,sensivel,F,real_clique,ok,22.64,8.0,0.982,0.0,F C Dm Bb F C Dm Bb F
+sensivel/F#/real_clique,sensivel,F#,real_clique,ok,21.38,8.0,0.981,0.0,C# Ebm B F# C# Ebm B F#
+sensivel/G/real_clique,sensivel,G,real_clique,ok,20.17,8.0,0.98,0.0,C G D Em C G D Em C G
+sensivel/Ab/real_clique,sensivel,Ab,real_clique,errou,17.85,7.5,0.868,0.55,Ab Fm C# Ab Eb Fm C# Ab
+sensivel/A/real_clique,sensivel,A,real_clique,errou,23.98,8.0,0.895,4.64,D F#m A E F#m D F#m A
+sensivel/Bb/real_clique,sensivel,Bb,real_clique,errou,22.64,8.0,0.868,4.95,Gm G Gm Bb F Gm G Gm Bb
+sensivel/B/real_clique,sensivel,B,real_clique,errou,20.03,7.5,0.586,15.54,E Abm B F# Ab E Abm B
+sensivel/C/real_livre,sensivel,C,real_livre,errou,20.46,8.1,0.677,13.56,C G Am A F C G Am A F C
+sensivel/C#/real_livre,sensivel,C#,real_livre,errou,16.39,6.1,0.726,10.0,C# Ab C# F# C# Ab C# F#
+sensivel/D/real_livre,sensivel,D,real_livre,errou,22.89,9.1,0.467,15.43,D G D G D G D G D
+sensivel/Eb/real_livre,sensivel,Eb,real_livre,errou,17.6,7.4,0.703,8.92,Bb Ab Eb Bb Ab Eb Bb Ab
+sensivel/E/real_livre,sensivel,E,real_livre,ok,18.23,6.1,0.989,0.0,A E B C#m A E B C#m A E
+sensivel/F/real_livre,sensivel,F,real_livre,errou,17.3,6.1,0.615,12.16,C C Dm Bb F C C Dm Bb F
+sensivel/F#/real_livre,sensivel,F#,real_livre,errou,16.95,6.4,0.321,19.7,Eb B F# C# Eb B F# C#
+sensivel/G/real_livre,sensivel,G,real_livre,errou,15.44,6.1,0.729,11.95,C G D Em C G D Em C G
+sensivel/Ab/real_livre,sensivel,Ab,real_livre,errou,16.95,7.1,0.753,7.13,Fm Ab Eb Fm Ab Eb Fm Ab
+sensivel/A/real_livre,sensivel,A,real_livre,errou,30.23,10.1,0.725,9.56,F# D A E F# D A E F# D
+sensivel/Bb/real_livre,sensivel,Bb,real_livre,errou,23.82,8.4,0.668,11.88,Gm G Eb Bb F Gm G Eb Bb
+sensivel/B/real_livre,sensivel,B,real_livre,errou,16.3,6.1,0.357,17.09,E B Ab E B Ab E B Abm
+worship/C/clique,worship,C,clique,ok,21.35,8.0,0.97,0.0,G C F Am G C F Am G C F
+worship/C#/clique,worship,C#,clique,ok,25.01,7.5,0.975,0.0,Ab C# F# Bbm Ab C# F#
+worship/D/clique,worship,D,clique,ok,16.02,8.0,0.96,0.0,A D G Bm A D G Bm A D G
+worship/Eb/clique,worship,Eb,clique,errou,18.47,8.0,0.768,5.69,Bb Gm Eb Ab Cm Bb Eb Ab
+worship/E/clique,worship,E,clique,errou,21.35,8.0,0.797,6.83,C# B E A C#m C# B E A
+worship/F/clique,worship,F,clique,ok,25.01,7.5,0.975,0.0,Bb Dm C F Bb Dm C F Bb
+worship/F#/clique,worship,F#,clique,errou,16.02,8.0,0.877,1.92,Ebm C# F# B Eb C# F# B
+worship/G/clique,worship,G,clique,ok,18.47,8.0,0.965,0.0,D G C Em D G C Em D G C
+worship/Ab/clique,worship,Ab,clique,ok,20.0,7.5,0.942,1.33,Fm Eb Ab C# Fm Eb Ab C#
+worship/A/clique,worship,A,clique,ok,25.01,7.5,0.975,0.0,A D F#m E A D F#m E A D
+worship/Bb/clique,worship,Bb,clique,ok,16.02,8.0,0.96,0.0,Gm F Bb Eb Gm F Bb Eb
+worship/B/clique,worship,B,clique,ok,18.47,8.0,0.965,0.0,E Abm F# B E Abm F# B E
+worship/C/tom_da_forma,worship,C,tom_da_forma,ok,20.0,7.5,0.969,0.0,G C F Am G C F Am G C F
+worship/C#/tom_da_forma,worship,C#,tom_da_forma,ok,25.01,7.5,0.975,0.0,Ab C# F# Bbm Ab C# F#
+worship/D/tom_da_forma,worship,D,tom_da_forma,errou,15.02,7.5,0.959,2.01,A D G Bm A D G Bm A D G
+worship/Eb/tom_da_forma,worship,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,Cm Bb Eb Ab Cm Bb Eb Ab
+worship/E/tom_da_forma,worship,E,tom_da_forma,ok,21.35,8.0,0.97,0.0,E A C#m B E A C#m B E A
+worship/F/tom_da_forma,worship,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,Bb Dm C F Bb Dm C F Bb
+worship/F#/tom_da_forma,worship,F#,tom_da_forma,ok,16.02,8.0,0.96,0.0,Ebm C# F# B Ebm C# F# B
+worship/G/tom_da_forma,worship,G,tom_da_forma,errou,17.33,7.5,0.878,3.72,G C Em E D G C Em D G C
+worship/Ab/tom_da_forma,worship,Ab,tom_da_forma,ok,20.0,7.5,0.969,0.0,Fm Eb Ab C# Fm Eb Ab C#
+worship/A/tom_da_forma,worship,A,tom_da_forma,ok,26.68,8.0,0.976,0.0,A D F#m E A D F#m E A D
+worship/Bb/tom_da_forma,worship,Bb,tom_da_forma,ok,16.02,8.0,0.96,0.0,Gm F Bb Eb Gm F Bb Eb
+worship/B/tom_da_forma,worship,B,tom_da_forma,errou,17.33,7.5,0.964,2.31,E Abm F# B E Abm F# B E
+worship/C/livre,worship,C,livre,ok,16.28,6.1,0.994,0.0,G C F Am G C F Am G C F
+worship/C#/livre,worship,C#,livre,ok,20.2,6.1,0.979,0.0,Bbm Ab C# F# Bbm Ab C#
+worship/D/livre,worship,D,livre,errou,12.21,6.1,0.665,11.38,A D G Bm A D G Bm A D G
+worship/Eb/livre,worship,Eb,livre,errou,14.02,6.1,0.753,8.68,Cm Bb Eb Ab Cm Bb Eb Ab
+worship/E/livre,worship,E,livre,ok,16.28,6.1,0.994,0.0,E A C#m B E A C#m B E A
+worship/F/livre,worship,F,livre,errou,20.2,6.1,0.517,29.69,Dm C F Bb Dm C F Bb Dm
+worship/F#/livre,worship,F#,livre,errou,14.21,7.1,0.774,6.0,C# F# B C# F# B C# F# B
+worship/G/livre,worship,G,livre,ok,14.12,6.1,0.951,0.3,D G C Em D G C Em D G C
+worship/Ab/livre,worship,Ab,livre,errou,16.23,6.1,0.733,10.0,Fm Gm Ab C# Fm Gm Ab C#
+worship/A/livre,worship,A,livre,ok,20.43,6.1,0.998,0.0,A D F#m E A D F#m E A D
+worship/Bb/livre,worship,Bb,livre,ok,12.26,6.1,0.965,0.0,Gm F Bb Eb Gm F Bb Eb
+worship/B/livre,worship,B,livre,ok,14.05,6.1,0.995,0.0,E Abm F# B E Abm F# B E
+worship/C/real_clique,worship,C,real_clique,errou,20.17,8.0,0.865,3.77,C F A G C F A G C F Am
+worship/C#/real_clique,worship,C#,real_clique,errou,24.05,9.0,0.706,8.62,Ab C# F# C# Ab C# F# C#
+worship/D/real_clique,worship,D,real_clique,errou,22.7,9.0,0.735,7.55,A D G D A D G D A D G D
+worship/Eb/real_clique,worship,Eb,real_clique,errou,19.06,8.0,0.66,10.84,F Eb Ab Eb Bb Eb Ab Eb
+worship/E/real_clique,worship,E,real_clique,ok,23.98,8.0,0.983,0.0,C#m B E A C#m B E A C#m
+worship/F/real_clique,worship,F,real_clique,errou,21.22,7.5,0.926,2.12,Bb Dm C F Dm C F Bb Dm
+worship/F#/real_clique,worship,F#,real_clique,ok,21.38,8.0,0.981,0.0,C# F# B Ebm C# F# B Ebm
+worship/G/real_clique,worship,G,real_clique,ok,20.17,8.0,0.98,0.0,C Em D G C Em D G C Em
+worship/Ab/real_clique,worship,Ab,real_clique,ok,19.06,8.0,0.979,0.0,Eb Ab C# Fm Eb Ab C# Fm
+worship/A/real_clique,worship,A,real_clique,errou,25.49,8.5,0.862,5.35,E A D F#m F# E A D F#
+worship/Bb/real_clique,worship,Bb,real_clique,ok,22.64,8.0,0.953,1.46,Gm F Bb Eb Gm F Bb Eb G
+worship/B/real_clique,worship,B,real_clique,errou,21.38,8.0,0.893,4.16,B E Abm Ab F# B E Abm
+worship/C/real_livre,worship,C,real_livre,errou,17.27,6.1,0.228,30.89,C F C F C F C F C F C F
+worship/C#/real_livre,worship,C#,real_livre,errou,21.62,8.1,0.757,8.0,Ab C# F# C# Ab C# F# C#
+worship/D/real_livre,worship,D,real_livre,errou,20.43,8.1,0.755,7.56,A D G A D G A D G A D G
+worship/Eb/real_livre,worship,Eb,real_livre,errou,19.36,8.2,0.749,7.13,Eb Bb Eb Ab Eb Bb Eb Ab
+worship/E/real_livre,worship,E,real_livre,errou,18.99,6.3,0.323,14.85,B C#m B E B C#m B E A
+worship/F/real_livre,worship,F,real_livre,errou,20.08,7.1,0.745,8.91,Dm C F Bb Dm C F F Bb
+worship/F#/real_livre,worship,F#,real_livre,errou,23.71,8.9,0.343,15.03,C# F# B Ebm C# F# C# F#
+worship/G/real_livre,worship,G,real_livre,ok,15.37,6.1,0.959,0.0,C Em D G C Em D G C Em
+worship/Ab/real_livre,worship,Ab,real_livre,errou,14.79,6.2,0.713,6.21,Eb Ab C# Fm Eb Ab C# Fm
+worship/A/real_livre,worship,A,real_livre,errou,19.11,6.4,0.506,17.74,E A D F# E A D F# E A
+worship/Bb/real_livre,worship,Bb,real_livre,errou,22.89,8.1,0.738,6.46,Gm F Bb Eb Gm F Bb Eb
+worship/B/real_livre,worship,B,real_livre,errou,24.36,9.1,0.762,3.66,B E Ab Abm B F# B E Ab
+tres_acordes/C/clique,tres_acordes,C,clique,ok,14.68,5.5,0.969,0.0,G C F G C F G C F G C F
+tres_acordes/C#/clique,tres_acordes,C#,clique,ok,18.34,5.5,0.975,0.0,C# F# Ab C# F# Ab C# F#
+tres_acordes/D/clique,tres_acordes,D,clique,ok,11.0,5.5,0.959,0.0,A D G A D G A D G A D G
+tres_acordes/Eb/clique,tres_acordes,Eb,clique,ok,13.85,6.0,0.965,0.0,Eb Ab Bb Eb Ab Bb Eb Ab
+tres_acordes/E/clique,tres_acordes,E,clique,ok,14.68,5.5,0.969,0.0,B E A B E A B E A B E A
+tres_acordes/F/clique,tres_acordes,F,clique,ok,18.34,5.5,0.975,0.0,Bb C F Bb C F Bb C F Bb
+tres_acordes/F#/clique,tres_acordes,F#,clique,ok,12.0,6.0,0.96,0.0,C# F# B C# F# B C# F# B
+tres_acordes/G/clique,tres_acordes,G,clique,ok,12.71,5.5,0.964,0.0,D G C D G C D G C D G C
+tres_acordes/Ab/clique,tres_acordes,Ab,clique,ok,16.01,6.0,0.97,0.0,Ab C# Eb Ab C# Eb Ab C#
+tres_acordes/A/clique,tres_acordes,A,clique,ok,18.34,5.5,0.975,0.0,E A D E A D E A D E A D
+tres_acordes/Bb/clique,tres_acordes,Bb,clique,ok,11.0,5.5,0.959,0.0,F Bb Eb F Bb Eb F Bb Eb
+tres_acordes/B/clique,tres_acordes,B,clique,ok,13.85,6.0,0.965,0.0,E F# B E F# B E F# B E
+tres_acordes/C/tom_da_forma,tres_acordes,C,tom_da_forma,ok,16.01,6.0,0.97,0.0,G C F G C F G C F G C F
+tres_acordes/C#/tom_da_forma,tres_acordes,C#,tom_da_forma,ok,20.01,6.0,0.976,0.0,C# F# Ab C# F# Ab C# F#
+tres_acordes/D/tom_da_forma,tres_acordes,D,tom_da_forma,ok,12.0,6.0,0.96,0.0,A D G A D G A D G A D G
+tres_acordes/Eb/tom_da_forma,tres_acordes,Eb,tom_da_forma,ok,12.71,5.5,0.964,0.0,Eb Ab Bb Eb Ab Bb Eb Ab
+tres_acordes/E/tom_da_forma,tres_acordes,E,tom_da_forma,ok,16.01,6.0,0.97,0.0,B E A B E A B E A B E A
+tres_acordes/F/tom_da_forma,tres_acordes,F,tom_da_forma,ok,18.34,5.5,0.975,0.0,Bb C F Bb C F Bb C F Bb
+tres_acordes/F#/tom_da_forma,tres_acordes,F#,tom_da_forma,ok,12.0,6.0,0.96,0.0,C# F# B C# F# B C# F# B
+tres_acordes/G/tom_da_forma,tres_acordes,G,tom_da_forma,ok,13.85,6.0,0.965,0.0,D G C D G C D G C D G C
+tres_acordes/Ab/tom_da_forma,tres_acordes,Ab,tom_da_forma,ok,20.0,7.5,0.941,1.41,C# Eb Gm Ab C# Eb Ab C#
+tres_acordes/A/tom_da_forma,tres_acordes,A,tom_da_forma,errou,18.34,5.5,0.975,3.35,E A D E A D E A D E A D
+tres_acordes/Bb/tom_da_forma,tres_acordes,Bb,tom_da_forma,ok,12.0,6.0,0.912,0.84,Eb F Bb Gm Eb F Bb Eb
+tres_acordes/B/tom_da_forma,tres_acordes,B,tom_da_forma,errou,12.71,5.5,0.867,3.36,E F# B E F# B E F# B E
+tres_acordes/C/livre,tres_acordes,C,livre,ok,13.56,5.1,0.995,0.0,G C F G C F G C F G C F
+tres_acordes/C#/livre,tres_acordes,C#,livre,errou,16.86,5.1,0.449,18.22,Ab C# Ab C# F# Ab C# Ab
+tres_acordes/D/livre,tres_acordes,D,livre,ok,10.24,5.1,0.973,0.0,A D G A D G A D G A D G
+tres_acordes/Eb/livre,tres_acordes,Eb,livre,ok,11.79,5.1,0.994,0.0,Eb Ab Bb Eb Ab Bb Eb Ab
+tres_acordes/E/livre,tres_acordes,E,livre,errou,13.61,5.1,0.418,25.33,B E A B E A B E A B E A
+tres_acordes/F/livre,tres_acordes,F,livre,ok,16.83,5.0,0.995,0.0,Bb C F Bb C F Bb C F Bb
+tres_acordes/F#/livre,tres_acordes,F#,livre,ok,10.19,5.1,0.988,0.0,C# F# B C# F# B C# F# B
+tres_acordes/G/livre,tres_acordes,G,livre,ok,11.72,5.1,0.994,0.0,D G C D G C D G C D G C
+tres_acordes/Ab/livre,tres_acordes,Ab,livre,ok,14.56,5.5,0.981,0.0,Ab C# Eb Ab C# Eb Ab C#
+tres_acordes/A/livre,tres_acordes,A,livre,errou,17.0,5.1,0.874,8.22,E A D E A D E A D E A D
+tres_acordes/Bb/livre,tres_acordes,Bb,livre,errou,10.24,5.1,0.885,1.82,F Bb Eb F Bb Eb F Bb Eb
+tres_acordes/B/livre,tres_acordes,B,livre,ok,12.0,5.2,0.993,0.0,E F# B E F# B E F# B E
+tres_acordes/C/real_clique,tres_acordes,C,real_clique,ok,17.0,6.0,0.931,1.31,C F G C F G C F G C F G
+tres_acordes/C#/real_clique,tres_acordes,C#,real_clique,ok,18.71,7.0,0.981,0.0,F# Ab C# F# Ab C# F# Ab
+tres_acordes/D/real_clique,tres_acordes,D,real_clique,ok,17.66,7.0,0.927,1.16,A D G D A D G D A D G A
+tres_acordes/Eb/real_clique,tres_acordes,Eb,real_clique,ok,16.67,7.0,0.926,1.09,Ab Bb Eb Ab Bb Eb Ab Bb
+tres_acordes/E/real_clique,tres_acordes,E,real_clique,ok,16.5,5.5,0.983,0.0,E A B E A B E A B E A B
+tres_acordes/F/real_clique,tres_acordes,F,real_clique,ok,15.58,5.5,0.982,0.0,C F Bb C F Bb C F Bb C
+tres_acordes/F#/real_clique,tres_acordes,F#,real_clique,ok,28.04,10.5,0.981,0.0,F# B C# F# B C# F# B C#
+tres_acordes/G/real_clique,tres_acordes,G,real_clique,ok,13.88,5.5,0.98,0.0,C D G C D G C D G Em D
+tres_acordes/Ab/real_clique,tres_acordes,Ab,real_clique,ok,13.11,5.5,0.978,0.0,C# Eb Ab C# Eb Ab C# Eb
+tres_acordes/A/real_clique,tres_acordes,A,real_clique,errou,18.01,6.0,0.879,1.55,F#m E A D E A D E A D E
+tres_acordes/Bb/real_clique,tres_acordes,Bb,real_clique,errou,21.22,7.5,0.926,2.84,Eb F Bb Eb F Bb Eb Gm F
+tres_acordes/B/real_clique,tres_acordes,B,real_clique,errou,17.38,6.5,0.9,4.14,F# B E Abm F# B E F#
+tres_acordes/C/real_livre,tres_acordes,C,real_livre,errou,14.44,5.1,0.333,27.34,C F C F C F C F C F C F
+tres_acordes/C#/real_livre,tres_acordes,C#,real_livre,ok,19.11,7.2,0.988,0.0,F# Ab C# F# Ab C# F# Ab
+tres_acordes/D/real_livre,tres_acordes,D,real_livre,errou,18.02,7.2,0.656,11.33,D G D G D G D G D G D G
+tres_acordes/Eb/real_livre,tres_acordes,Eb,real_livre,ok,12.84,5.4,0.98,0.0,Eb Ab Bb Eb Ab Bb Eb Ab
+tres_acordes/E/real_livre,tres_acordes,E,real_livre,errou,24.29,8.1,0.253,14.36,B E A B A B
+tres_acordes/F/real_livre,tres_acordes,F,real_livre,errou,14.35,5.1,0.379,23.42,Bb C F Bb C F Bb F Bb C
+tres_acordes/F#/real_livre,tres_acordes,F#,real_livre,errou,16.25,6.1,0.588,13.29,F# Ebm C# F# Ebm C# F#
+tres_acordes/G/real_livre,tres_acordes,G,real_livre,errou,12.86,5.1,0.85,7.19,G C D G C D G C D G C D
+tres_acordes/Ab/real_livre,tres_acordes,Ab,real_livre,ok,14.58,6.1,0.983,0.0,C# Eb Ab C# Eb Ab C# Eb
+tres_acordes/A/real_livre,tres_acordes,A,real_livre,errou,15.39,5.1,0.447,15.74,A D E A D E A D E D E A
+tres_acordes/Bb/real_livre,tres_acordes,Bb,real_livre,errou,17.97,6.4,0.409,18.13,Eb F Bb Eb F Bb Eb F Bb
+tres_acordes/B/real_livre,tres_acordes,B,real_livre,errou,16.97,6.4,0.668,12.0,F# B Abm F# B Abm F#
+dois_acordes/C/clique,dois_acordes,C,clique,ok,10.67,4.0,0.97,0.0,C F C F C F C F C F C F
+dois_acordes/C#/clique,dois_acordes,C#,clique,ok,11.68,3.5,0.975,0.0,C# F# C# F# C# F# C# F#
+dois_acordes/D/clique,dois_acordes,D,clique,ok,8.01,4.0,0.96,0.0,D G D G D G D G D G D G
+dois_acordes/Eb/clique,dois_acordes,Eb,clique,ok,8.09,3.5,0.965,0.0,Eb Ab Eb Ab Eb Ab Eb Ab
+dois_acordes/E/clique,dois_acordes,E,clique,ok,9.34,3.5,0.969,0.0,E A E A E A E A E A E A
+dois_acordes/F/clique,dois_acordes,F,clique,ok,13.35,4.0,0.976,0.0,Bb F Bb F Bb F Bb F Bb
+dois_acordes/F#/clique,dois_acordes,F#,clique,ok,8.01,4.0,0.96,0.0,B F# B F# B F# B F# B
+dois_acordes/G/clique,dois_acordes,G,clique,ok,9.25,4.0,0.965,0.0,G C G C G C G C G C G C
+dois_acordes/Ab/clique,dois_acordes,Ab,clique,ok,10.67,4.0,0.97,0.0,Ab C# Ab C# Ab C# Ab C#
+dois_acordes/A/clique,dois_acordes,A,clique,ok,13.35,4.0,0.976,0.0,A D A D A D A D A D A D
+dois_acordes/Bb/clique,dois_acordes,Bb,clique,ok,8.01,4.0,0.96,0.0,Bb Eb Bb Eb Bb Eb Bb Eb
+dois_acordes/B/clique,dois_acordes,B,clique,ok,9.25,4.0,0.965,0.0,B E B E B E B E B E B E
+dois_acordes/C/tom_da_forma,dois_acordes,C,tom_da_forma,ok,10.67,4.0,0.97,0.0,C F C F C F C F C F C F
+dois_acordes/C#/tom_da_forma,dois_acordes,C#,tom_da_forma,ok,11.68,3.5,0.975,0.0,C# F# C# F# C# F# C# F#
+dois_acordes/D/tom_da_forma,dois_acordes,D,tom_da_forma,ok,8.01,4.0,0.96,0.0,D G D G D G D G D G D G
+dois_acordes/Eb/tom_da_forma,dois_acordes,Eb,tom_da_forma,ok,9.25,4.0,0.965,0.0,Eb Ab Eb Ab Eb Ab Eb Ab
+dois_acordes/E/tom_da_forma,dois_acordes,E,tom_da_forma,ok,10.67,4.0,0.97,0.0,E A E A E A E A E A E A
+dois_acordes/F/tom_da_forma,dois_acordes,F,tom_da_forma,ok,11.68,3.5,0.975,0.0,Bb F Bb F Bb F Bb F Bb
+dois_acordes/F#/tom_da_forma,dois_acordes,F#,tom_da_forma,ok,8.01,4.0,0.96,0.0,B F# B F# B F# B F# B
+dois_acordes/G/tom_da_forma,dois_acordes,G,tom_da_forma,ok,8.09,3.5,0.965,0.0,G C G C G C G C G C G C
+dois_acordes/Ab/tom_da_forma,dois_acordes,Ab,tom_da_forma,ok,10.67,4.0,0.97,0.0,Ab C# Ab C# Ab C# Ab C#
+dois_acordes/A/tom_da_forma,dois_acordes,A,tom_da_forma,ok,11.68,3.5,0.975,0.0,A D A D A D A D A D A D
+dois_acordes/Bb/tom_da_forma,dois_acordes,Bb,tom_da_forma,ok,11.0,5.5,0.959,0.0,Bb Eb Bb Eb Bb Eb Bb Eb
+dois_acordes/B/tom_da_forma,dois_acordes,B,tom_da_forma,ok,8.09,3.5,0.965,0.0,B E B E B E B E B E B E
+dois_acordes/C/livre,dois_acordes,C,livre,ok,10.8,4.0,0.996,0.0,C F C F C F C F C F C F
+dois_acordes/C#/livre,dois_acordes,C#,livre,errou,13.63,4.1,0.748,13.15,F# C# F# C# F# C# F# C#
+dois_acordes/D/livre,dois_acordes,D,livre,ok,8.22,4.1,0.993,0.0,D G D G D G D G D G D G
+dois_acordes/Eb/livre,dois_acordes,Eb,livre,errou,10.4,4.5,0.766,1.84,Ab Eb Ab Eb Ab Eb Ab Eb
+dois_acordes/E/livre,dois_acordes,E,livre,errou,10.82,4.1,0.873,5.22,E A E A E A E A E A E A
+dois_acordes/F/livre,dois_acordes,F,livre,ok,13.58,4.1,0.995,0.0,Bb F Bb F Bb F Bb F Bb
+dois_acordes/F#/livre,dois_acordes,F#,livre,ok,8.24,4.1,0.995,0.0,B F# B F# B F# B F# B
+dois_acordes/G/livre,dois_acordes,G,livre,errou,9.47,4.1,0.877,2.17,G C G C G C G C G C G C
+dois_acordes/Ab/livre,dois_acordes,Ab,livre,ok,10.94,4.1,0.996,0.0,Ab C# Ab C# Ab C# Ab C#
+dois_acordes/A/livre,dois_acordes,A,livre,ok,13.54,4.1,0.995,0.0,A D A D A D A D A D A D
+dois_acordes/Bb/livre,dois_acordes,Bb,livre,ok,8.24,4.1,0.951,0.53,Bb Eb Bb Eb Bb Eb Bb Eb
+dois_acordes/B/livre,dois_acordes,B,livre,ok,9.47,4.1,0.994,0.0,B E B E B E B E B E B E
+dois_acordes/C/real_clique,dois_acordes,C,real_clique,ok,8.86,3.5,0.98,0.0,F C F C F C F C F Am C
+dois_acordes/C#/real_clique,dois_acordes,C#,real_clique,ok,10.7,4.0,0.981,0.0,F# C# F# C# F# C# F# C#
+dois_acordes/D/real_clique,dois_acordes,D,real_clique,ok,8.86,3.5,0.98,0.0,G D G D G D G D G D G D
+dois_acordes/Eb/real_clique,dois_acordes,Eb,real_clique,ok,8.35,3.5,0.978,0.0,Ab Eb Ab Eb Ab Eb Ab Eb
+dois_acordes/E/real_clique,dois_acordes,E,real_clique,ok,16.5,5.5,0.983,0.0,A E A E A E A E A E A E
+dois_acordes/F/real_clique,dois_acordes,F,real_clique,ok,9.94,3.5,0.982,0.0,F Bb F Bb F Bb F Bb F
+dois_acordes/F#/real_clique,dois_acordes,F#,real_clique,errou,20.03,7.5,0.898,3.3,F# B F# B F# B F# B F#
+dois_acordes/G/real_clique,dois_acordes,G,real_clique,ok,8.86,3.5,0.98,0.0,C G C G C G C G C G C G
+dois_acordes/Ab/real_clique,dois_acordes,Ab,real_clique,errou,8.35,3.5,0.819,0.64,Ab C# Ab Ab C# Ab C# Ab
+dois_acordes/A/real_clique,dois_acordes,A,real_clique,ok,22.49,7.5,0.954,1.55,D A D A D A D A D F#m A
+dois_acordes/Bb/real_clique,dois_acordes,Bb,real_clique,errou,11.33,4.0,0.793,10.89,Bb Gm Bb Eb Gm Bb Eb Bb
+dois_acordes/B/real_clique,dois_acordes,B,real_clique,errou,14.71,5.5,0.88,5.44,B E Abm B E Abm B E B
+dois_acordes/C/real_livre,dois_acordes,C,real_livre,ok,10.4,4.1,0.986,0.0,F C F C F C F C F C F C
+dois_acordes/C#/real_livre,dois_acordes,C#,real_livre,ok,10.98,4.1,0.985,0.0,F# C# F# C# F# C# F# C#
+dois_acordes/D/real_livre,dois_acordes,D,real_livre,ok,12.84,5.1,0.987,0.0,G D G D G D G D G D G D
+dois_acordes/Eb/real_livre,dois_acordes,Eb,real_livre,ok,12.12,5.1,0.989,0.0,Ab Eb Ab Eb Ab Eb Ab Eb
+dois_acordes/E/real_livre,dois_acordes,E,real_livre,errou,12.47,4.2,0.683,14.69,A E A E A E A E A E A E
+dois_acordes/F/real_livre,dois_acordes,F,real_livre,errou,11.63,4.1,0.703,14.8,Bb F Bb F Bb F Bb F Bb
+dois_acordes/F#/real_livre,dois_acordes,F#,real_livre,errou,8.29,3.1,0.552,18.45,B F# F# B F# B F# B F#
+dois_acordes/G/real_livre,dois_acordes,G,real_livre,errou,13.56,5.4,0.861,4.93,C G C G C G C G C G C G
+dois_acordes/Ab/real_livre,dois_acordes,Ab,real_livre,errou,9.82,4.1,0.897,3.1,Ab C# Ab C# Ab C# Ab C#
+dois_acordes/A/real_livre,dois_acordes,A,real_livre,errou,12.31,4.1,0.557,19.38,D A D A D A D A D A D A
+dois_acordes/Bb/real_livre,dois_acordes,Bb,real_livre,errou,14.84,5.3,0.568,20.77,Eb Bb Eb Bb Eb Bb Eb Bb
+dois_acordes/B/real_livre,dois_acordes,B,real_livre,ok,18.97,7.1,0.972,0.0,E B E B E B E B E B E B
+duas_por_compasso/C/clique,duas_por_compasso,C,clique,ok,10.67,4.0,0.917,1.42,G Am F C G Am F C G Am
+duas_por_compasso/C#/clique,duas_por_compasso,C#,clique,errou,13.35,4.0,0.703,10.09,F# C# Ab Bb F# C# Ab Bb
+duas_por_compasso/D/clique,duas_por_compasso,D,clique,errou,8.01,4.0,0.898,1.08,A Bm G D A Bm G D A Bm
+duas_por_compasso/Eb/clique,duas_por_compasso,Eb,clique,ok,9.25,4.0,0.909,1.23,Ab Eb Bb Cm Ab Eb Bb Cm
+duas_por_compasso/E/clique,duas_por_compasso,E,clique,ok,10.67,4.0,0.917,1.42,C#m A E B C#m A E B C#m
+duas_por_compasso/F/clique,duas_por_compasso,F,clique,ok,11.68,3.5,0.93,1.75,Dm Bb F C Dm Bb F C Dm
+duas_por_compasso/F#/clique,duas_por_compasso,F#,clique,errou,8.01,4.0,0.723,5.08,B F# C# Bb B F# C# Ebm
+duas_por_compasso/G/clique,duas_por_compasso,G,clique,ok,9.25,4.0,0.909,1.23,D Em C G D Em C G D Em
+duas_por_compasso/Ab/clique,duas_por_compasso,Ab,clique,ok,10.67,4.0,0.917,1.42,C# Ab Eb Fm C# Ab Eb Fm
+duas_por_compasso/A/clique,duas_por_compasso,A,clique,ok,13.35,4.0,0.929,1.75,F#m D A E F#m D A E F#m
+duas_por_compasso/Bb/clique,duas_por_compasso,Bb,clique,errou,7.01,3.5,0.899,1.08,Eb Bb F Gm Eb Bb F Gm
+duas_por_compasso/B/clique,duas_por_compasso,B,clique,ok,9.25,4.0,0.909,1.23,E B F# Abm E B F# Abm
+duas_por_compasso/C/tom_da_forma,duas_por_compasso,C,tom_da_forma,ok,9.34,3.5,0.918,1.42,G Am F C G Am F C G Am
+duas_por_compasso/C#/tom_da_forma,duas_por_compasso,C#,tom_da_forma,errou,11.68,3.5,0.93,3.42,C# Ab Bbm F# C# Ab Bbm
+duas_por_compasso/D/tom_da_forma,duas_por_compasso,D,tom_da_forma,errou,7.01,3.5,0.899,1.08,A Bm G D A Bm G D A Bm
+duas_por_compasso/Eb/tom_da_forma,duas_por_compasso,Eb,tom_da_forma,ok,9.25,4.0,0.909,1.23,Ab Eb Bb Cm Ab Eb Bb Cm
+duas_por_compasso/E/tom_da_forma,duas_por_compasso,E,tom_da_forma,errou,12.01,4.5,0.894,3.42,C#m A E B C# A E B C#m
+duas_por_compasso/F/tom_da_forma,duas_por_compasso,F,tom_da_forma,ok,11.68,3.5,0.93,1.75,Dm Bb F C Dm Bb F C Dm
+duas_por_compasso/F#/tom_da_forma,duas_por_compasso,F#,tom_da_forma,errou,7.01,3.5,0.899,2.08,B F# C# Ebm B F# C# Ebm
+duas_por_compasso/G/tom_da_forma,duas_por_compasso,G,tom_da_forma,ok,9.25,4.0,0.909,1.23,D Em C G D Em C G D Em
+duas_por_compasso/Ab/tom_da_forma,duas_por_compasso,Ab,tom_da_forma,errou,9.34,3.5,0.918,2.75,C# Ab Eb Fm C# Ab Eb Fm
+duas_por_compasso/A/tom_da_forma,duas_por_compasso,A,tom_da_forma,ok,13.35,4.0,0.929,1.75,F#m D A E F#m D A E F#m
+duas_por_compasso/Bb/tom_da_forma,duas_por_compasso,Bb,tom_da_forma,errou,8.01,4.0,0.858,2.08,F Gm Eb Bb F Gm Bb F Gm
+duas_por_compasso/B/tom_da_forma,duas_por_compasso,B,tom_da_forma,errou,8.09,3.5,0.844,4.12,E B F# Abm E B F# Ab
+duas_por_compasso/C/livre,duas_por_compasso,C,livre,ok,9.52,3.6,0.966,1.37,G Am F C G Am F C G Am
+duas_por_compasso/C#/livre,duas_por_compasso,C#,livre,errou,12.26,3.7,0.511,6.5,Ab C# Ab Bbm F# C# Ab
+duas_por_compasso/D/livre,duas_por_compasso,D,livre,ok,7.17,3.6,0.957,0.96,A Bm G D A Bm G D A Bm
+duas_por_compasso/Eb/livre,duas_por_compasso,Eb,livre,ok,8.29,3.6,0.968,1.18,Ab Eb Bb Cm Ab Eb Bb Cm
+duas_por_compasso/E/livre,duas_por_compasso,E,livre,errou,9.89,3.7,0.731,1.33,E B C#m A E B C#m A E B
+duas_por_compasso/F/livre,duas_por_compasso,F,livre,ok,11.84,3.6,0.968,1.66,Dm Bb F C Dm Bb F C Dm
+duas_por_compasso/F#/livre,duas_por_compasso,F#,livre,errou,8.24,4.1,0.728,6.03,B F# C# B F# C# B F# C#
+duas_por_compasso/G/livre,duas_por_compasso,G,livre,ok,9.43,4.1,0.963,1.16,D Em C G D Em C G D Em
+duas_por_compasso/Ab/livre,duas_por_compasso,Ab,livre,ok,9.52,3.6,0.967,1.32,C# Ab Eb Fm C# Ab Eb Fm
+duas_por_compasso/A/livre,duas_por_compasso,A,livre,ok,11.79,3.5,0.964,1.67,F#m D A E F#m D A E F#m
+duas_por_compasso/Bb/livre,duas_por_compasso,Bb,livre,errou,9.43,4.7,0.718,6.0,F G Eb Bb F G Eb Bb F G
+duas_por_compasso/B/livre,duas_por_compasso,B,livre,ok,9.5,4.1,0.964,1.18,E B F# Abm E B F# Abm
+duas_por_compasso/C/real_clique,duas_por_compasso,C,real_clique,errou,11.33,4.0,0.712,8.51,G C F C G C F C D C F C
+duas_por_compasso/C#/real_clique,duas_por_compasso,C#,real_clique,errou,10.7,4.0,0.711,8.01,Ab C# F# C# Ab C# F# C#
+duas_por_compasso/D/real_clique,duas_por_compasso,D,real_clique,errou,10.11,4.0,0.687,8.17,A D G D A D G D A D G D
+duas_por_compasso/Eb/real_clique,duas_por_compasso,Eb,real_clique,errou,8.35,3.5,0.624,9.52,F Eb Ab Eb F Eb Ab Eb
+duas_por_compasso/E/real_clique,duas_por_compasso,E,real_clique,errou,10.51,3.5,0.922,2.29,A E B C#m A E B C#m A E
+duas_por_compasso/F/real_clique,duas_por_compasso,F,real_clique,ok,9.94,3.5,0.942,1.46,F C Dm Bb F C Dm Bb F
+duas_por_compasso/F#/real_clique,duas_por_compasso,F#,real_clique,ok,9.37,3.5,0.94,1.39,C# Ebm B F# C# Ebm F#
+duas_por_compasso/G/real_clique,duas_por_compasso,G,real_clique,ok,8.86,3.5,0.938,1.31,C G D Em C G D Em C G
+duas_por_compasso/Ab/real_clique,duas_por_compasso,Ab,real_clique,ok,8.35,3.5,0.913,1.84,Eb Fm C# Ab Eb Fm C# Ab
+duas_por_compasso/A/real_clique,duas_por_compasso,A,real_clique,errou,12.02,4.0,0.921,2.29,D A E F#m D A E F#m D A
+duas_por_compasso/Bb/real_clique,duas_por_compasso,Bb,real_clique,errou,9.94,3.5,0.877,3.56,F Gm Eb Bb F Gm Eb Bb
+duas_por_compasso/B/real_clique,duas_por_compasso,B,real_clique,errou,10.7,4.0,0.848,4.06,B F# Ab E B F# Abm E B
+duas_por_compasso/C/real_livre,duas_por_compasso,C,real_livre,errou,10.87,4.3,0.4,7.56,F C Am F C Am F C Am F
+duas_por_compasso/C#/real_livre,duas_por_compasso,C#,real_livre,errou,10.98,4.1,0.506,13.33,F# C# F# C# F# C# F# C#
+duas_por_compasso/D/real_livre,duas_por_compasso,D,real_livre,errou,10.4,4.1,0.478,10.65,D A G D A G D A G D A G
+duas_por_compasso/Eb/real_livre,duas_por_compasso,Eb,real_livre,errou,9.8,4.1,0.446,10.54,Eb Bb Ab Eb Bb Ab Eb Bb
+duas_por_compasso/E/real_livre,duas_por_compasso,E,real_livre,errou,15.37,5.1,0.343,18.08,B A B C#m B A B C#m B A
+duas_por_compasso/F/real_livre,duas_por_compasso,F,real_livre,ok,11.54,4.1,0.944,1.38,F C Dm Bb F C Dm Bb F
+duas_por_compasso/F#/real_livre,duas_por_compasso,F#,real_livre,errou,11.05,4.1,0.385,13.29,C# C# Ebm F# C# Ebm F#
+duas_por_compasso/G/real_livre,duas_por_compasso,G,real_livre,errou,10.98,4.4,0.672,3.0,C G D Em C G D G D Em
+duas_por_compasso/Ab/real_livre,duas_por_compasso,Ab,real_livre,errou,9.82,4.1,0.629,11.79,Fm Ab Eb Fm Ab Eb Fm Ab
+duas_por_compasso/A/real_livre,duas_por_compasso,A,real_livre,errou,19.83,6.6,0.361,8.23,A F#m D A F#m D A A F#m
+duas_por_compasso/Bb/real_livre,duas_por_compasso,Bb,real_livre,errou,13.16,4.7,0.18,14.37,F G Bb G Bb F G Bb F G
+duas_por_compasso/B/real_livre,duas_por_compasso,B,real_livre,errou,11.0,4.1,0.722,7.98,B F# E B F# E B F# E B
+dois_compassos/C/clique,dois_compassos,C,clique,ok,42.69,16.0,0.986,0.0,G Am F C G Am F C
+dois_compassos/C#/clique,dois_compassos,C#,clique,ok,51.69,15.5,0.988,0.0,Bbm F# C# Ab Bbm F# C#
+dois_compassos/D/clique,dois_compassos,D,clique,ok,31.02,15.5,0.979,0.0,D A Bm G D A Bm G D
+dois_compassos/Eb/clique,dois_compassos,Eb,clique,ok,36.93,16.0,0.984,0.0,Bb Cm Ab Eb Bb Cm Ab Eb
+dois_compassos/E/clique,dois_compassos,E,clique,ok,42.69,16.0,0.986,0.0,B C#m A E B C#m A E
+dois_compassos/F/clique,dois_compassos,F,clique,ok,51.69,15.5,0.988,0.0,F C Dm Bb F C Dm Bb F
+dois_compassos/F#/clique,dois_compassos,F#,clique,ok,32.02,16.0,0.981,0.0,C# Ebm B F# C# Ebm B F#
+dois_compassos/G/clique,dois_compassos,G,clique,ok,36.93,16.0,0.984,0.0,D Em C G D Em C G
+dois_compassos/Ab/clique,dois_compassos,Ab,clique,ok,42.69,16.0,0.986,0.0,Eb Fm C# Ab Eb Fm C# Ab
+dois_compassos/A/clique,dois_compassos,A,clique,ok,51.69,15.5,0.988,0.0,A E F#m D A E F#m D A
+dois_compassos/Bb/clique,dois_compassos,Bb,clique,errou,33.01,16.5,0.778,2.92,Gm Eb Gm Bb F Gm Eb Gm
+dois_compassos/B/clique,dois_compassos,B,clique,ok,35.79,15.5,0.982,0.0,B F# Abm E B F# Abm E B
+dois_compassos/C/tom_da_forma,dois_compassos,C,tom_da_forma,ok,41.34,15.5,0.985,0.0,C G Am F C G Am F C
+dois_compassos/C#/tom_da_forma,dois_compassos,C#,tom_da_forma,errou,53.34,16.0,0.756,11.67,Ab Bb F# C# Ab Bb F# C#
+dois_compassos/D/tom_da_forma,dois_compassos,D,tom_da_forma,ok,32.02,16.0,0.981,0.0,A Bm G D A Bm G D
+dois_compassos/Eb/tom_da_forma,dois_compassos,Eb,tom_da_forma,ok,36.93,16.0,0.984,0.0,Bb Cm Ab Eb Bb Cm Ab Eb
+dois_compassos/E/tom_da_forma,dois_compassos,E,tom_da_forma,errou,42.69,16.0,0.813,6.51,C# C#m A E B C# C#m A E
+dois_compassos/F/tom_da_forma,dois_compassos,F,tom_da_forma,ok,51.69,15.5,0.988,0.0,F C Dm Bb F C Dm Bb F
+dois_compassos/F#/tom_da_forma,dois_compassos,F#,tom_da_forma,ok,31.02,15.5,0.979,0.0,C# Ebm B F# C# Ebm B F#
+dois_compassos/G/tom_da_forma,dois_compassos,G,tom_da_forma,ok,35.79,15.5,0.982,0.0,G D Em C G D Em C G
+dois_compassos/Ab/tom_da_forma,dois_compassos,Ab,tom_da_forma,ok,42.69,16.0,0.986,0.0,Eb Fm C# Ab Eb Fm C# Ab
+dois_compassos/A/tom_da_forma,dois_compassos,A,tom_da_forma,ok,53.34,16.0,0.989,0.0,E F#m D A E F#m D A
+dois_compassos/Bb/tom_da_forma,dois_compassos,Bb,tom_da_forma,ok,32.02,16.0,0.981,0.0,F Gm Eb Bb F Gm Eb Bb
+dois_compassos/B/tom_da_forma,dois_compassos,B,tom_da_forma,ok,36.93,16.0,0.984,0.0,F# Abm E B F# Abm E B
+dois_compassos/C/livre,dois_compassos,C,livre,ok,32.27,12.1,0.998,0.0,F C G Am F C G Am F C
+dois_compassos/C#/livre,dois_compassos,C#,livre,errou,41.28,12.4,0.383,28.47,F# C# Ab Bbm F# C# Ab
+dois_compassos/D/livre,dois_compassos,D,livre,ok,24.24,12.1,0.998,0.0,G D A Bm G D A Bm G D
+dois_compassos/Eb/livre,dois_compassos,Eb,livre,ok,27.93,12.1,0.998,0.0,Bb Cm Ab Eb Bb Cm Ab Eb
+dois_compassos/E/livre,dois_compassos,E,livre,ok,43.35,16.3,0.985,0.0,B C#m A E B C#m A E
+dois_compassos/F/livre,dois_compassos,F,livre,ok,40.22,12.1,0.998,0.0,F C Dm Bb F C Dm Bb F
+dois_compassos/F#/livre,dois_compassos,F#,livre,errou,15.79,7.9,0.535,11.36,Ebm B Ebm B Ebm F# C#
+dois_compassos/G/livre,dois_compassos,G,livre,errou,28.0,12.1,0.478,25.12,C G D Em C G D Em C G D
+dois_compassos/Ab/livre,dois_compassos,Ab,livre,errou,32.34,12.1,0.604,17.96,C# C# Ab Eb Fm C# Ab Eb
+dois_compassos/A/livre,dois_compassos,A,livre,errou,40.75,12.2,0.515,25.41,A E F#m D A E F#m D A E
+dois_compassos/Bb/livre,dois_compassos,Bb,livre,errou,25.52,12.8,0.478,12.74,Eb Bb Bb F Gm Bb Eb Bb
+dois_compassos/B/livre,dois_compassos,B,livre,ok,28.09,12.2,0.996,0.0,B F# Abm E B F# Abm E B
+dois_compassos/C/real_clique,dois_compassos,C,real_clique,errou,43.84,15.5,0.764,9.88,C F C F C G C F C F C G
+dois_compassos/C#/real_clique,dois_compassos,C#,real_clique,errou,10.7,4.0,0.444,12.72,C# F# C# Ab C# F# C# Ab
+dois_compassos/D/real_clique,dois_compassos,D,real_clique,errou,11.37,4.5,0.453,19.45,D A D A D G D A D G D A
+dois_compassos/Eb/real_clique,dois_compassos,Eb,real_clique,errou,36.87,15.5,0.734,9.49,Eb Bb F Bb Eb Ab Eb Bb
+dois_compassos/E/real_clique,dois_compassos,E,real_clique,ok,52.42,17.5,0.991,0.0,B C#m A E B C#m A E B
+dois_compassos/F/real_clique,dois_compassos,F,real_clique,ok,49.48,17.5,0.959,1.41,Bb F Dm F C Dm Bb F C
+dois_compassos/F#/real_clique,dois_compassos,F#,real_clique,ok,46.71,17.5,0.99,0.0,Ebm B F# C# Ebm B F# C#
+dois_compassos/G/real_clique,dois_compassos,G,real_clique,errou,41.58,16.5,0.93,2.57,D Em C Em G D Em C G D
+dois_compassos/Ab/real_clique,dois_compassos,Ab,real_clique,ok,54.68,23.0,0.989,0.0,Ab Eb Fm C# Ab Eb
+dois_compassos/A/real_clique,dois_compassos,A,real_clique,ok,52.42,17.5,0.991,0.0,E F#m D A E F#m D A E
+dois_compassos/Bb/real_clique,dois_compassos,Bb,real_clique,errou,17.0,6.0,0.514,6.39,Eb Bb F Gm G Gm Eb Bb F
+dois_compassos/B/real_clique,dois_compassos,B,real_clique,errou,42.72,16.0,0.905,2.57,E B F# Ab Abm E B F#
+dois_compassos/C/real_livre,dois_compassos,C,real_livre,errou,45.44,16.1,0.523,19.76,F C F C
+dois_compassos/C#/real_livre,dois_compassos,C#,real_livre,errou,35.04,13.1,0.752,11.64,C# F# C# Ab C# F# C# Ab
+dois_compassos/D/real_livre,dois_compassos,D,real_livre,errou,40.56,16.1,0.643,7.92,A D G D A G D
+dois_compassos/Eb/real_livre,dois_compassos,Eb,real_livre,errou,38.38,16.2,0.611,12.67,Bb F Ab Eb Bb F Ab Eb
+dois_compassos/E/real_livre,dois_compassos,E,real_livre,errou,40.12,13.4,0.405,17.71,A A E C#m A B C#m A E B
+dois_compassos/F/real_livre,dois_compassos,F,real_livre,errou,40.38,14.3,0.418,14.92,F C C Dm F C Dm Bb F C
+dois_compassos/F#/real_livre,dois_compassos,F#,real_livre,ok,32.27,12.1,0.993,0.0,Ebm B F# C# Ebm B F# C#
+dois_compassos/G/real_livre,dois_compassos,G,real_livre,errou,40.98,16.3,0.553,8.8,D Am G D Am C G D
+dois_compassos/Ab/real_livre,dois_compassos,Ab,real_livre,ok,28.91,12.2,0.971,0.7,Fm C# Ab Eb Fm C# Ab Eb
+dois_compassos/A/real_livre,dois_compassos,A,real_livre,errou,84.94,28.4,0.358,4.1,F# A
+dois_compassos/Bb/real_livre,dois_compassos,Bb,real_livre,ok,45.49,16.1,0.927,0.0,F Gm Eb Bb F Gm Eb Bb F
+dois_compassos/B/real_livre,dois_compassos,B,real_livre,errou,14.49,5.4,0.058,19.39,B Ab Abm B Ab Abm B Ab
+volta_na_tonica/C/clique,volta_na_tonica,C,clique,ok,20.0,7.5,0.969,0.0,C F C G C F C G C F C G
+volta_na_tonica/C#/clique,volta_na_tonica,C#,clique,ok,25.01,7.5,0.975,0.0,C# F# C# Ab C# F# C# Ab
+volta_na_tonica/D/clique,volta_na_tonica,D,clique,ok,16.02,8.0,0.96,0.0,D G D A D G D A D G D A
+volta_na_tonica/Eb/clique,volta_na_tonica,Eb,clique,errou,18.47,8.0,0.621,11.84,Eb Gm Bb Gm Ab Eb Gm Bb
+volta_na_tonica/E/clique,volta_na_tonica,E,clique,ok,21.35,8.0,0.97,0.0,E A E B E A E B E A E B
+volta_na_tonica/F/clique,volta_na_tonica,F,clique,ok,26.68,8.0,0.976,0.0,F C F Bb F C F Bb F C
+volta_na_tonica/F#/clique,volta_na_tonica,F#,clique,ok,16.02,8.0,0.96,0.0,F# B F# C# F# B F# C#
+volta_na_tonica/G/clique,volta_na_tonica,G,clique,ok,18.47,8.0,0.965,0.0,G C G D G C G D G C G D
+volta_na_tonica/Ab/clique,volta_na_tonica,Ab,clique,ok,21.35,8.0,0.97,0.0,Ab C# Ab Eb Ab C# Ab Eb
+volta_na_tonica/A/clique,volta_na_tonica,A,clique,ok,25.01,7.5,0.975,0.0,A D A E A D A E A D A E
+volta_na_tonica/Bb/clique,volta_na_tonica,Bb,clique,ok,16.02,8.0,0.96,0.0,F Bb Eb Bb F Bb Eb Bb F
+volta_na_tonica/B/clique,volta_na_tonica,B,clique,ok,18.47,8.0,0.965,0.0,B F# B E B F# B E B F#
+volta_na_tonica/C/tom_da_forma,volta_na_tonica,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,C F C G C F C G C F C G
+volta_na_tonica/C#/tom_da_forma,volta_na_tonica,C#,tom_da_forma,errou,25.01,7.5,0.975,3.35,C# F# C# Ab C# F# C# Ab
+volta_na_tonica/D/tom_da_forma,volta_na_tonica,D,tom_da_forma,errou,15.02,7.5,0.959,2.01,D G D A D G D A D G D A
+volta_na_tonica/Eb/tom_da_forma,volta_na_tonica,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,Eb Ab Eb Bb Eb Ab Eb Bb
+volta_na_tonica/E/tom_da_forma,volta_na_tonica,E,tom_da_forma,ok,20.0,7.5,0.969,0.0,E A E B E A E B E A E B
+volta_na_tonica/F/tom_da_forma,volta_na_tonica,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,F C F Bb F C F Bb F C
+volta_na_tonica/F#/tom_da_forma,volta_na_tonica,F#,tom_da_forma,ok,16.02,8.0,0.96,0.0,F# B F# C# F# B F# C#
+volta_na_tonica/G/tom_da_forma,volta_na_tonica,G,tom_da_forma,ok,18.47,8.0,0.965,0.0,G C G D G C G D G C G D
+volta_na_tonica/Ab/tom_da_forma,volta_na_tonica,Ab,tom_da_forma,ok,20.0,7.5,0.969,0.0,Ab C# Ab Eb Ab C# Ab Eb
+volta_na_tonica/A/tom_da_forma,volta_na_tonica,A,tom_da_forma,ok,26.68,8.0,0.976,0.0,A D A E A D A E A D A E
+volta_na_tonica/Bb/tom_da_forma,volta_na_tonica,Bb,tom_da_forma,ok,18.01,9.0,0.96,0.0,F Bb Eb Bb F Bb Eb Bb F
+volta_na_tonica/B/tom_da_forma,volta_na_tonica,B,tom_da_forma,ok,18.47,8.0,0.965,0.0,B F# B E B F# B E B F#
+volta_na_tonica/C/livre,volta_na_tonica,C,livre,ok,16.21,6.1,0.996,0.0,C F C G C F C G C F C G
+volta_na_tonica/C#/livre,volta_na_tonica,C#,livre,errou,20.25,6.1,0.519,21.15,C# F# C# Ab C# F# C# Ab
+volta_na_tonica/D/livre,volta_na_tonica,D,livre,ok,12.24,6.1,0.996,0.0,D G D A D G D A D G D A
+volta_na_tonica/Eb/livre,volta_na_tonica,Eb,livre,errou,15.02,6.5,0.636,12.18,Eb Ab Gm Bb Eb Ab Gm Bb
+volta_na_tonica/E/livre,volta_na_tonica,E,livre,ok,16.28,6.1,0.995,0.0,E A E B E A E B E A E B
+volta_na_tonica/F/livre,volta_na_tonica,F,livre,ok,21.41,6.4,0.993,0.0,F C F Bb F C F Bb F C
+volta_na_tonica/F#/livre,volta_na_tonica,F#,livre,errou,12.51,6.3,0.882,0.77,F# B F# C# F# B F# C#
+volta_na_tonica/G/livre,volta_na_tonica,G,livre,errou,14.05,6.1,0.874,3.57,G C G D G C G D G C G D
+volta_na_tonica/Ab/livre,volta_na_tonica,Ab,livre,errou,21.59,8.1,0.76,8.0,C# Ab C# Ab C# Ab C# Ab
+volta_na_tonica/A/livre,volta_na_tonica,A,livre,ok,20.25,6.1,0.995,0.0,A D A E A D A E A D A E
+volta_na_tonica/Bb/livre,volta_na_tonica,Bb,livre,ok,12.21,6.1,0.993,0.0,F Bb Eb Bb F Bb Eb Bb F
+volta_na_tonica/B/livre,volta_na_tonica,B,livre,ok,14.12,6.1,0.993,0.0,B F# B E B F# B E B F#
+volta_na_tonica/C/real_clique,volta_na_tonica,C,real_clique,ok,20.17,8.0,0.98,0.0,F C G C F C G C F C G C
+volta_na_tonica/C#/real_clique,volta_na_tonica,C#,real_clique,ok,20.03,7.5,0.981,0.0,F# C# Ab C# F# C# Ab C#
+volta_na_tonica/D/real_clique,volta_na_tonica,D,real_clique,ok,20.17,8.0,0.953,0.58,G D A D G D A D G D A D
+volta_na_tonica/Eb/real_clique,volta_na_tonica,Eb,real_clique,ok,17.85,7.5,0.95,1.23,Eb Bb F Eb Ab Eb Bb Eb
+volta_na_tonica/E/real_clique,volta_na_tonica,E,real_clique,ok,28.48,9.5,0.951,1.54,B E A E B E A E Em B E
+volta_na_tonica/F/real_clique,volta_na_tonica,F,real_clique,errou,21.22,7.5,0.843,5.62,F C F Bb F C F Bb F C F
+volta_na_tonica/F#/real_clique,volta_na_tonica,F#,real_clique,ok,20.03,7.5,0.954,1.3,B F# C# F# B F# C# F#
+volta_na_tonica/G/real_clique,volta_na_tonica,G,real_clique,ok,18.91,7.5,0.98,0.0,C G D G C G D G C G D G
+volta_na_tonica/Ab/real_clique,volta_na_tonica,Ab,real_clique,ok,19.03,8.0,0.979,0.0,C# Ab Eb Ab C# Ab Eb Ab
+volta_na_tonica/A/real_clique,volta_na_tonica,A,real_clique,errou,28.48,9.5,0.792,4.49,E A F#m A E A F#m A E A
+volta_na_tonica/Bb/real_clique,volta_na_tonica,Bb,real_clique,errou,22.64,8.0,0.748,5.86,F Bb Dm Eb Bb Bb F Bb
+volta_na_tonica/B/real_clique,volta_na_tonica,B,real_clique,errou,20.03,7.5,0.87,2.69,Abm B F# B E B F# B E B
+volta_na_tonica/C/real_livre,volta_na_tonica,C,real_livre,ok,22.85,8.1,0.986,0.0,F C G C F C G C F C G C
+volta_na_tonica/C#/real_livre,volta_na_tonica,C#,real_livre,errou,21.64,8.1,0.755,8.0,F# C# F# C# F# C# F# C#
+volta_na_tonica/D/real_livre,volta_na_tonica,D,real_livre,ok,15.39,6.1,0.984,0.0,G D A D G D A D G D A D
+volta_na_tonica/Eb/real_livre,volta_na_tonica,Eb,real_livre,errou,16.86,7.1,0.762,7.13,Ab Eb F Eb Ab Eb F Eb
+volta_na_tonica/E/real_livre,volta_na_tonica,E,real_livre,errou,18.44,6.2,0.515,15.0,A E B E A E E A E B A E
+volta_na_tonica/F/real_livre,volta_na_tonica,F,real_livre,errou,25.73,9.1,0.428,18.58,F F Dm F C F Dm F C F
+volta_na_tonica/F#/real_livre,volta_na_tonica,F#,real_livre,errou,16.25,6.1,0.689,15.7,B F# C# F# B F# C# F#
+volta_na_tonica/G/real_livre,volta_na_tonica,G,real_livre,errou,15.76,6.3,0.623,12.27,D G D G D G D G D
+volta_na_tonica/Ab/real_livre,volta_na_tonica,Ab,real_livre,errou,16.37,6.9,0.34,12.96,C# Ab C# Ab C# Ab C# Eb
+volta_na_tonica/A/real_livre,volta_na_tonica,A,real_livre,errou,18.3,6.1,0.731,11.22,E A E A E A E A E
+volta_na_tonica/Bb/real_livre,volta_na_tonica,Bb,real_livre,errou,17.85,6.3,0.686,15.74,Eb Bb F Bb Eb Bb F Bb
+volta_na_tonica/B/real_livre,volta_na_tonica,B,real_livre,ok,16.3,6.1,0.988,0.0,F# B E B F# B E B F# B
+seis_acordes/C/clique,seis_acordes,C,clique,ok,30.68,11.5,0.969,0.0,G Am Em F G C G Am Em F G C G
+seis_acordes/C#/clique,seis_acordes,C#,clique,ok,38.34,11.5,0.975,0.0,Ab C# Ab Bbm Fm F# Ab C# Ab
+seis_acordes/D/clique,seis_acordes,D,clique,ok,24.01,12.0,0.96,0.0,Bm F#m G A D A Bm F#m G A D A
+seis_acordes/Eb/clique,seis_acordes,Eb,clique,ok,27.71,12.0,0.965,0.0,Ab Bb Eb Bb Cm Gm Ab Bb Eb Bb
+seis_acordes/E/clique,seis_acordes,E,clique,ok,32.01,12.0,0.97,0.0,Abm A B E B C#m Abm A B E B
+seis_acordes/F/clique,seis_acordes,F,clique,ok,38.34,11.5,0.975,0.0,Dm Am Bb C F C Dm Am Bb C F C
+seis_acordes/F#/clique,seis_acordes,F#,clique,errou,24.01,12.0,0.854,1.26,F# C# Bb Ebm Bbm B C# F# C#
+seis_acordes/G/clique,seis_acordes,G,clique,ok,27.71,12.0,0.965,0.0,D Em Bm C D G D Em Bm C D G D
+seis_acordes/Ab/clique,seis_acordes,Ab,clique,ok,32.01,12.0,0.97,0.0,C# Eb Ab Eb Fm Cm C# Eb Ab Eb
+seis_acordes/A/clique,seis_acordes,A,clique,ok,40.01,12.0,0.976,0.0,C#m D E A E F#m C#m D E A E
+seis_acordes/Bb/clique,seis_acordes,Bb,clique,ok,24.01,12.0,0.96,0.0,Dm Eb F Bb F Gm Dm Eb F Bb F
+seis_acordes/B/clique,seis_acordes,B,clique,ok,27.71,12.0,0.927,1.24,E F# B F# Abm Ebm E F# B F#
+seis_acordes/C/tom_da_forma,seis_acordes,C,tom_da_forma,ok,32.01,12.0,0.97,0.0,G Am Em F G C G Am Em F G C G
+seis_acordes/C#/tom_da_forma,seis_acordes,C#,tom_da_forma,ok,40.01,12.0,0.976,0.0,Ab C# Ab Bbm Fm F# Ab C# Ab
+seis_acordes/D/tom_da_forma,seis_acordes,D,tom_da_forma,ok,23.01,11.5,0.959,0.0,Bm F#m G A D A Bm F#m G A D A
+seis_acordes/Eb/tom_da_forma,seis_acordes,Eb,tom_da_forma,ok,27.71,12.0,0.965,0.0,Ab Bb Eb Bb Cm Gm Ab Bb Eb Bb
+seis_acordes/E/tom_da_forma,seis_acordes,E,tom_da_forma,ok,32.01,12.0,0.934,0.58,Abm A B E B C#m Abm A B E B
+seis_acordes/F/tom_da_forma,seis_acordes,F,tom_da_forma,ok,38.34,11.5,0.975,0.0,Dm Am Bb C F C Dm Am Bb C F C
+seis_acordes/F#/tom_da_forma,seis_acordes,F#,tom_da_forma,ok,23.01,11.5,0.959,0.0,B C# F# C# Ebm Bbm B C# F# C#
+seis_acordes/G/tom_da_forma,seis_acordes,G,tom_da_forma,ok,27.71,12.0,0.965,0.0,D Em Bm C D G D Em Bm C D G D
+seis_acordes/Ab/tom_da_forma,seis_acordes,Ab,tom_da_forma,errou,30.68,11.5,0.828,5.22,Gm Ab Eb Fm C Cm C# Eb Ab Eb
+seis_acordes/A/tom_da_forma,seis_acordes,A,tom_da_forma,ok,38.34,11.5,0.938,1.75,C# D E A E F#m C#m D E A E
+seis_acordes/Bb/tom_da_forma,seis_acordes,Bb,tom_da_forma,errou,23.01,11.5,0.89,0.84,Eb F Bb F G Gm Dm Eb F Bb F
+seis_acordes/B/tom_da_forma,seis_acordes,B,tom_da_forma,ok,26.55,11.5,0.964,0.0,E F# B F# Abm Ebm E F# B F#
+seis_acordes/C/livre,seis_acordes,C,livre,ok,24.57,9.2,0.995,0.0,G Am Em F G C G Am Em F G C G
+seis_acordes/C#/livre,seis_acordes,C#,livre,errou,40.24,12.1,0.837,5.0,F# Ab C# Ab Bbm F F# Ab C# Ab
+seis_acordes/D/livre,seis_acordes,D,livre,errou,22.17,11.1,0.851,3.0,A Bm F# G A D A Bm F# G A D A
+seis_acordes/Eb/livre,seis_acordes,Eb,livre,errou,33.34,14.4,0.613,6.92,Ab Bb Cm Ab Bb
+seis_acordes/E/livre,seis_acordes,E,livre,errou,24.24,9.1,0.868,4.0,C# Abm A B E B C# Abm A B E B
+seis_acordes/F/livre,seis_acordes,F,livre,ok,30.3,9.1,0.996,0.0,Dm Am Bb C F C Dm Am Bb C F C
+seis_acordes/F#/livre,seis_acordes,F#,livre,ok,18.2,9.1,0.994,0.0,B C# F# C# Ebm Bbm B C# F# C#
+seis_acordes/G/livre,seis_acordes,G,livre,errou,21.59,9.4,0.874,2.58,D Em Bm C D G D Em Bm C D G D
+seis_acordes/Ab/livre,seis_acordes,Ab,livre,errou,29.6,11.1,0.382,17.14,Eb Gm Fm Cm Cm C# Eb Ab Eb Gm
+seis_acordes/A/livre,seis_acordes,A,livre,ok,36.89,11.1,0.953,0.0,C#m D E A E F#m C#m D E A E
+seis_acordes/Bb/livre,seis_acordes,Bb,livre,ok,18.3,9.1,0.986,0.0,Dm Eb F Bb F Gm Dm Eb F Bb F
+seis_acordes/B/livre,seis_acordes,B,livre,errou,27.98,12.1,0.683,6.92,F# Ab E F# B F# Ab E F# B F#
+canone/C/clique,canone,C,clique,ok,42.69,16.0,0.97,0.0,F C F G C G Am Em F C F G C G
+canone/C#/clique,canone,C#,clique,errou,53.34,16.0,0.864,3.01,Bb Bbm F Fm F# C# F# Ab C# Ab
+canone/D/clique,canone,D,clique,ok,32.02,16.0,0.933,0.42,D G A D A Bm F#m G D G A D A
+canone/Eb/clique,canone,Eb,clique,ok,36.93,16.0,0.965,0.0,Eb Bb Cm Gm Ab Eb Ab Bb Eb Bb
+canone/E/clique,canone,E,clique,ok,42.69,16.0,0.941,1.41,E A B E B C#m Abm A E A B E B
+canone/F/clique,canone,F,clique,ok,51.69,15.5,0.975,0.0,Bb C F C Dm Am Bb F Bb C F C
+canone/F#/clique,canone,F#,clique,ok,32.02,16.0,0.96,0.0,F# C# Ebm Bbm B F# B C# F# C#
+canone/G/clique,canone,G,clique,ok,36.93,16.0,0.965,0.0,C G C D G D Em Bm C G C D G D
+canone/Ab/clique,canone,Ab,clique,ok,42.69,16.0,0.97,0.0,Ab Eb Fm Cm C# Ab C# Eb Ab Eb
+canone/A/clique,canone,A,clique,errou,53.34,16.0,0.861,6.65,A E F#m F# C# C#m D A D E A E
+canone/Bb/clique,canone,Bb,clique,ok,31.02,15.5,0.959,0.0,F Bb F Gm Dm Eb Bb Eb F Bb F
+canone/B/clique,canone,B,clique,ok,36.93,16.0,0.965,0.0,F# B F# Abm Ebm E B E F# B F#
+canone/C/tom_da_forma,canone,C,tom_da_forma,ok,42.69,16.0,0.942,0.58,C F G C G Am E Em F C F G C G
+canone/C#/tom_da_forma,canone,C#,tom_da_forma,ok,51.69,15.5,0.975,0.0,Ab Bbm Fm F# C# F# Ab C# Ab
+canone/D/tom_da_forma,canone,D,tom_da_forma,ok,31.02,15.5,0.959,0.0,D G A D A Bm F#m G D G A D A
+canone/Eb/tom_da_forma,canone,Eb,tom_da_forma,ok,36.93,16.0,0.965,0.0,Eb Bb Cm Gm Ab Eb Ab Bb Eb Bb
+canone/E/tom_da_forma,canone,E,tom_da_forma,ok,42.69,16.0,0.97,0.0,E A B E B C#m Abm A E A B E B
+canone/F/tom_da_forma,canone,F,tom_da_forma,ok,51.69,15.5,0.975,0.0,Bb C F C Dm Am Bb F Bb C F C
+canone/F#/tom_da_forma,canone,F#,tom_da_forma,errou,33.01,16.5,0.959,2.01,F# C# Ebm Bbm B F# B C# F# C#
+canone/G/tom_da_forma,canone,G,tom_da_forma,ok,35.79,15.5,0.911,0.98,G C D G D Em B Bm C G C D G D
+canone/Ab/tom_da_forma,canone,Ab,tom_da_forma,ok,42.69,16.0,0.97,0.0,Ab Eb Fm Cm C# Ab C# Eb Ab Eb
+canone/A/tom_da_forma,canone,A,tom_da_forma,errou,51.69,15.5,0.975,3.35,A D E A E F#m C#m D A D E A E
+canone/Bb/tom_da_forma,canone,Bb,tom_da_forma,ok,31.02,15.5,0.959,0.0,F Bb F Gm Dm Eb Bb Eb F Bb F
+canone/B/tom_da_forma,canone,B,tom_da_forma,errou,35.79,15.5,0.964,2.31,F# B F# Abm Ebm E B E F# B F#
+canone/C/livre,canone,C,livre,ok,37.52,14.1,0.994,0.0,F C F G C G Am Em F C F G C G
+canone/C#/livre,canone,C#,livre,errou,40.31,12.1,0.591,23.71,Ab Bbm Fm F# C# F# Ab C# Ab
+canone/D/livre,canone,D,livre,ok,24.19,12.1,0.994,0.0,D G A D A Bm F#m G D G A D A
+canone/Eb/livre,canone,Eb,livre,ok,27.91,12.1,0.995,0.0,Eb Bb Cm Gm Ab Eb Ab Bb Eb Bb
+canone/E/livre,canone,E,livre,errou,57.0,21.4,0.613,10.43,A B E B C#m Abm A E A B E B
+canone/F/livre,canone,F,livre,errou,40.29,12.1,0.816,6.1,Bb C F C Dm Am Bb F Bb C F C
+canone/F#/livre,canone,F#,livre,errou,28.21,14.1,0.889,3.0,C# F# C# Bbm B F# B C# F# C#
+canone/G/livre,canone,G,livre,errou,27.91,12.1,0.871,4.86,C G C D G D Em Bm C G C D G D
+canone/Ab/livre,canone,Ab,livre,ok,32.23,12.1,0.995,0.0,Ab Eb Fm Cm C# Ab C# Eb Ab Eb
+canone/A/livre,canone,A,livre,errou,40.22,12.1,0.886,1.71,D A D E A E F#m C#m D A D E A
+canone/Bb/livre,canone,Bb,livre,errou,44.33,22.2,0.897,1.5,F Bb F Dm Eb Bb Eb F Bb F
+canone/B/livre,canone,B,livre,ok,27.91,12.1,0.995,0.0,F# B F# Abm Ebm E B E F# B F#
+falsa_volta/C/clique,falsa_volta,C,clique,errou,10.67,4.0,0.623,5.36,G Am F C G C G Am F C G
+falsa_volta/C#/clique,falsa_volta,C#,clique,errou,11.68,3.5,0.634,6.69,Ab C# Ab Bbm F# C# Ab
+falsa_volta/D/clique,falsa_volta,D,clique,errou,8.01,4.0,0.616,4.0,A Bm G D A D A Bm G D A
+falsa_volta/Eb/clique,falsa_volta,Eb,clique,errou,9.25,4.0,0.62,4.64,Eb Bb Eb Bb Cm Ab Eb Bb
+falsa_volta/E/clique,falsa_volta,E,clique,errou,9.34,3.5,0.63,5.36,C#m A E B E B C#m A E B
+falsa_volta/F/clique,falsa_volta,F,clique,errou,13.35,4.0,0.627,6.69,Dm Bb F C F C Dm Bb F C
+falsa_volta/F#/clique,falsa_volta,F#,clique,errou,8.01,4.0,0.594,4.42,C# F# C# Eb Ebm B F# C#
+falsa_volta/G/clique,falsa_volta,G,clique,errou,9.25,4.0,0.62,4.64,D Em C G D G D Em C G D
+falsa_volta/Ab/clique,falsa_volta,Ab,clique,errou,10.67,4.0,0.623,4.68,Ab Eb Ab Eb Fm C# Ab Eb
+falsa_volta/A/clique,falsa_volta,A,clique,errou,13.35,4.0,0.605,7.52,F#m D A E A E F#m D A E
+falsa_volta/Bb/clique,falsa_volta,Bb,clique,errou,8.01,4.0,0.616,4.0,Eb Bb F Bb F Gm Eb Bb F
+falsa_volta/B/clique,falsa_volta,B,clique,errou,9.25,4.0,0.528,8.08,F# B F# B F# Abm E B F#
+falsa_volta/C/tom_da_forma,falsa_volta,C,tom_da_forma,errou,9.34,3.5,0.63,8.03,G Am F C G C G Am F C G
+falsa_volta/C#/tom_da_forma,falsa_volta,C#,tom_da_forma,errou,13.35,4.0,0.627,6.69,Ab C# Ab Bbm F# C# Ab
+falsa_volta/D/tom_da_forma,falsa_volta,D,tom_da_forma,errou,7.01,3.5,0.623,4.0,A Bm G D A D A Bm G D A
+falsa_volta/Eb/tom_da_forma,falsa_volta,Eb,tom_da_forma,errou,23.09,10.0,0.836,2.32,Eb Bb Eb Bb Cm Ab Eb Bb
+falsa_volta/E/tom_da_forma,falsa_volta,E,tom_da_forma,errou,9.34,3.5,0.63,8.03,C#m A E B E B C#m A E B
+falsa_volta/F/tom_da_forma,falsa_volta,F,tom_da_forma,errou,11.68,3.5,0.634,6.69,Dm Bb F C F C Dm Bb F C
+falsa_volta/F#/tom_da_forma,falsa_volta,F#,tom_da_forma,errou,8.01,4.0,0.525,5.92,F# C# F# C# Bb B F# C#
+falsa_volta/G/tom_da_forma,falsa_volta,G,tom_da_forma,errou,9.25,4.0,0.62,4.64,D Em C G D G D Em C G D
+falsa_volta/Ab/tom_da_forma,falsa_volta,Ab,tom_da_forma,errou,10.67,4.0,0.623,5.36,Ab Eb Ab Eb Fm C# Ab Eb
+falsa_volta/A/tom_da_forma,falsa_volta,A,tom_da_forma,errou,13.35,4.0,0.604,7.52,F#m D A E A E F#m D A E
+falsa_volta/Bb/tom_da_forma,falsa_volta,Bb,tom_da_forma,errou,7.01,3.5,0.623,4.0,Eb Bb F Bb F Gm Eb Bb F
+falsa_volta/B/tom_da_forma,falsa_volta,B,tom_da_forma,errou,9.25,4.0,0.62,4.64,E B F# B F# Abm E B F#
+falsa_volta/C/livre,falsa_volta,C,livre,errou,18.88,7.1,0.629,9.36,Am F C G Am F Am F C G
+falsa_volta/C#/livre,falsa_volta,C#,livre,errou,23.57,7.1,0.457,17.71,Ab Bbm F# Bbm F# C# Ab
+falsa_volta/D/livre,falsa_volta,D,livre,errou,14.19,7.1,0.542,6.73,B G D A B A Bm B G D A
+falsa_volta/Eb/livre,falsa_volta,Eb,livre,errou,16.28,7.1,0.644,8.28,Eb Bb Cm Ab Cm Ab Eb Bb
+falsa_volta/E/livre,falsa_volta,E,livre,errou,24.19,9.1,0.53,9.95,E B E B E B E B E A E B
+falsa_volta/F/livre,falsa_volta,F,livre,errou,23.61,7.1,0.595,11.37,Bb F C Dm Bb F Bb F C
+falsa_volta/F#/livre,falsa_volta,F#,livre,errou,14.28,7.1,0.534,8.2,F# C# Ebm B Ebm B F# C#
+falsa_volta/G/livre,falsa_volta,G,livre,errou,16.35,7.1,0.603,8.27,Em C G D Em C Em C G D
+falsa_volta/Ab/livre,falsa_volta,Ab,livre,errou,19.04,7.1,0.636,9.67,Ab Eb Fm C# Fm C# Ab Eb
+falsa_volta/A/livre,falsa_volta,A,livre,errou,23.61,7.1,0.496,19.49,D A E F#m D A F#m D A E
+falsa_volta/Bb/livre,falsa_volta,Bb,livre,errou,14.21,7.1,0.638,7.05,Bb F Gm Eb Gm Eb Bb F
+falsa_volta/B/livre,falsa_volta,B,livre,errou,16.46,7.1,0.589,8.89,E B F# Abm E B E B F#
+falsa_volta/C/real_clique,falsa_volta,C,real_clique,errou,11.33,4.0,0.328,17.62,C C G C D G C F C G C
+falsa_volta/C#/real_clique,falsa_volta,C#,real_clique,errou,13.37,5.0,0.347,26.0,C# Ebm C# Ebm C# Ebm C#
+falsa_volta/D/real_clique,falsa_volta,D,real_clique,errou,12.62,5.0,0.345,24.53,D Em D Em D Em D Em D
+falsa_volta/Eb/real_clique,falsa_volta,Eb,real_clique,errou,11.93,5.0,0.591,12.33,Eb Bb Eb Ab Eb F Bb Eb
+falsa_volta/E/real_clique,falsa_volta,E,real_clique,errou,10.51,3.5,0.569,6.07,A E B E B C#m A E B E
+falsa_volta/F/real_clique,falsa_volta,F,real_clique,errou,9.94,3.5,0.545,8.51,Bb F C F C Dm Bb F C F
+falsa_volta/F#/real_clique,falsa_volta,F#,real_clique,errou,9.37,3.5,0.659,4.71,C# F# C# Ebm B F# C# F#
+falsa_volta/G/real_clique,falsa_volta,G,real_clique,errou,9.56,3.8,0.599,5.11,Em C G D G D Em C G D G
+falsa_volta/Ab/real_clique,falsa_volta,Ab,real_clique,errou,8.35,3.5,0.635,4.84,Eb Ab Eb Fm C# Ab Eb Ab
+falsa_volta/A/real_clique,falsa_volta,A,real_clique,errou,12.02,4.0,0.512,11.47,A E F#m F# D F#m A E A
+falsa_volta/Bb/real_clique,falsa_volta,Bb,real_clique,errou,9.94,3.5,0.454,14.93,Bb F Bb F G Eb Bb F Bb
+falsa_volta/B/real_clique,falsa_volta,B,real_clique,errou,9.37,3.5,0.637,2.71,B F# B F# Abm E B F# B
+falsa_volta/C/real_livre,falsa_volta,C,real_livre,errou,17.97,7.1,0.542,9.45,F C G Am F Am F C G Am
+falsa_volta/C#/real_livre,falsa_volta,C#,real_livre,errou,29.6,11.1,0.563,12.0,C# F# C# F# C#
+falsa_volta/D/real_livre,falsa_volta,D,real_livre,errou,20.43,8.1,0.552,11.32,D A D A D G D A G D A D
+falsa_volta/Eb/real_livre,falsa_volta,Eb,real_livre,errou,26.77,11.3,0.692,7.14,Eb Bb Eb F Ab Eb Bb Eb
+falsa_volta/E/real_livre,falsa_volta,E,real_livre,errou,39.19,13.1,0.267,10.44,C#m C#m E B B C#m
+falsa_volta/F/real_livre,falsa_volta,F,real_livre,errou,20.01,7.1,0.467,19.93,Dm F C Dm F C Dm F C Dm
+falsa_volta/F#/real_livre,falsa_volta,F#,real_livre,errou,24.24,9.1,0.495,8.96,F# C# F# C# F# C# F# B
+falsa_volta/G/real_livre,falsa_volta,G,real_livre,errou,17.81,7.1,0.637,9.32,C G D Em C Em C G D Em
+falsa_volta/Ab/real_livre,falsa_volta,Ab,real_livre,errou,21.71,9.1,0.582,7.46,Eb Ab Eb Ab C# Ab Eb Ab
+falsa_volta/A/real_livre,falsa_volta,A,real_livre,errou,21.5,7.2,0.29,17.95,F# D A E F# D A A E F#
+falsa_volta/Bb/real_livre,falsa_volta,Bb,real_livre,errou,20.22,7.2,0.501,12.5,Bb F G F Gm G Eb Bb F
+falsa_volta/B/real_livre,falsa_volta,B,real_livre,errou,20.04,7.5,0.242,8.89,E B F# Abm E B Abm B
+menor/C/clique,menor,C,clique,ok,21.35,8.0,0.97,0.0,Am G F G Am G F G Am G
+menor/C#/clique,menor,C#,clique,errou,26.68,8.0,0.836,6.26,Bbm Ab F# Ab Bb Bbm Ab
+menor/D/clique,menor,D,clique,errou,16.02,8.0,0.931,3.58,Bm A G A Bm A G A Bm A
+menor/Eb/clique,menor,Eb,clique,ok,18.47,8.0,0.965,0.0,Ab Bb Cm Bb Ab Bb Cm Bb
+menor/E/clique,menor,E,clique,ok,21.35,8.0,0.97,0.0,B A B C#m B A B C#m B
+menor/F/clique,menor,F,clique,ok,25.01,7.5,0.975,0.0,C Bb C Dm C Bb C Dm C
+menor/F#/clique,menor,F#,clique,ok,16.02,8.0,0.96,0.0,B C# Ebm C# B C# Ebm C#
+menor/G/clique,menor,G,clique,ok,17.33,7.5,0.964,0.0,Em D C D Em D C D Em D
+menor/Ab/clique,menor,Ab,clique,ok,20.0,7.5,0.969,0.0,C# Eb Fm Eb C# Eb Fm Eb
+menor/A/clique,menor,A,clique,ok,25.01,7.5,0.975,0.0,E D E F#m E D E F#m E
+menor/Bb/clique,menor,Bb,clique,ok,16.02,8.0,0.96,0.0,F Eb F Gm F Eb F Gm F
+menor/B/clique,menor,B,clique,ok,18.47,8.0,0.965,0.0,E F# Abm F# E F# Abm F#
+menor/C/tom_da_forma,menor,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,Am G F G Am G F G Am G
+menor/C#/tom_da_forma,menor,C#,tom_da_forma,ok,26.68,8.0,0.976,0.0,Ab Bbm Ab F# Ab Bbm Ab
+menor/D/tom_da_forma,menor,D,tom_da_forma,ok,16.02,8.0,0.96,0.0,Bm A G A Bm A G A Bm A
+menor/Eb/tom_da_forma,menor,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,Ab Bb Cm Bb Ab Bb Cm Bb
+menor/E/tom_da_forma,menor,E,tom_da_forma,ok,20.0,7.5,0.969,0.0,B A B C#m B A B C#m B
+menor/F/tom_da_forma,menor,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,C Bb C Dm C Bb C Dm C
+menor/F#/tom_da_forma,menor,F#,tom_da_forma,errou,16.02,8.0,0.705,8.58,B C# Bb C# B C# Bb C#
+menor/G/tom_da_forma,menor,G,tom_da_forma,ok,18.47,8.0,0.965,0.0,Em D C D Em D C D Em D
+menor/Ab/tom_da_forma,menor,Ab,tom_da_forma,ok,25.34,9.5,0.969,0.0,C# Eb Fm Eb C# Eb Fm Eb
+menor/A/tom_da_forma,menor,A,tom_da_forma,errou,26.68,8.0,0.888,8.59,D E F#m E D E F#m F# E
+menor/Bb/tom_da_forma,menor,Bb,tom_da_forma,errou,9.01,4.5,0.725,7.5,F Gm F Gm F Gm F Gm F
+menor/B/tom_da_forma,menor,B,tom_da_forma,ok,18.47,8.0,0.965,0.0,E F# Abm F# E F# Abm F#
+menor/C/livre,menor,C,livre,ok,16.21,6.1,0.996,0.0,Am G F G Am G F G Am G
+menor/C#/livre,menor,C#,livre,errou,20.27,6.1,0.566,17.82,Ab Bbm Ab F# Ab Bbm Ab
+menor/D/livre,menor,D,livre,ok,12.19,6.1,0.995,0.0,Bm A G A Bm A G A Bm A
+menor/Eb/livre,menor,Eb,livre,ok,14.12,6.1,0.997,0.0,Ab Bb Cm Bb Ab Bb Cm Bb
+menor/E/livre,menor,E,livre,errou,18.99,7.1,0.588,21.16,B C# C#m B A B C# C#m B
+menor/F/livre,menor,F,livre,errou,20.18,6.1,0.542,21.65,C Dm C Bb C Dm C Bb C
+menor/F#/livre,menor,F#,livre,errou,12.24,6.1,0.779,4.46,B C# Ebm C# B C# Ebm C#
+menor/G/livre,menor,G,livre,errou,16.32,7.1,0.889,3.83,D Em E Em D C D Em E Em
+menor/Ab/livre,menor,Ab,livre,errou,19.9,7.5,0.837,1.77,Eb F Fm Eb C# Eb F Fm
+menor/A/livre,menor,A,livre,ok,20.25,6.1,0.995,0.0,E D E F#m E D E F#m E
+menor/Bb/livre,menor,Bb,livre,errou,10.28,5.1,0.538,15.75,F G Gm F G Gm F G Gm F
+menor/B/livre,menor,B,livre,ok,14.12,6.1,0.989,0.0,E F# Abm F# E F# Abm F#
+menor/C/real_clique,menor,C,real_clique,errou,20.17,8.0,0.921,2.61,G F G Am G F G Am A G F
+menor/C#/real_clique,menor,C#,real_clique,errou,20.03,7.5,0.645,11.23,Eb Ab F# Ab C# Eb Ab F#
+menor/D/real_clique,menor,D,real_clique,errou,22.7,9.0,0.615,9.88,A D A G A D A G A D A G
+menor/Eb/real_clique,menor,Eb,real_clique,errou,22.61,9.5,0.662,8.91,Eb Bb Ab Bb Eb F Bb Ab
+menor/E/real_clique,menor,E,real_clique,ok,22.49,7.5,0.983,0.0,B A B C#m B A B C#m B A
+menor/F/real_clique,menor,F,real_clique,ok,22.64,8.0,0.982,0.0,Bb C Dm C Bb C Dm C Bb
+menor/F#/real_clique,menor,F#,real_clique,ok,20.03,7.5,0.981,0.0,C# Ebm C# B C# Ebm C# B
+menor/G/real_clique,menor,G,real_clique,ok,21.45,8.5,0.949,1.31,D C D Em D C D Em D C
+menor/Ab/real_clique,menor,Ab,real_clique,ok,19.06,8.0,0.979,0.0,Eb Fm Eb C# Eb Fm Eb C#
+menor/A/real_clique,menor,A,real_clique,errou,12.02,4.0,0.609,17.11,F#m E D E F#m E D E F#m
+menor/Bb/real_clique,menor,Bb,real_clique,errou,21.22,7.5,0.729,21.84,F G Gm F Gm F Gm F Eb
+menor/B/real_clique,menor,B,real_clique,errou,21.38,8.0,0.894,5.38,Abm Ab F# E F# Ab F# E
+menor/C/real_livre,menor,C,real_livre,errou,40.31,14.3,0.154,13.31,C C F F C F
+menor/C#/real_livre,menor,C#,real_livre,errou,38.03,14.3,0.406,12.0,Ab F# C# Ab F# C# Ab F#
+menor/D/real_livre,menor,D,real_livre,errou,15.35,6.1,0.729,9.44,A G A G A G A G A G
+menor/Eb/real_livre,menor,Eb,real_livre,errou,14.91,6.3,0.334,19.63,Ab F Eb Bb Ab F Eb Bb
+menor/E/real_livre,menor,E,real_livre,errou,18.83,6.3,0.306,21.41,C#m B A B C#m B A B C#m
+menor/F/real_livre,menor,F,real_livre,errou,48.39,17.1,0.808,3.26,Bb C Dm C Bb C Dm C Bb
+menor/F#/real_livre,menor,F#,real_livre,errou,17.39,6.5,0.833,3.93,C# Ebm C# B C# Ebm C# B
+menor/G/real_livre,menor,G,real_livre,ok,15.35,6.1,0.955,0.0,D C D Em D C D Em D C
+menor/Ab/real_livre,menor,Ab,real_livre,errou,19.29,8.1,0.865,4.18,Eb Fm Eb C# Eb Fm Eb C#
+menor/A/real_livre,menor,A,real_livre,errou,57.68,19.3,0.524,5.89,F# E F#m E D
+menor/Bb/real_livre,menor,Bb,real_livre,errou,24.82,8.8,0.773,5.12,Eb F Gm G F Eb F Gm G F
+menor/B/real_livre,menor,B,real_livre,errou,19.69,7.4,0.556,17.55,E F# F# E F# Abm Ab F#
+ii_V_I/C/clique,ii_V_I,C,clique,ok,20.0,7.5,0.969,0.0,G C Am Dm G C Am Dm G
+ii_V_I/C#/clique,ii_V_I,C#,clique,ok,26.68,8.0,0.948,0.76,Ebm Ab C# Bbm Ebm Ab
+ii_V_I/D/clique,ii_V_I,D,clique,ok,15.02,7.5,0.959,0.0,A D Bm Em A D Bm Em A
+ii_V_I/Eb/clique,ii_V_I,Eb,clique,errou,18.47,8.0,0.938,2.25,Eb Cm Fm Bb Eb Cm Fm Bb
+ii_V_I/E/clique,ii_V_I,E,clique,errou,20.0,7.5,0.721,9.33,B E C# F#m B E C# F#m B
+ii_V_I/F/clique,ii_V_I,F,clique,ok,25.01,7.5,0.975,0.0,C F Dm Gm C F Dm Gm C
+ii_V_I/F#/clique,ii_V_I,F#,clique,ok,16.02,8.0,0.931,1.08,Abm C# F# Ebm Eb Abm C#
+ii_V_I/G/clique,ii_V_I,G,clique,ok,18.47,8.0,0.965,0.0,D G Em Am D G Em Am D
+ii_V_I/Ab/clique,ii_V_I,Ab,clique,ok,21.35,8.0,0.942,0.59,Fm Bbm Eb Ab Fm Bbm Eb
+ii_V_I/A/clique,ii_V_I,A,clique,ok,26.68,8.0,0.976,0.0,E A F#m Bm E A F#m Bm E
+ii_V_I/Bb/clique,ii_V_I,Bb,clique,ok,15.02,7.5,0.959,0.0,F Bb Gm Cm F Bb Gm Cm F
+ii_V_I/B/clique,ii_V_I,B,clique,ok,18.47,8.0,0.965,0.0,Abm C#m F# B Abm C#m F#
+ii_V_I/C/tom_da_forma,ii_V_I,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,G C Am Dm G C Am Dm G
+ii_V_I/C#/tom_da_forma,ii_V_I,C#,tom_da_forma,errou,25.01,7.5,0.975,5.84,Ebm Ab C# Bbm Ebm Ab
+ii_V_I/D/tom_da_forma,ii_V_I,D,tom_da_forma,errou,15.02,7.5,0.959,2.01,A D Bm Em A D Bm Em A
+ii_V_I/Eb/tom_da_forma,ii_V_I,Eb,tom_da_forma,errou,18.47,8.0,0.682,8.65,Eb Cm F Bb Eb Cm F Bb
+ii_V_I/E/tom_da_forma,ii_V_I,E,tom_da_forma,errou,21.35,8.0,0.856,6.0,F#m F# B E C#m F#m F# B
+ii_V_I/F/tom_da_forma,ii_V_I,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,C F Dm Gm C F Dm Gm C
+ii_V_I/F#/tom_da_forma,ii_V_I,F#,tom_da_forma,errou,19.01,9.5,0.926,2.58,Abm C# F# Ebm Abm C#
+ii_V_I/G/tom_da_forma,ii_V_I,G,tom_da_forma,ok,18.47,8.0,0.911,0.98,G E Em Am D G E Em Am D
+ii_V_I/Ab/tom_da_forma,ii_V_I,Ab,tom_da_forma,ok,20.0,7.5,0.969,0.0,Fm Bbm Eb Ab Fm Bbm Eb
+ii_V_I/A/tom_da_forma,ii_V_I,A,tom_da_forma,errou,25.01,7.5,0.975,2.49,E A F#m Bm E A F#m Bm E
+ii_V_I/Bb/tom_da_forma,ii_V_I,Bb,tom_da_forma,ok,16.02,8.0,0.96,0.0,F Bb Gm Cm F Bb Gm Cm F
+ii_V_I/B/tom_da_forma,ii_V_I,B,tom_da_forma,ok,18.47,8.0,0.965,0.0,Abm C#m F# B Abm C#m F#
+ii_V_I/C/livre,ii_V_I,C,livre,errou,16.25,6.1,0.714,9.31,G C Am Dm G C Am Dm G
+ii_V_I/C#/livre,ii_V_I,C#,livre,errou,23.68,7.1,0.392,28.64,Ab Ab C# Bbm Eb Ebm Ab
+ii_V_I/D/livre,ii_V_I,D,livre,errou,12.19,6.1,0.879,2.04,A D Bm Em A D Bm Em A
+ii_V_I/Eb/livre,ii_V_I,Eb,livre,ok,14.07,6.1,0.994,0.0,Eb Cm Fm Bb Eb Cm Fm Bb
+ii_V_I/E/livre,ii_V_I,E,livre,errou,19.85,7.4,0.389,24.02,C# F# F#m B E C# F# F#m
+ii_V_I/F/livre,ii_V_I,F,livre,errou,20.32,6.1,0.996,2.5,C F Dm Gm C F Dm Gm C
+ii_V_I/F#/livre,ii_V_I,F#,livre,errou,12.75,6.4,0.373,15.5,F# C# F# C# F# C# F# C#
+ii_V_I/G/livre,ii_V_I,G,livre,errou,14.05,6.1,0.732,8.65,D G Am D G Am D G Am D
+ii_V_I/Ab/livre,ii_V_I,Ab,livre,ok,16.28,6.1,0.994,0.0,Fm Bbm Eb Ab Fm Bbm Eb
+ii_V_I/A/livre,ii_V_I,A,livre,ok,20.29,6.1,0.996,0.0,E A F#m Bm E A F#m Bm E
+ii_V_I/Bb/livre,ii_V_I,Bb,livre,errou,12.21,6.1,0.872,1.78,F Bb Gm Cm F Bb Gm Cm F
+ii_V_I/B/livre,ii_V_I,B,livre,ok,14.09,6.1,0.992,0.0,Abm C#m F# B Abm C#m F#
+emprestado/C/clique,emprestado,C,clique,ok,21.35,8.0,0.977,0.0,Bb F C Bb F C Bb F C Bb
+emprestado/C#/clique,emprestado,C#,clique,ok,25.01,7.5,0.982,0.0,F# C# B F# C# B F# C# B
+emprestado/D/clique,emprestado,D,clique,ok,16.02,8.0,0.969,0.0,G D C G D C G D C G D C
+emprestado/Eb/clique,emprestado,Eb,clique,ok,18.47,8.0,0.973,0.0,Eb C# Ab Eb C# Ab Eb C#
+emprestado/E/clique,emprestado,E,clique,ok,21.35,8.0,0.977,0.0,A E D A E D A E D A E D
+emprestado/F/clique,emprestado,F,clique,ok,25.01,7.5,0.955,1.58,Bb F Eb Bb F Eb Bb F Eb
+emprestado/F#/clique,emprestado,F#,clique,ok,16.02,8.0,0.969,0.0,E B F# E B F# E B F# E
+emprestado/G/clique,emprestado,G,clique,ok,18.47,8.0,0.973,0.0,C G F C G F C G F C G F
+emprestado/Ab/clique,emprestado,Ab,clique,ok,21.35,8.0,0.977,0.0,Ab F# C# Ab F# C# Ab F#
+emprestado/A/clique,emprestado,A,clique,ok,26.68,8.0,0.982,0.0,D A G D A G D A G D A G
+emprestado/Bb/clique,emprestado,Bb,clique,ok,15.02,7.5,0.97,0.0,Bb Ab Eb Bb Ab Eb Bb Ab
+emprestado/B/clique,emprestado,B,clique,ok,17.33,7.5,0.974,0.0,E B A E B A E B A E B A
+emprestado/C/tom_da_forma,emprestado,C,tom_da_forma,ok,21.35,8.0,0.977,0.0,Bb F C Bb F C Bb F C Bb
+emprestado/C#/tom_da_forma,emprestado,C#,tom_da_forma,ok,26.68,8.0,0.982,0.0,F# C# B F# C# B F# C# B
+emprestado/D/tom_da_forma,emprestado,D,tom_da_forma,ok,16.02,8.0,0.969,0.0,G D C G D C G D C G D C
+emprestado/Eb/tom_da_forma,emprestado,Eb,tom_da_forma,ok,17.33,7.5,0.974,0.0,Eb C# Ab Eb C# Ab Eb C#
+emprestado/E/tom_da_forma,emprestado,E,tom_da_forma,ok,21.35,8.0,0.977,0.0,A E D A E D A E D A E D
+emprestado/F/tom_da_forma,emprestado,F,tom_da_forma,ok,26.68,8.0,0.952,1.75,F Eb Bb F Eb Gm Bb F Eb
+emprestado/F#/tom_da_forma,emprestado,F#,tom_da_forma,ok,16.02,8.0,0.969,0.0,E B F# E B F# E B F# E
+emprestado/G/tom_da_forma,emprestado,G,tom_da_forma,ok,18.47,8.0,0.973,0.0,C G F C G F C G F C G F
+emprestado/Ab/tom_da_forma,emprestado,Ab,tom_da_forma,ok,21.35,8.0,0.977,0.0,Ab F# C# Ab F# C# Ab F#
+emprestado/A/tom_da_forma,emprestado,A,tom_da_forma,ok,26.68,8.0,0.982,0.0,D A G D A G D A G D A G
+emprestado/Bb/tom_da_forma,emprestado,Bb,tom_da_forma,ok,15.02,7.5,0.97,0.0,Bb Ab Eb Bb Ab Eb Bb Ab
+emprestado/B/tom_da_forma,emprestado,B,tom_da_forma,ok,18.47,8.0,0.973,0.0,E B A E B A E B A E B A
+emprestado/C/livre,emprestado,C,livre,ok,16.23,6.1,0.997,0.0,Bb F C Bb F C Bb F C Bb
+emprestado/C#/livre,emprestado,C#,livre,ok,20.27,6.1,0.977,0.0,B F# C# B F# C# B F# C#
+emprestado/D/livre,emprestado,D,livre,ok,12.24,6.1,0.922,0.61,G D C G D C G D C G D C
+emprestado/Eb/livre,emprestado,Eb,livre,ok,13.98,6.1,0.995,0.0,Eb C# Ab Eb C# Ab Eb C#
+emprestado/E/livre,emprestado,E,livre,errou,16.21,6.1,0.907,2.45,A E D A E D A E D A E D
+emprestado/F/livre,emprestado,F,livre,ok,20.2,6.1,0.981,0.0,Eb Bb F Eb Bb F Eb Bb F
+emprestado/F#/livre,emprestado,F#,livre,ok,12.17,6.1,0.913,0.51,E B F# E B F# E B F# E
+emprestado/G/livre,emprestado,G,livre,ok,14.14,6.1,0.951,0.35,C G F C G F C G F C G F
+emprestado/Ab/livre,emprestado,Ab,livre,ok,16.21,6.1,0.998,0.0,Ab F# C# Ab F# C# Ab F#
+emprestado/A/livre,emprestado,A,livre,ok,20.15,6.0,0.998,0.0,D A G D A G D A G D A G
+emprestado/Bb/livre,emprestado,Bb,livre,ok,12.35,6.2,0.976,0.0,Eb Bb Ab Eb Bb Ab Eb Bb
+emprestado/B/livre,emprestado,B,livre,ok,14.14,6.1,0.997,0.0,E B A E B A E B A E B A
+dominante_secundaria/C/clique,dominante_secundaria,C,clique,ok,20.0,7.5,0.969,0.0,F C E Am F C E Am F C E
+dominante_secundaria/C#/clique,dominante_secundaria,C#,clique,ok,26.68,8.0,0.976,0.0,Bbm F# C# F Bbm F# C# F
+dominante_secundaria/D/clique,dominante_secundaria,D,clique,ok,16.02,8.0,0.96,0.0,F# Bm G D F# Bm G D F#
+dominante_secundaria/Eb/clique,dominante_secundaria,Eb,clique,ok,18.47,8.0,0.965,0.0,G Cm Ab Eb G Cm Ab Eb G
+dominante_secundaria/E/clique,dominante_secundaria,E,clique,ok,21.35,8.0,0.97,0.0,C#m A E Ab C#m A E Ab
+dominante_secundaria/F/clique,dominante_secundaria,F,clique,ok,26.68,8.0,0.976,0.0,F A Dm Bb F A Dm Bb F A
+dominante_secundaria/F#/clique,dominante_secundaria,F#,clique,ok,16.02,8.0,0.96,0.0,Ebm B F# Bb Ebm B F# Bb
+dominante_secundaria/G/clique,dominante_secundaria,G,clique,ok,17.33,7.5,0.964,0.0,C G B Em C G B Em C G B
+dominante_secundaria/Ab/clique,dominante_secundaria,Ab,clique,ok,21.35,8.0,0.97,0.0,C Fm C# Ab C Fm C# Ab C
+dominante_secundaria/A/clique,dominante_secundaria,A,clique,errou,25.01,7.5,0.975,2.49,F#m D A C# F#m D A C#
+dominante_secundaria/Bb/clique,dominante_secundaria,Bb,clique,errou,15.02,7.5,0.905,2.06,D Gm Eb Bb D Gm Eb Bb D
+dominante_secundaria/B/clique,dominante_secundaria,B,clique,ok,18.47,8.0,0.965,0.0,Abm E B Eb Abm E B Eb
+dominante_secundaria/C/tom_da_forma,dominante_secundaria,C,tom_da_forma,ok,20.0,7.5,0.969,0.0,F C E Am F C E Am F C E
+dominante_secundaria/C#/tom_da_forma,dominante_secundaria,C#,tom_da_forma,ok,26.68,8.0,0.976,0.0,Bbm F# C# F Bbm F# C# F
+dominante_secundaria/D/tom_da_forma,dominante_secundaria,D,tom_da_forma,ok,16.02,8.0,0.96,0.0,F# Bm G D F# Bm G D F#
+dominante_secundaria/Eb/tom_da_forma,dominante_secundaria,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,G Cm Ab Eb G Cm Ab Eb G
+dominante_secundaria/E/tom_da_forma,dominante_secundaria,E,tom_da_forma,ok,21.35,8.0,0.97,0.0,C#m A E Ab C#m A E Ab
+dominante_secundaria/F/tom_da_forma,dominante_secundaria,F,tom_da_forma,ok,25.01,7.5,0.975,0.0,F A Dm Bb F A Dm Bb F A
+dominante_secundaria/F#/tom_da_forma,dominante_secundaria,F#,tom_da_forma,errou,20.01,10.0,0.638,9.65,Bbm Bb Eb B F# Bbm Bb
+dominante_secundaria/G/tom_da_forma,dominante_secundaria,G,tom_da_forma,ok,18.47,8.0,0.965,0.0,C G B Em C G B Em C G B
+dominante_secundaria/Ab/tom_da_forma,dominante_secundaria,Ab,tom_da_forma,ok,20.0,7.5,0.969,0.0,C Fm C# Ab C Fm C# Ab C
+dominante_secundaria/A/tom_da_forma,dominante_secundaria,A,tom_da_forma,ok,26.68,8.0,0.976,0.0,F#m D A C# F#m D A C#
+dominante_secundaria/Bb/tom_da_forma,dominante_secundaria,Bb,tom_da_forma,errou,16.02,8.0,0.879,2.75,G Gm Eb Bb D Gm Eb Bb D
+dominante_secundaria/B/tom_da_forma,dominante_secundaria,B,tom_da_forma,errou,17.33,7.5,0.911,2.75,Abm E B Eb Abm E B Eb
+dominante_secundaria/C/livre,dominante_secundaria,C,livre,ok,17.0,6.4,0.987,0.0,F C E Am F C E Am F C E
+dominante_secundaria/C#/livre,dominante_secundaria,C#,livre,errou,26.89,8.1,0.622,26.39,F# C# F Bbm F# C# F Bbm
+dominante_secundaria/D/livre,dominante_secundaria,D,livre,errou,12.26,6.1,0.898,1.69,F# Bm G D F# Bm G D F#
+dominante_secundaria/Eb/livre,dominante_secundaria,Eb,livre,errou,16.39,7.1,0.494,15.57,Ab Bb Cm Ab Bb Cm Ab Bb
+dominante_secundaria/E/livre,dominante_secundaria,E,livre,errou,24.24,9.1,0.696,14.67,C# A E Ab C#m C# A E Ab
+dominante_secundaria/F/livre,dominante_secundaria,F,livre,errou,20.25,6.1,0.713,12.03,F A Dm Bb F A Dm Bb F A
+dominante_secundaria/F#/livre,dominante_secundaria,F#,livre,errou,16.21,8.1,0.721,8.0,Ebm B F# Bb Ebm B F# Bb
+dominante_secundaria/G/livre,dominante_secundaria,G,livre,ok,14.21,6.2,0.995,0.0,C G B Em C G B Em C G B
+dominante_secundaria/Ab/livre,dominante_secundaria,Ab,livre,errou,17.95,6.7,0.85,1.87,C Fm C# Ab C Fm C# Ab C
+dominante_secundaria/A/livre,dominante_secundaria,A,livre,errou,20.27,6.1,0.241,38.1,F#m D A C# F#m D A C#
+dominante_secundaria/Bb/livre,dominante_secundaria,Bb,livre,ok,12.79,6.4,0.951,0.0,D Gm Eb Bb D Gm Eb Bb D
+dominante_secundaria/B/livre,dominante_secundaria,B,livre,errou,16.44,7.1,0.701,6.92,B Gm Abm E B Gm Abm E B
+formas_worship/C/clique,formas_worship,C,clique,ok,20.0,7.5,0.969,0.0,F C G Am F C G Am F C G
+formas_worship/C#/clique,formas_worship,C#,clique,errou,25.01,7.5,0.863,6.9,F# C# Ab Bbm F# C# Ab
+formas_worship/D/clique,formas_worship,D,clique,errou,17.02,8.5,0.87,2.58,G D A Bm G D A Bm G D A
+formas_worship/Eb/clique,formas_worship,Eb,clique,ok,18.47,8.0,0.965,0.0,Cm Ab Eb Bb Cm Ab Eb Bb
+formas_worship/E/clique,formas_worship,E,clique,errou,22.67,8.5,0.878,4.23,E B C#m A E B C#m A E B
+formas_worship/F/clique,formas_worship,F,clique,ok,28.35,8.5,0.945,1.75,F C Dm Bb F C Dm Bb F C
+formas_worship/F#/clique,formas_worship,F#,clique,errou,17.02,8.5,0.696,7.08,F# B F# C# F# B F# C#
+formas_worship/G/clique,formas_worship,G,clique,errou,18.47,8.0,0.822,4.7,G C G D G C G D G C G D
+formas_worship/Ab/clique,formas_worship,Ab,clique,errou,21.35,8.0,0.513,16.0,Ab Eb Ab Eb Ab Eb Ab Eb
+formas_worship/A/clique,formas_worship,A,clique,ok,28.35,8.5,0.975,0.0,A E F#m D A E F#m D A E
+formas_worship/Bb/clique,formas_worship,Bb,clique,ok,15.02,7.5,0.93,1.08,Eb Bb F Gm Bb Eb Bb F
+formas_worship/B/clique,formas_worship,B,clique,errou,21.93,9.5,0.835,4.95,B E B F# Abm B E B F#
+formas_worship/C/tom_da_forma,formas_worship,C,tom_da_forma,ok,21.35,8.0,0.97,0.0,F C G Am F C G Am F C G
+formas_worship/C#/tom_da_forma,formas_worship,C#,tom_da_forma,errou,25.01,7.5,0.861,10.34,C# Ab Bbm C# F# C# Ab
+formas_worship/D/tom_da_forma,formas_worship,D,tom_da_forma,ok,16.02,8.0,0.904,1.5,G D A Bm G D A Bm G D A
+formas_worship/Eb/tom_da_forma,formas_worship,Eb,tom_da_forma,ok,18.47,8.0,0.965,0.0,Cm Ab Eb Bb Cm Ab Eb Bb
+formas_worship/E/tom_da_forma,formas_worship,E,tom_da_forma,ok,20.0,7.5,0.942,0.58,E B C#m A E B C#m A E B
+formas_worship/F/tom_da_forma,formas_worship,F,tom_da_forma,ok,26.68,8.0,0.976,0.0,F C Dm Bb F C Dm Bb F C
+formas_worship/F#/tom_da_forma,formas_worship,F#,tom_da_forma,ok,18.01,9.0,0.9,1.5,B F# C# F# Ebm B F# C#
+formas_worship/G/tom_da_forma,formas_worship,G,tom_da_forma,errou,21.93,9.5,0.835,4.95,D Em G C G D Em G C G D
+formas_worship/Ab/tom_da_forma,formas_worship,Ab,tom_da_forma,errou,24.02,9.0,0.485,16.0,Ab Eb Ab Eb Ab Eb Ab Eb
+formas_worship/A/tom_da_forma,formas_worship,A,tom_da_forma,ok,26.68,8.0,0.976,0.0,A E F#m D A E F#m D A E
+formas_worship/Bb/tom_da_forma,formas_worship,Bb,tom_da_forma,errou,15.02,7.5,0.905,2.06,F Gm Eb Bb F Gm Eb Bb F
+formas_worship/B/tom_da_forma,formas_worship,B,tom_da_forma,ok,18.47,8.0,0.965,0.0,Abm E B F# Abm E B F#
+formas_worship/C/livre,formas_worship,C,livre,ok,16.32,6.1,0.993,0.0,F C G Am F C G Am F C G
+formas_worship/C#/livre,formas_worship,C#,livre,errou,27.0,8.1,0.274,38.88,C# Ab Bbm F# C# Ab Bbm
+formas_worship/D/livre,formas_worship,D,livre,errou,12.26,6.1,0.706,7.41,Bm G D A Bm G D A G D A
+formas_worship/Eb/livre,formas_worship,Eb,livre,errou,16.6,7.2,0.206,19.12,Eb Cm Eb Bb Eb Cm Eb Bb
+formas_worship/E/livre,formas_worship,E,livre,ok,16.25,6.1,0.993,0.0,E B C#m A E B C#m A E B
+formas_worship/F/livre,formas_worship,F,livre,ok,20.2,6.1,0.995,0.0,F C Dm Bb F C Dm Bb F C
+formas_worship/F#/livre,formas_worship,F#,livre,errou,13.79,6.9,0.53,9.48,C# Ebm F# C# Ebm B F#
+formas_worship/G/livre,formas_worship,G,livre,errou,17.27,7.5,0.56,12.5,D G C G D G C G D G C G
+formas_worship/Ab/livre,formas_worship,Ab,livre,errou,16.65,6.2,0.326,28.94,Ab Eb Fm Ab Eb Fm Ab Eb
+formas_worship/A/livre,formas_worship,A,livre,errou,30.23,9.1,0.277,24.27,E A F#m D A A E A F#m D
+formas_worship/Bb/livre,formas_worship,Bb,livre,errou,13.44,6.7,0.369,19.1,F Gm Bb Eb Bb F Gm Bb
+formas_worship/B/livre,formas_worship,B,livre,errou,14.05,6.1,0.55,16.73,B F# Abm B F# Abm B F#
+formas_sus/C/clique,formas_sus,C,clique,ok,21.35,8.0,0.979,0.0,F G C F G C F G C F G C
+formas_sus/C#/clique,formas_sus,C#,clique,ok,26.68,8.0,0.983,0.0,Ab C# F# Ab C# F# Ab C#
+formas_sus/D/clique,formas_sus,D,clique,errou,15.02,7.5,0.76,6.0,D A D A D A D A D
+formas_sus/Eb/clique,formas_sus,Eb,clique,ok,18.47,8.0,0.976,0.0,Bb Eb Ab Bb Eb Ab Bb Eb
+formas_sus/E/clique,formas_sus,E,clique,ok,21.35,8.0,0.979,0.0,A B E A B E A B E A B E
+formas_sus/F/clique,formas_sus,F,clique,errou,28.35,8.5,0.834,7.74,C F Bb Dm C F Bb Dm C F
+formas_sus/F#/clique,formas_sus,F#,clique,ok,16.02,8.0,0.972,0.0,B C# F# B C# F# B C# F#
+formas_sus/G/clique,formas_sus,G,clique,errou,18.47,8.0,0.857,4.95,C G D G C G D G C G D G
+formas_sus/Ab/clique,formas_sus,Ab,clique,errou,22.67,8.5,0.781,6.59,Eb Ab Eb Ab Eb Ab Eb Ab
+formas_sus/A/clique,formas_sus,A,clique,ok,26.68,8.0,0.983,0.0,D E A D E A D E A D E A
+formas_sus/Bb/clique,formas_sus,Bb,clique,errou,15.02,7.5,0.885,3.24,Eb Bb F Bb Eb Bb F Bb
+formas_sus/B/clique,formas_sus,B,clique,errou,18.47,8.0,0.75,6.92,F# B Abm F# B Abm F# B
+formas_sus/C/tom_da_forma,formas_sus,C,tom_da_forma,ok,21.35,8.0,0.979,0.0,F G C F G C F G C F G C
+formas_sus/C#/tom_da_forma,formas_sus,C#,tom_da_forma,ok,26.68,8.0,0.983,0.0,Ab C# F# Ab C# F# Ab C#
+formas_sus/D/tom_da_forma,formas_sus,D,tom_da_forma,ok,16.02,8.0,0.972,0.0,G A D G A D G A D G A D
+formas_sus/Eb/tom_da_forma,formas_sus,Eb,tom_da_forma,ok,18.47,8.0,0.976,0.0,Bb Eb Ab Bb Eb Ab Bb Eb
+formas_sus/E/tom_da_forma,formas_sus,E,tom_da_forma,errou,20.0,7.5,0.951,6.66,A B E A B E A B E A B E
+formas_sus/F/tom_da_forma,formas_sus,F,tom_da_forma,errou,31.67,9.5,0.917,3.49,Bb C F Bb C F Bb C Fm F
+formas_sus/F#/tom_da_forma,formas_sus,F#,tom_da_forma,ok,15.02,7.5,0.97,0.0,B C# F# B C# F# B C# F#
+formas_sus/G/tom_da_forma,formas_sus,G,tom_da_forma,ok,18.47,8.0,0.976,0.0,C D G C D G C D G C D G
+formas_sus/Ab/tom_da_forma,formas_sus,Ab,tom_da_forma,errou,22.67,8.5,0.747,8.0,Eb Ab Fm Eb Ab Fm Eb Ab
+formas_sus/A/tom_da_forma,formas_sus,A,tom_da_forma,errou,25.01,7.5,0.955,8.33,D E A D E A D E A D E A
+formas_sus/Bb/tom_da_forma,formas_sus,Bb,tom_da_forma,ok,17.02,8.5,0.941,1.08,Eb F Bb Eb F Bb Eb F Bb
+formas_sus/B/tom_da_forma,formas_sus,B,tom_da_forma,ok,19.63,8.5,0.975,0.0,B E F# B E F# B E F# B
+formas_sus/C/livre,formas_sus,C,livre,ok,29.53,11.1,0.996,0.0,C F G C F G C F G C
+formas_sus/C#/livre,formas_sus,C#,livre,errou,22.41,6.7,0.79,5.59,Bbm Ab C# F# Bbm Ab C#
+formas_sus/D/livre,formas_sus,D,livre,errou,14.19,7.1,0.511,10.95,A G D G D G D
+formas_sus/Eb/livre,formas_sus,Eb,livre,ok,16.35,7.1,0.997,0.0,Bb Eb Ab Bb Eb Ab Bb Eb
+formas_sus/E/livre,formas_sus,E,livre,errou,21.62,8.1,0.566,17.28,B E Abm E A B E Abm E A
+formas_sus/F/livre,formas_sus,F,livre,errou,26.89,8.1,0.865,2.69,F Bb C F Bb C F Bb C F
+formas_sus/F#/livre,formas_sus,F#,livre,errou,14.26,7.1,0.844,3.51,B C# F# B C# F# B C# F#
+formas_sus/G/livre,formas_sus,G,livre,errou,15.32,6.6,0.531,13.86,Gm G C G Gm G C G Gm G
+formas_sus/Ab/livre,formas_sus,Ab,livre,errou,32.13,12.1,0.614,10.0,Fm Ab Eb Ab Fm Ab
+formas_sus/A/livre,formas_sus,A,livre,errou,22.36,6.7,0.504,22.89,D A D A D A D A D A D A
+formas_sus/Bb/livre,formas_sus,Bb,livre,errou,13.44,6.7,0.43,15.1,Eb Bb Eb Bb Eb Bb Eb Bb
+formas_sus/B/livre,formas_sus,B,livre,ok,16.37,7.1,0.995,0.0,B E F# B E F# B E F# B

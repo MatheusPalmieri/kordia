@@ -1,4 +1,4 @@
-// Spectrum, onset detector and chord tracker (Python: pipeline._norm_mag, onsets.py, chords.py).
+// Spectrum, onset detector and chord tracker.
 #include <algorithm>
 #include <complex>
 
@@ -77,10 +77,10 @@ std::optional<Onset> OnsetDetector::process(const std::vector<double>& mag, doub
 ChordTracker::ChordTracker(double sr, std::optional<int> key_pc)
     : band_(band_bins(P::CHROMA_WIN, sr, P::CHROMA_FMIN, P::CHROMA_FMAX)), T_(templates()), prior_(key_prior(key_pc)) {
     std::vector<long long> midi;
-    for (int b : band_) midi.push_back(pyround(69 + 12 * std::log2(b * sr / P::CHROMA_WIN / 440.0)));
+    for (int b : band_) midi.push_back(round_even(69 + 12 * std::log2(b * sr / P::CHROMA_WIN / 440.0)));
     long long lo = *std::min_element(midi.begin(), midi.end()), hi = *std::max_element(midi.begin(), midi.end());
     for (long long m : midi) semi_.push_back((int)(m - lo));
-    for (long long s = 0; s <= hi - lo; ++s) semi_pc_.push_back((int)pymod(s + lo, 12));
+    for (long long s = 0; s <= hi - lo; ++s) semi_pc_.push_back((int)floor_mod(s + lo, 12));
     semis_.resize(semi_pc_.size());
     post = prior_;
     evidence.fill(1.0 / 25);

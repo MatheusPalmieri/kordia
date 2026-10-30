@@ -4,24 +4,22 @@
 
 Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os acordes **que estão soando**, não uma cifra pré-programada. Pensado para banda de igreja, onde não há clique, o tom muda na hora e o andamento oscila.
 
-**Status:** app ao vivo em **C++/JUCE** (WASAPI exclusivo, ~40 ms de latência de driver) com o núcleo portado do protótipo Python, que continua como laboratório (cenários, métricas, reprodução de sessões). Os dois dão decisões idênticas nos 12 cenários. Baseline: 88 % do tempo com o acorde certo, zero falso disparo, trocas a ~30 ms do tempo quando o ciclo está travado (~260 ms reagindo). Detalhes e falhas conhecidas em [`docs/resultados.md`](docs/resultados.md).
+**Status:** app ao vivo em **C++/JUCE** (WASAPI, ~22 ms de latência de driver no modo padrão) e laboratório também em C++ (cenários, métricas, prova, reprodução de sessões). Os dois usam o mesmo núcleo; o projeto não tem Python. Detalhes, números e falhas conhecidas em [`docs/resultados.md`](docs/resultados.md).
 
 ## Instalação
 
-```bash
-python -m venv .venv
-.venv/Scripts/pip install -e .        # laboratório Python (Windows, Git Bash)
-python tasks.py build --app           # núcleo C++ + módulo Python + app JUCE (Kordia.exe)
-python tasks.py atalho                # cria Kordia.lnk na raiz, o atalho com a logo
+```bat
+tasks build --app           :: núcleo + laboratório + testes + app JUCE (Kordia.exe)
+tasks atalho                :: cria Kordia.lnk na raiz, o atalho com a logo
 ```
 
-O build C++ precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft, pybind11 e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `python tasks.py build` (sem `--app`) compila só o núcleo e o módulo `kordia_core` usado pelo laboratório.
+O build precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `tasks build` (sem `--app`) compila só o núcleo, o laboratório e os testes.
 
-Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib e pytest para o laboratório. O app em si só precisa do WebView2, que já vem no Windows 11.
+O app em si só precisa do WebView2, que já vem no Windows 11.
 
 ## Uso ao vivo (app)
 
-Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `python tasks.py atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre `cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe` (compile com `python tasks.py build --app`). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
+Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `tasks atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre `cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe` (compile com `tasks build --app`). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
 
 **Ele já ouve desde que abre:** antes do Iniciar, a tela mostra o acorde que está reconhecendo (ou a nota, se você tocar uma só) e o nível do violão, sem tocar nada e sem gravar sessão. Ao apertar **Iniciar** com BPM fixo ou Clique ligado, ele **conta 4 tempos** no clique (4, 3, 2, 1 na tela) e só começa a memorizar no compasso seguinte. Sem clique e sem BPM não há o que contar: ele começa a seguir na hora.
 
@@ -41,53 +39,57 @@ Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automá
 
 ### Logs de cada sessão
 
-Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar. "Abrir pasta" no rodapé leva até ela.
+Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar (`replay_<data-hora>.svg`, abre em qualquer navegador). "Abrir pasta" no rodapé leva até ela.
 
-O relatório é gerado chamando o laboratório Python ao parar (precisa da `.venv`). O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
+O relatório é gerado pelo `kordia_lab`, que o app chama ao parar. O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
 
-```bash
-python -m acompanhante.cli rodar --sessao sessoes/2026-10-29_20-40-00
+```bat
+cpp\build\Release\kordia_lab rodar --sessao sessoes\2026-10-29_20-40-00
 ```
 
 Para eu analisar um problema que você ouviu ao vivo, basta mandar a pasta da sessão (ou dizer o horário em que aconteceu).
 
 ## Uso em arquivos e avaliação
 
-```bash
-# testes (unitários + regressão dos cenários)
-python tasks.py test
+```bat
+:: testes (unitários + regressão dos cenários + prova resumida), ~30 s
+tasks test
 
-# gerar um cenário sintético (WAV + verdade-base JSON)
-python -m acompanhante.cli gerar --cenario acelerando --saida dados/
+:: avaliar todos os cenários (tabela de métricas + relatórios SVG), ~3 s
+tasks avaliar baseline
 
-# rodar o acompanhante num WAV qualquer (inclusive gravação de celular)
-python -m acompanhante.cli rodar --entrada minha_gravacao.wav --modo livre --tom C
-python -m acompanhante.cli rodar --entrada gravacao.wav --modo metronomo --bpm 110 --tom C
-python -m acompanhante.cli rodar --entrada gravacao.wav --modo decorado --progressao "C G Am F" --tom C
+:: prova: músicas novas nos 12 tons, com a configuração do app e o violão real das sessões, ~5 min
+tasks prova dev
+```
 
-# avaliar todos os cenários (tabela de métricas + relatórios PNG)
-python -m acompanhante.cli avaliar --todos --versao baseline
+Direto no laboratório (`cpp\build\Release\kordia_lab.exe`, a partir da raiz do repositório):
 
-# prova: músicas novas nos 12 tons, com a configuração do app e o violão real das sessões
-python -m acompanhante.cli prova --versao dev
+```bat
+:: gerar um cenário sintético (WAV + verdade-base JSON)
+kordia_lab gerar --cenario acelerando --saida dados
+
+:: rodar o acompanhante num WAV qualquer (inclusive gravação de celular)
+kordia_lab rodar --entrada minha_gravacao.wav --modo livre --tom C
+kordia_lab rodar --entrada gravacao.wav --modo metronomo --bpm 110 --tom C
+kordia_lab rodar --entrada gravacao.wav --modo decorado --progressao "C G Am F" --tom C
 ```
 
 `rodar` gera, ao lado da saída escolhida (`--saida`, padrão `saida/`):
 - `<nome>_render.wav`: violão original + baixo + pad;
 - `<nome>.mid` e `<nome>_eventos.json`: os eventos do acompanhamento;
-- `<nome>.png`: relatório visual (forma de onda, onsets, BPM, acordes, estado).
+- `<nome>.svg`: relatório visual (forma de onda, onsets, BPM, acordes, estado, dinâmica).
 
 `avaliar` salva tudo em `resultados/<versao>/`.
 
 ## Estrutura
 
 ```
-assets/         logo (gerar_icones.py gera svg, png e ico) e abrir.bat
-cpp/core/       núcleo C++ (o motor do produto; espelha acompanhante/ linha a linha)
-cpp/python/     módulo kordia_core: o laboratório roda o núcleo C++
-cpp/app/        app JUCE (Kordia.exe) e teste de fumaça do caminho ao vivo (KordiaLiveTest.exe)
-acompanhante/   laboratório Python: referência do algoritmo, cenários, métricas, relatórios; ui/ = interface
-tests/          pytest
+assets/         logo (kordia.svg é a fonte; png e ico exportados) e abrir.bat
+cpp/core/       núcleo: o motor, sem JUCE; os parâmetros ficam em include/kordia/core.h
+cpp/app/        app JUCE (Kordia.exe), teste de fumaça ao vivo (KordiaLiveTest.exe); ui/ = interface
+cpp/lab/        laboratório (kordia_lab.exe): cenários, métricas, prova, relatórios, reprodução de sessões
+cpp/tests/      testes (kordia_tests.exe)
+tasks.bat       build, testes, avaliação, prova, atalho
 docs/           visão, requisitos, arquitetura, riscos, testes, roadmap, decisões, resultados, glossário
 dados/          cenários gerados (ignorado pelo git)
 sessoes/        gravações e logs das sessões ao vivo (ignorado pelo git)

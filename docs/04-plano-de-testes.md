@@ -2,7 +2,7 @@
 
 ## Cenários sintéticos
 
-Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, voicings abertos, batida com espalhamento entre cordas, jitter humano de tempo e intensidade). Todos começam com ~1 s de silêncio e terminam com o último acorde soando um compasso, seguido de silêncio. Cada um tem semente fixa e gera WAV + JSON de verdade-base (`dados/<nome>.wav|.json`).
+Gerados por `cpp/lab/scenarios.cpp` com violão Karplus-Strong (6 cordas, voicings abertos, batida com espalhamento entre cordas, jitter humano de tempo e intensidade). Todos começam com ~1 s de silêncio e terminam com o último acorde soando um compasso, seguido de silêncio. Cada um tem semente fixa e gera WAV + JSON de verdade-base (`dados/<nome>.wav|.json`).
 
 | Nome | O que testa | Modo de execução |
 |---|---|---|
@@ -21,9 +21,9 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `tom_errado` | B–F#–G#m–E com o tom configurado em Dó (caso real de 2026-10-29) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 
-## Prova (`acompanhante/exam.py`)
+## Prova (`cpp/lab/exam.cpp`)
 
-`python -m acompanhante.cli prova [--progressao ...] [--tom ...] [--variante ...] [--versao v]` → tabela e `resultados/<versao>/prova.csv`. Responde: **tocando uma música nova, em qualquer tom, o app acaba tocando o que foi tocado?** Usa a configuração da interface (aprender na tônica, manter o padrão, tom automático) e o violão meio tom abaixo. Batida (3) e BPM (72–120) giram com o tom.
+`kordia_lab prova [--progressao ...] [--tom ...] [--variante ...] [--versao v]` → tabela e `resultados/<versao>/prova.csv`. Responde: **tocando uma música nova, em qualquer tom, o app acaba tocando o que foi tocado?** Usa a configuração da interface (aprender na tônica, manter o padrão, tom automático) e o violão meio tom abaixo. Batida (3) e BPM (72–120) giram com o tom.
 
 | Variante | Entrada | Configuração |
 |---|---|---|
@@ -36,7 +36,7 @@ Progressões: 2, 3, 4, 6 e 8 acordes, duas por compasso, dois compassos por acor
 
 Nota de cada música: `lock_compassos` (compassos até travar), `acc` (acorde exato depois de travar), `wrong_s` (segundos de harmonia errada, fora do primeiro tempo de cada troca; a tônica só conta se não pertencer ao tom), `played` (últimos acordes tocados). **Certa:** travou, `acc` ≥ 0,90 e `wrong_s` ≤ 2.
 
-Ao fim, a prova imprime o **controle**: as 6 sessões reais com clique, inteiras e sem cortes (`exam.CONTROLS`), com a mesma nota. É o número mais próximo do palco. A verdade continua sendo a posição no ciclo, e a sessão 15:52 tem compassos que soam como variação do músico.
+Ao fim, a prova imprime o **controle**: as 6 sessões reais com clique, inteiras e sem cortes (`CONTROLS`), com a mesma nota. É o número mais próximo do palco. A verdade continua sendo a posição no ciclo, e a sessão 15:52 tem compassos que soam como variação do músico.
 
 Fora da prova: compasso ternário, seções diferentes (verso/refrão), mudança de tom e cantor por cima.
 
@@ -44,7 +44,7 @@ Fora da prova: compasso ternário, seções diferentes (verso/refrão), mudança
 
 `tempo` (curva de BPM), `beats`, `downbeats`, `chords` (segmentos `[início, fim, rótulo]`, com `N` = silêncio e `P` = pausa), `changes` (com flag `surpresa` para trocas inesperadas), `ends` (instante em que o músico terminou), `run` (modo, bpm, tom, progressão para a execução).
 
-## Métricas (`acompanhante/metrics.py`)
+## Métricas (`cpp/lab/metrics.cpp`)
 
 | Métrica | Definição |
 |---|---|
@@ -64,11 +64,11 @@ Fora da prova: compasso ternário, seções diferentes (verso/refrão), mudança
 | `parou_no_compasso`, `esqueceu` | parou entre −0,25 s e +0,35 s da barra final; passou por OCIOSO entre um fim e a música seguinte |
 | `corr_dinamica` | correlação entre intensidade real e velocity do acompanhamento |
 
-Os resultados vão para `resultados/<versao>/metricas.csv` e `.json`, com relatórios PNG em `resultados/<versao>/relatorios/`.
+Os resultados vão para `resultados/<versao>/metricas.csv` e `.json`, com relatórios SVG em `resultados/<versao>/relatorios/`.
 
 ## Critérios de aceitação (limiares de regressão)
 
-Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
+Começam frouxos e são apertados a cada versão (ver `cpp/tests/tests.cpp`):
 
 - `estavel_120`: `acc_total` ≥ 80 %, `falso_disparo_s` ≤ 1 s, erro de BPM ≤ 5.
 - Todo cenário: `falso_disparo_s` ≤ 2 s e `parada_s` ≤ 1 compasso + 1 s.
@@ -78,7 +78,7 @@ Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
 
 ## Testes unitários
 
-`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), clique (segue o andamento; com BPM fixo começa no Iniciar), leitura de sessão gravada, compensação de latência, e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
+`kordia_tests` (`tasks test`, ~30 s) cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), clique (segue o andamento; com BPM fixo começa no Iniciar), leitura de sessão gravada, compensação de latência, e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
 
 ## Gravações reais
 
@@ -88,9 +88,11 @@ Sem verdade-base: `rodar` gera só o relatório visual e o WAV renderizado. A av
 
 Cada sessão ao vivo (`sessoes/<data-hora>/`) é reproduzível offline com resultado idêntico (`rodar --sessao`). Fluxo: o Matheus relata um problema e indica a sessão e o horário; reproduzimos, achamos a causa no `decisoes.jsonl` e no `quadros.csv`, corrigimos e, quando possível, transformamos o trecho num cenário ou teste de regressão.
 
-## Equivalência C++ × Python
+## A régua não muda sem querer
 
-`tests/test_cpp.py` (pulado se o módulo não estiver compilado): parâmetros iguais; em cada um dos 12 cenários, as mesmas trocas, estados e acordes ouvidos por bloco, áudio sintetizado igual (< 1e-9) e métricas iguais; clique e `lookahead` iguais; e o núcleo a 24 kHz dá o mesmo resultado musical que a 22,05 kHz.
+Todas as versões em `resultados.md` foram medidas nas mesmas músicas, então o gerador de áudio não pode mudar sem aviso. `kordia_tests` guarda valores tirados do NumPy e do SciPy (sequência do gerador, soma de 1 milhão de normais, `resample_poly`, `pluck`) e um hash do áudio dos 14 cenários (`cpp/tests/scenario_hashes.inc`). Na migração para C++, o áudio dos cenários e das variantes `real_*` ficou idêntico bit a bit ao do Python, e as métricas e a prova inteira (852 músicas) saíram iguais; a sala das variantes sintéticas difere em ~3e-8 (−150 dB, arredondamento da FFT em precisão simples), sem mudar nenhuma decisão.
+
+**Lacuna conhecida:** voltar `ONSET_DELTA` para 0,60, valor que falhou com o violão real, não reprova nenhum teste. Nem os cenários nem o controle com clique dependem dele a ponto de cair abaixo dos limiares.
 
 ## Fumaça do caminho ao vivo (C++)
 

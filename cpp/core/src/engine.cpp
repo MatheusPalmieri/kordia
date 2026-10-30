@@ -1,4 +1,4 @@
-// Decision engine: state machine, confidence ladder, stop rules, prediction scheduling (Python: engine.py).
+// Decision engine: state machine, confidence ladder, stop rules, prediction scheduling.
 #include "kordia/core.h"
 
 namespace kordia {
@@ -146,7 +146,7 @@ void Engine::learn_slot(double t, const Slot& slot) {
     bool was_locked = memory_.locked;
     bool played = last_onset && t - *last_onset <= bar();
     int heard = memory_.push_slot(slot.first, played ? slot.second : Chroma{},
-                                  hold ? (int)pyround(2 * P::HOLD_CONTRA_BARS) : P::GRID_MISS);
+                                  hold ? (int)round_even(2 * P::HOLD_CONTRA_BARS) : P::GRID_MISS);
     if (heard != N_IDX && heard != last_heard_) {
         heard_.push_back(heard);
         if (heard_.size() > 12) heard_.pop_front();

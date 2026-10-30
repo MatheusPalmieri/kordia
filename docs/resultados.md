@@ -1,13 +1,43 @@
 # Resultados
 
-Como reproduzir: `python tasks.py avaliar <versao>` → `resultados/<versao>/metricas.csv|json` + relatórios PNG + áudio renderizado.
+Como reproduzir: `tasks avaliar <versao>` → `resultados/<versao>/metricas.csv|json` + relatórios SVG + áudio renderizado. As versões até a v7 foram medidas com o laboratório em Python e os comandos citados nelas são históricos; as músicas e as métricas são as mesmas (decisão 104).
 Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md).
 
 ---
 
-## v8 — 2026-10-30 (aprender na grade, ouvir antes de tocar, contagem) — medição parcial
+## v8 — 2026-10-30 (aprender na grade, ouvir antes de tocar, contagem; laboratório em C++)
 
-**Pendente:** a prova completa e `tasks.py avaliar v8` não terminaram; o sistema interrompeu o processo por falta de memória. Falta medir, portanto, as variantes sintéticas (`clique`, `tom_da_forma`), a tabela dos cenários e a prova inteira em C++. `livre` e `real_livre` não mudaram de caminho. Os números abaixo são os que existem. Para completar: `python -m acompanhante.cli prova --versao v8` e `python tasks.py avaliar v8`.
+`tasks prova v8` e `tasks avaliar v8` terminaram agora, já no laboratório em C++: a pendência desta versão acabou, e a migração não mudou nenhum número (ver "Laboratório em C++" abaixo).
+
+**Prova completa (852 músicas), comparada com a v7:**
+
+| variante | músicas certas v7 | músicas certas v8 | acerto depois de travar | harmonia errada por música |
+|---|---|---|---|---|
+| `clique` | 123/204 | **157/204** | 0,83 → **0,92** | 3,8 → **1,4 s** |
+| `tom_da_forma` | 121/204 | **146/204** | 0,83 → **0,92** | 3,9 → **1,5 s** |
+| `livre` | 97/204 | 97/204 | 0,81 | 6,0 s |
+| `real_clique` | 24/120 | **53/120** | 0,61 → **0,84** | 10,4 → **4,5 s** |
+| `real_livre` | 19/120 | 19/120 | 0,63 | 10,3 s |
+| **total** | **384/852 (45 %)** | **472/852 (55 %)** | | |
+
+**114 músicas passaram a dar certo e 26 pioraram.** As 26 são todas com clique: 13 em `tom_da_forma`, 8 em `real_clique` e 5 em `clique`. Todas continuam travando. Em 17 delas o acerto segue ≥ 0,90 e a música só caiu pelo limite de 2 s de harmonia errada; as piores são `dois_acordes/Bb/real_clique` (10,9 s errados) e `formas_sus/A/tom_da_forma` (8,3 s). Sem clique, nada mudou, como esperado: `livre` e `real_livre` somam as mesmas 116 de 324 músicas.
+
+**Cenários sintéticos:** `resultados/v8/metricas.csv` é idêntico ao da v7, porque nenhum cenário usa a grade.
+
+**Laboratório em C++ (mesma data).** Antes de apagar o Python, o código em C++ foi comparado com uma referência congelada do commit `6822e6c`:
+
+| o que foi comparado | resultado |
+|---|---|
+| áudio dos 14 cenários | idêntico bit a bit |
+| áudio das variantes `real_*` (amostra de 3) | idêntico bit a bit |
+| áudio das variantes sintéticas da prova (amostra de 3) | difere em ~3e-8 (−150 dB), arredondamento da FFT em precisão simples |
+| `metricas.csv` e `metricas.json` | idênticos |
+| `prova.csv` (852 músicas) | idêntico, nenhuma linha diferente |
+| controle com as 6 sessões reais | idêntico depois da correção abaixo |
+
+O controle achou um bug da migração antes de o Python sair: uma gravação mais curta que o último compasso previsto era completada com zeros, e a sessão 15:52 dava 0,823 em vez de 0,826. A avaliação caiu para ~3 s e a prova para ~5,5 min (eram ~10 min).
+
+**Lacuna achada ao testar a suíte:** inverter as terças reprova 15 dos 56 testes, mas voltar `ONSET_DELTA` para 0,60, valor que falhou com o violão real, não reprova nenhum. O caminho da grade quase não depende desse piso.
 
 **Controle: as 6 sessões reais com clique, inteiras** (padrões da interface, tom automático; verdade = posição no ciclo; motor Python antes do port):
 

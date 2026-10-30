@@ -54,7 +54,7 @@
 
 - **RNF1 Causalidade/streaming:** todo processamento é bloco a bloco, sem olhar o futuro, inclusive no harness offline. Nada de funções que precisem do áudio inteiro.
 - **RNF2 Latência:** o atraso estrutural do pipeline é de 1 bloco (512 amostras a 22 050 Hz ≈ 23 ms) mais o tempo de decisão. Trocas previstas devem cair a menos de ±¼ de pulso do tempo real; trocas reativas, a menos de ~½ pulso.
-- **RNF3 Portabilidade:** algoritmos simples e explícitos, portáveis para C++/JUCE. Todos os parâmetros (janelas, limiares) ficam documentados em `acompanhante/params.py`.
+- **RNF3 Portabilidade:** algoritmos simples e explícitos; o núcleo não depende do JUCE. Todos os parâmetros (janelas, limiares) ficam documentados em `cpp/core/include/kordia/core.h`.
 - **RNF4 Mensurabilidade:** toda mudança relevante é avaliada nos cenários e registrada em `docs/resultados.md`.
 - **RNF5 Segurança musical:** falso disparo (tocar quando não devia) é o erro mais caro e tem métrica própria.
 

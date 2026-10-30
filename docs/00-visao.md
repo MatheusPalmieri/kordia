@@ -40,4 +40,4 @@ Músicos de banda de igreja (e bandas pequenas em geral) que tocam violão ou gu
 
 - Não é um "Shazam": não reconhece a música.
 - Não acompanha solo, melodia, voz nem bateria.
-- Não é (ainda) um app, VST ou pedal: o passo zero é um protótipo offline em Python para medir as ideias com números.
+- Não é (ainda) um VST ou pedal: é um app de Windows, com um laboratório offline para medir as ideias com números.

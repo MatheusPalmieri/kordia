@@ -42,7 +42,7 @@ std::array<std::array<double, 12>, 24> templates() {
     for (int i = 0; i < 24; ++i) {
         for (int tone : chord_pcs(i))
             for (int h = 1; h <= P::TEMPLATE_HARMONICS; ++h)
-                T[i][pymod(tone + pyround(12 * std::log2((double)h)), 12)] += std::pow(P::TEMPLATE_DECAY, h - 1);
+                T[i][floor_mod(tone + round_even(12 * std::log2((double)h)), 12)] += std::pow(P::TEMPLATE_DECAY, h - 1);
         double n = 0;
         for (double v : T[i]) n += v * v;
         n = std::sqrt(n);
