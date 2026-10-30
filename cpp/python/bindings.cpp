@@ -9,7 +9,6 @@
 namespace py = pybind11;
 using namespace kordia;
 
-static constexpr double SR = 22050.0;
 
 static RunConfig cfg_from(const py::dict& d) {
     RunConfig c;
@@ -43,7 +42,7 @@ static py::dict event_dict(const Event& e) {
 }
 
 static py::dict run_offline(py::array_t<double, py::array::c_style | py::array::forcecast> audio_in, const py::dict& cfg,
-                            double lookahead) {
+                            double lookahead, double SR) {
     std::vector<double> a(audio_in.data(), audio_in.data() + audio_in.size());
     RunConfig c = cfg_from(cfg);
     double fb_gain = 0.0;
@@ -128,6 +127,7 @@ static py::dict params() {
 
 PYBIND11_MODULE(kordia_core, m) {
     m.doc() = "Kordia C++ core (same algorithm as the Python reference in acompanhante/)";
-    m.def("run_offline", &run_offline, py::arg("audio"), py::arg("cfg"), py::arg("lookahead") = 0.0);
+    m.def("run_offline", &run_offline, py::arg("audio"), py::arg("cfg"), py::arg("lookahead") = 0.0,
+          py::arg("sr") = 22050.0);   // sessions from 48 kHz devices are analysed at 24 kHz
     m.def("params", &params);
 }

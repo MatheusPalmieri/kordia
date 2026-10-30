@@ -160,7 +160,7 @@ class Live:
         from .session import load
         self.report = "gerando"
         try:
-            audio, cfg, lookahead = load(folder)
+            audio, cfg, lookahead, _ = load(folder)
             res = run(audio, RunConfig.from_dict(cfg), lookahead=lookahead)
             plot(res, folder / "relatorio.png", None, f"Sessão {folder.name}")
             self.report = "pronto"

@@ -162,13 +162,16 @@ class Processor:
         return self.tracker.bar_pos(int(np.floor(self.tracker.beat_phase(self.s / P.SR)))) + 1
 
 
-def run(audio, cfg: RunConfig, lookahead=0.0, backend="py"):
+def run(audio, cfg: RunConfig, lookahead=0.0, backend="py", sr=P.SR):
     """Offline run. lookahead: only to replay a live session exactly (same decisions, same timing).
-    backend="cpp": the same algorithm in the C++ core (cpp/, built by `python tasks.py build`)."""
+    backend="cpp": the same algorithm in the C++ core (cpp/, built by `python tasks.py build`); only the C++ core
+    runs at another analysis rate `sr` (live sessions recorded on 48 kHz devices are analysed at 24 kHz)."""
     if backend == "cpp":
         from . import kordia_core
-        r = kordia_core.run_offline(np.asarray(audio, dtype=np.float64), cfg.__dict__, lookahead)
+        r = kordia_core.run_offline(np.asarray(audio, dtype=np.float64), cfg.__dict__, lookahead, sr)
         return Result(r["audio"], r["accomp"], r["log"], r["events"], r["changes"], r["onsets"])
+    if sr != P.SR:
+        raise ValueError(f"o núcleo Python só analisa a {P.SR} Hz; use backend='cpp' para {sr} Hz")
     audio = np.asarray(audio, dtype=np.float64).copy()
     proc = Processor(cfg, lookahead=lookahead)
     out = np.zeros((len(audio), 2))

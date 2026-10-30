@@ -36,3 +36,13 @@ def test_live_lookahead_and_click_match():
     py, cpp = run(audio, cfg, lookahead=0.12), run(audio, cfg, lookahead=0.12, backend="cpp")
     assert [e for e in py.events if e["inst"] == "click"] == [e for e in cpp.events if e["inst"] == "click"]
     assert [c[:3] for c in py.changes] == [c[:3] for c in cpp.changes]
+
+
+def test_core_is_rate_independent():
+    """Live on a 48 kHz device the core analyses at 24 kHz: same musical result as at 22.05 kHz."""
+    from scipy.signal import resample_poly
+    audio, truth = scenarios.build("estavel_120")
+    a24 = resample_poly(audio, 160, 147)   # 22050 -> 24000
+    res = run(a24, RunConfig.from_dict(truth["run"]), backend="cpp", sr=24000.0)
+    m = evaluate(res, truth)
+    assert m["acc_total"] >= 0.85 and m["falso_disparo_s"] == 0 and m["lat_travado_ms"] < 80

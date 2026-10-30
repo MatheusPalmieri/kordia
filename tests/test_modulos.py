@@ -198,6 +198,6 @@ def test_session_records_and_replays(tmp_path):
     block = np.full(P.HOP, 0.1)
     rec.feed(block, {k: 0 for k in __import__("acompanhante.session", fromlist=["x"]).FIELDS}, [{"t": 0, "motivo": "x"}])
     folder = rec.stop({"ok": True})
-    audio, cfg, la = load(folder)
-    assert len(audio) == P.HOP and abs(audio[0] - 0.1) < 1e-3 and cfg["tom"] == "C" and la == 0.1
+    audio, cfg, la, sr = load(folder)
+    assert len(audio) == P.HOP and abs(audio[0] - 0.1) < 1e-3 and cfg["tom"] == "C" and la == 0.1 and sr == P.SR
     assert (folder / "decisoes.jsonl").read_text(encoding="utf-8").strip()

@@ -22,9 +22,15 @@ App com interface web moderna, entrada/saída de áudio, tom, BPM fixo, progress
 - Anotar verdade-base de algumas à mão para medir.
 - Ajustar parâmetros de onset/chroma para áudio real (ruído de sala, compressão do celular).
 
-## Fase 3 — Tempo real (C++/JUCE) — linguagem escolhida (decisão 37)
-- Pré-requisito: Visual Studio Build Tools (C++) + CMake.
-- Motor em C++ (ASIO/WASAPI, bloco 128–256), interface reaproveitada via WebView do JUCE 8, Python mantido como laboratório e gerador de vetores de teste.
+## Fase 3 — Tempo real (C++/JUCE) — em andamento
+Feito (2026-10-29): núcleo C++ idêntico ao Python (`tests/test_cpp.py`), módulo `kordia_core` para o laboratório, app JUCE com WASAPI exclusivo (~40 ms), interface web reaproveitada no WebView2, sessões gravadas no mesmo formato e relatório automático.
+
+Pendente:
+- ASIO (SDK da Steinberg) para interfaces de áudio profissionais.
+- FFT pré-alocada (`juce::dsp::FFT` ou plano próprio) no lugar do pocketfft, que aloca a cada chamada.
+- Motivos de decisão sem alocação no thread de áudio (hoje `std::string`).
+- Instalador / exe assinado; ícone; guardar configurações no app.
+- VST3/AU do mesmo núcleo.
 - Portar `params.py` e os módulos um a um, com os mesmos testes (vetores de entrada/saída gerados pelo Python).
 - Baixa latência: bloco de 128–256 amostras, análise harmônica em thread separada.
 - Entrada de interface de áudio, saída MIDI e/ou sintetizador interno.

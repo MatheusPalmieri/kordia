@@ -66,3 +66,11 @@ Sem verdade-base: `rodar` gera só o relatório visual e o WAV renderizado. A av
 ## Sessões reais
 
 Cada sessão ao vivo (`sessoes/<data-hora>/`) é reproduzível offline com resultado idêntico (`rodar --sessao`). Fluxo: o Matheus relata um problema e indica a sessão e o horário; reproduzimos, achamos a causa no `decisoes.jsonl` e no `quadros.csv`, corrigimos e, quando possível, transformamos o trecho num cenário ou teste de regressão.
+
+## Equivalência C++ × Python
+
+`tests/test_cpp.py` (pulado se o módulo não estiver compilado): parâmetros iguais; em cada um dos 12 cenários, as mesmas trocas, estados e acordes ouvidos por bloco, áudio sintetizado igual (< 1e-9) e métricas iguais; clique e `lookahead` iguais; e o núcleo a 24 kHz dá o mesmo resultado musical que a 22,05 kHz.
+
+## Fumaça do caminho ao vivo (C++)
+
+`KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]` abre os dispositivos reais com volume 0 por 2 s e imprime o nível na entrada do processador, o nível bruto do driver, a latência, as falhas de áudio e o erro mostrado à interface. Também grava uma sessão. Foi assim que a entrada corrompida do WASAPI compartilhado foi achada.

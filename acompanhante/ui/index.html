@@ -122,6 +122,9 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
     <div class="col">
       <section class="card">
         <h2>Áudio</h2>
+        <div class="row" id="driverRow" hidden><div class="stack"><label>Driver</label><select id="driver"></select></div></div>
+        <div class="row" id="bufferRow" hidden><div class="stack"><label>Latência do driver</label>
+          <select id="buffer"><option value="256">Baixa (~5 ms) — pode falhar</option><option value="480" selected>Normal (~10 ms)</option><option value="960">Segura (~20 ms)</option></select></div></div>
         <div class="row"><div class="stack"><label>Entrada</label><select id="input"></select></div></div>
         <div class="row"><div class="stack"><label>Saída</label><select id="output"></select></div></div>
         <div class="row"><div class="stack">
@@ -194,6 +197,7 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
     <span>Latência <b id="lat">—</b></span>
     <span>Processamento <b id="cost">—</b></span>
     <span>Falhas de áudio <b id="xruns">0</b></span>
+    <span id="engineInfo"></span>
     <span id="sessionInfo"></span>
     <span class="spacer"></span>
     <span class="warn">Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.</span>
@@ -205,7 +209,9 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
 const $ = id => document.getElementById(id);
 const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
-const SAVE = ["input", "output", "gain", "monitor", "volume", "dynFixed", "key", "bpm", "bpmOn", "prog", "progOn", "clickVol"];
+// inside the C++/JUCE app the page is served by the WebView resource provider: GET + polling instead of POST + SSE
+const NATIVE = location.hostname === "juce.backend";
+const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "key", "bpm", "bpmOn", "prog", "progOn", "clickVol"];
 let running = false, clickOn = false, lastChord = null, lastError = null, state = {};
 
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
@@ -213,7 +219,9 @@ function recall(k) { try { const v = localStorage.getItem("kordia." + k); return
 function val(el) { return el.type === "checkbox" ? el.checked : el.value; }
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 4200); }
 async function api(path, body) {
-  const r = await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const r = NATIVE
+    ? await fetch(body === undefined ? path : path + "?q=" + encodeURIComponent(JSON.stringify(body)))
+    : await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
   const j = await r.json();
   if (j.ok === false) throw new Error(j.error);
   return j;
@@ -234,7 +242,7 @@ function labels() {
   $("progChips").innerHTML = $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "";
 }
 function lockSettings() {
-  for (const id of ["input", "output", "key", "bpmOn", "progOn"]) $(id).disabled = running;
+  for (const id of ["driver", "buffer", "input", "output", "key", "bpmOn", "progOn"]) $(id).disabled = running;
   labels();
   $("startBtn").textContent = running ? "Parar" : "Iniciar";
   $("startBtn").classList.toggle("stop", running);
@@ -243,12 +251,8 @@ function lockSettings() {
 async function init() {
   $("key").innerHTML = KEYS.map(k => `<option value="${k}">${k || "Nenhum"}</option>`).join("");
   $("meterMark").style.left = ((-55 + 60) / 60 * 100) + "%";
-  try {
-    const d = await api("/api/devices");
-    $("input").innerHTML = d.inputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
-    $("output").innerHTML = d.outputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
-    $("input").value = d.default_input; $("output").value = d.default_output;
-  } catch (e) { toast("Não consegui listar os dispositivos de áudio."); }
+  await loadDevices(recall("driver"));
+  $("driver").addEventListener("change", () => loadDevices($("driver").value));
   for (const id of SAVE) {
     const v = recall(id), el = $(id);
     if (v === undefined) continue;
@@ -263,15 +267,39 @@ async function init() {
   $("freezeBtn").onclick = () => api("/api/live", { fixar_bpm: !state.frozen }).catch(e => toast(e.message));
   $("startBtn").onclick = startStop;
   labels(); lockSettings();
-  const es = new EventSource("/api/events");
-  es.onmessage = ev => { render(JSON.parse(ev.data)); if (location.search.includes("snapshot")) es.close(); };  // ?snapshot: headless captures
+  if (NATIVE) {
+    const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
+    poll();
+  } else {
+    const es = new EventSource("/api/events");
+    es.onmessage = ev => { render(JSON.parse(ev.data)); if (location.search.includes("snapshot")) es.close(); };  // ?snapshot: headless captures
+  }
+}
+
+async function loadDevices(type) {
+  try {
+    const d = await api("/api/devices", type ? { type } : undefined);
+    if (d.types) {   // C++ engine: pick the Windows audio driver (WASAPI / exclusive / DirectSound)
+      $("driverRow").hidden = false;
+      $("bufferRow").hidden = false;
+      $("driver").innerHTML = d.types.map(t => `<option value="${t}">${t}</option>`).join("");
+      $("driver").value = d.type;
+    }
+    $("input").innerHTML = d.inputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
+    $("output").innerHTML = d.outputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
+    $("input").value = d.default_input; $("output").value = d.default_output;
+    for (const id of ["input", "output"]) {
+      const v = recall(id);
+      if (v !== undefined && [...$(id).options].some(o => o.value == v)) $(id).value = v;
+    }
+  } catch (e) { toast("Não consegui listar os dispositivos de áudio."); }
 }
 
 async function startStop() {
   $("startBtn").disabled = true;
   try {
     if (running) await api("/api/stop", {});
-    else await api("/api/start", { input: +$("input").value, output: +$("output").value, tom: $("key").value || null,
+    else await api("/api/start", { type: $("driver").value || null, buffer: NATIVE ? +$("buffer").value : null, input: $("input").value, output: $("output").value, tom: $("key").value || null,
       bpm: $("bpmOn").checked ? +$("bpm").value : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
   } catch (e) { toast(e.message); }
   $("startBtn").disabled = false;
@@ -311,6 +339,7 @@ function render(s) {
   $("diary").innerHTML = items || `<li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li>`;
   $("lat").textContent = s.latency_ms ? s.latency_ms + " ms" : "—";
   $("cost").textContent = s.cost_ms != null ? `${s.cost_ms} ms / ${s.budget_ms} ms` : "—";
+  $("engineInfo").innerHTML = s.engine ? `Motor <b>${s.engine}</b>` : "";
   $("xruns").textContent = s.xruns; $("xruns").parentElement.classList.toggle("warn", s.xruns > 0);
   $("sessionInfo").innerHTML = s.session ? `Sessão <b>${s.session.split(/[\\/]/).pop()}</b>${s.report ? " · relatório " + s.report : ""} · <a class="link" id="openBtn">Abrir pasta</a>` : "";
   if ($("openBtn")) $("openBtn").onclick = () => api("/api/open", {});

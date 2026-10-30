@@ -115,3 +115,32 @@ flowchart LR
 - **Sessões:** o callback só enfileira (bloco de entrada + linha de estado + decisões novas); uma thread grava WAV, CSV e JSONL. Ao parar, outra thread reproduz a sessão offline (`run(..., lookahead)`) e salva `relatorio.png`.
 - **Janela:** `app.py` abre o Edge com `--app=` e um perfil próprio (`%LOCALAPPDATA%/kordia/edge`). Um watchdog encerra o áudio e o processo quando a janela fecha (nenhum cliente de eventos por 6 s).
 - Sem log por quadro em memória no modo ao vivo (memória limitada); o log vai para o disco.
+
+## Núcleo C++ e app JUCE
+
+```mermaid
+flowchart LR
+    subgraph core[cpp/core — biblioteca kordia]
+        PRO[Processor<br/>onsets · acordes · tempo · memória · motor · acompanhamento · síntese]
+    end
+    subgraph app[cpp/app — Kordia.exe]
+        DEV[AudioDeviceManager<br/>WASAPI exclusivo, buffer 480] -->|entrada| DEC[ganho + passa-baixa + decimação ÷2]
+        DEC -->|blocos de 512 a 22,05/24 kHz| PRO
+        PRO -->|render na taxa da placa, adiantado pela latência| DEV
+        PRO -.->|try-lock| SNAP[Snapshot]
+        PRO -.->|AbstractFifo| SW[SessionWriter<br/>thread]
+        WEB[WebView2<br/>acompanhante/ui/index.html embutida] -->|GET /api/*?q=json| RP[resource provider]
+        RP --> SNAP
+    end
+    subgraph lab[acompanhante — laboratório]
+        PY[kordia_core<br/>pybind11] --> PRO
+        MET[cenários · métricas · relatórios · rodar --sessao]
+    end
+    SW --> DISK[(sessoes/)]
+    DISK --> MET
+```
+
+- **`cpp/core`** (`kordia`, biblioteca estática, sem JUCE): port linha a linha do Python, com os mesmos nomes. FFT pelo pocketfft (só cabeçalho). A taxa de análise é um parâmetro de execução: 22 050 Hz no laboratório; ao vivo, taxa da placa ÷ 2 (44,1 kHz → 22 050; 48 kHz → 24 000). A síntese roda na taxa da placa. Todos os tempos do algoritmo estão em segundos, então o resultado musical não depende da taxa (`test_core_is_rate_independent`).
+- **`cpp/python`** (`kordia_core`): `run_offline(audio, cfg, lookahead, sr)` devolve as mesmas peças do `Result` do Python; `pipeline.run(..., backend="cpp")` e `avaliar --backend cpp` usam isso.
+- **`cpp/app`**: `LiveEngine` é o `AudioIODeviceCallback`. A entrada passa por ganho, por um passa-baixa FIR de 63 coeficientes e pela decimação; a cada 512 amostras chama `Processor::analyze`; a saída vem de `Processor::render` no tempo `amostras/taxa + latência` (o `lookahead`, igual ao app Python). A interface é a mesma `index.html`, servida pelo *resource provider* do WebView2: no app C++ ela usa `GET /api/<nome>?q=<json>` e consulta `/api/state` a cada 50 ms (no app Python: POST + SSE).
+- **Sessões**: mesmo formato do app Python (`config.json` traz também `sr`, `motor`, `driver`, `buffer`). Ao parar, o app chama `.venv/Scripts/python -m acompanhante.cli rodar --sessao <pasta> --saida <pasta>` para gerar o relatório.

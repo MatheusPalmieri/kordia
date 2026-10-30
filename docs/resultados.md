@@ -5,6 +5,23 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v3 — 2026-10-29 (port para C++/JUCE)
+
+As métricas de algoritmo são **as mesmas da v2**: o núcleo C++ dá decisões idênticas (12/12 cenários, `tests/test_cpp.py`). O que mudou foi o motor ao vivo:
+
+| ao vivo, nesta máquina | app Python (v2) | app C++/JUCE (v3) |
+|---|---|---|
+| driver | MME | WASAPI exclusivo |
+| latência informada pelo driver (entrada + saída) | ~116 ms | **~40 ms** |
+| buffer | 512 a 22,05 kHz (23 ms) | 480 a 44,1 kHz (10,9 ms) |
+| custo médio por bloco | ~1 ms (de 23 ms) | **~0,07 ms** (de 10,9 ms) |
+| falhas de áudio em teste de 2–15 s | 0 | 0 (após a partida) |
+| processamento offline de 38 s de áudio | 2,6 s | 0,4 s |
+
+O que ainda não foi medido: latência real ponta a ponta (violão → caixa) com loopback físico; sessões longas com violão. A latência das **trocas reativas** continua ~250 ms de algoritmo + driver; o ganho do C++ é nos ~75 ms de driver.
+
+---
+
 ## v2 — 2026-10-29 (depois do primeiro teste ao vivo)
 
 Mudanças: travamento mais rápido e mais teimoso (decisões 38–44), som novo e mais alto (45–46), cenário de realimentação recalibrado (47).

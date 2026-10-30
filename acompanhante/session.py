@@ -57,9 +57,8 @@ class SessionRecorder:
 
 
 def load(folder):
-    """(input audio, RunConfig dict, lookahead) of a recorded session."""
+    """(input audio, RunConfig dict, lookahead, analysis rate) of a recorded session (Python or C++ app)."""
     folder = Path(folder)
     cfg = json.loads((folder / "config.json").read_text(encoding="utf-8"))
     audio, sr = sf.read(folder / "entrada.wav")
-    assert sr == P.SR, "session recorded at the internal rate"
-    return audio, cfg["run"], cfg.get("lookahead", 0.0)
+    return audio, cfg["run"], cfg.get("lookahead", 0.0), sr

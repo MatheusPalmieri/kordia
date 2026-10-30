@@ -41,16 +41,20 @@ def cmd_rodar(a):
     lookahead = 0.0
     if a.sessao:
         from .session import load
-        audio, run_cfg, lookahead = load(a.sessao)
+        audio, run_cfg, lookahead, sr = load(a.sessao)
         cfg = RunConfig.from_dict(run_cfg)
         name = "replay_" + Path(a.sessao).name
         a.modo = cfg.modo
     else:
+        sr = P.SR
         audio = load_wav(a.entrada)
         cfg = RunConfig(modo=a.modo, tom=a.tom, bpm=a.bpm, progressao=a.progressao)
         name = Path(a.entrada).stem
     t0 = time.time()
-    res = run(audio, cfg, lookahead=lookahead)
+    if a.sessao and sr != P.SR:   # recorded by the C++ app on a 48 kHz device: only the C++ core runs at that rate
+        res = run(audio, cfg, lookahead=lookahead, backend="cpp", sr=sr)
+    else:
+        res = run(audio, cfg, lookahead=lookahead)
     truth = json.loads(Path(a.verdade).read_text()) if a.verdade else None
     _save_outputs(res, Path(a.saida), name, truth, f"{name} — modo {a.modo}")
     print(f"{name}: {len(audio) / P.SR:.1f} s processados em {time.time() - t0:.1f} s; {len(res.changes)} trocas")

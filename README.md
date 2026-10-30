@@ -2,21 +2,25 @@
 
 Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os acordes **que estão soando**, não uma cifra pré-programada. Pensado para banda de igreja, onde não há clique, o tom muda na hora e o andamento oscila.
 
-**Status:** passo zero, um protótipo offline em Python, causal (streaming), testado em áudio sintético com verdade-base. Baseline: 88 % do tempo com o acorde certo, zero falso disparo, trocas a ~30 ms do tempo quando o ciclo está travado (~260 ms reagindo). Detalhes e falhas conhecidas em [`docs/resultados.md`](docs/resultados.md).
+**Status:** app ao vivo em **C++/JUCE** (WASAPI exclusivo, ~40 ms de latência de driver) com o núcleo portado do protótipo Python, que continua como laboratório (cenários, métricas, reprodução de sessões). Os dois dão decisões idênticas nos 12 cenários. Baseline: 88 % do tempo com o acorde certo, zero falso disparo, trocas a ~30 ms do tempo quando o ciclo está travado (~260 ms reagindo). Detalhes e falhas conhecidas em [`docs/resultados.md`](docs/resultados.md).
 
 ## Instalação
 
 ```bash
 python -m venv .venv
-.venv/Scripts/pip install -e .        # Windows (Git Bash)
-# .venv/bin/pip install -e .          # Linux/macOS
+.venv/Scripts/pip install -e .        # laboratório Python (Windows, Git Bash)
+python tasks.py build --app           # núcleo C++ + módulo Python + app JUCE (Kordia.exe)
 ```
+
+O build C++ precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft, pybind11 e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `python tasks.py build` (sem `--app`) compila só o núcleo e o módulo `kordia_core` usado pelo laboratório.
 
 Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest, sounddevice (áudio ao vivo) e o Microsoft Edge (já vem no Windows) para a janela do app.
 
 ## Uso ao vivo (app)
 
-Dê dois cliques em **`Acompanhante.bat`** (ou `python -m acompanhante.app`). Abre uma janela própria (Edge em modo app, sem barras de navegador), com tema claro/escuro automático.
+Dê dois cliques em **`Acompanhante.bat`**. Ele abre o app C++ (`cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe`) se estiver compilado; senão, o app Python (`python -m acompanhante.app`, mesma interface, latência maior).
+
+No app C++ aparecem também **Driver** (padrão: *Windows Audio (Exclusive Mode)*) e **Latência do driver** (padrão: ~10 ms). O modo exclusivo toma a placa só para o Kordia: outros programas ficam mudos enquanto ele toca. Se a entrada chegar corrompida (acontece no modo compartilhado nesta máquina), a janela avisa para trocar de driver.
 
 1. **Áudio:** escolha a entrada (microfone, interface, mesa) e a saída (já vem o alto-falante padrão). Toque e ajuste o **ganho** até a barra passar da marca cinza na batida.
 2. **Música (opcional):** tom principal, **BPM fixo** e **progressão conhecida** (ex.: `C G Am F`). Sem nada, ele só ouve e segue.
@@ -35,7 +39,7 @@ A janela mostra o acorde tocado (grande), o que está ouvindo e a confiança, o 
 
 Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar. "Abrir pasta" no rodapé leva até ela.
 
-O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
+No app C++, o relatório é gerado chamando o laboratório Python ao parar (precisa da `.venv`). O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
 
 ```bash
 python -m acompanhante.cli rodar --sessao sessoes/2026-10-29_20-40-00
@@ -71,7 +75,10 @@ python -m acompanhante.cli avaliar --todos --versao baseline
 ## Estrutura
 
 ```
-acompanhante/   código (um módulo por camada; parâmetros em params.py; ui/ = interface do app)
+cpp/core/       núcleo C++ (o motor do produto; espelha acompanhante/ linha a linha)
+cpp/python/     módulo kordia_core: o laboratório roda o núcleo C++
+cpp/app/        app JUCE (Kordia.exe) e teste de fumaça do caminho ao vivo (KordiaLiveTest.exe)
+acompanhante/   laboratório Python: referência do algoritmo, cenários, métricas, relatórios; ui/ = interface
 tests/          pytest
 docs/           visão, requisitos, arquitetura, riscos, testes, roadmap, decisões, resultados, glossário
 dados/          cenários gerados (ignorado pelo git)

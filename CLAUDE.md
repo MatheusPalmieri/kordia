@@ -2,6 +2,8 @@
 
 Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad seguindo os acordes. Leia `docs/00-visao.md` e `docs/02-arquitetura.md` antes de mexer no código.
 
+**Duas implementações do mesmo algoritmo:** `acompanhante/` (Python: referência e laboratório) e `cpp/core/` (C++: o motor do app ao vivo). Elas têm que dar **exatamente** as mesmas decisões (`tests/test_cpp.py`).
+
 ## Princípios (não negociáveis)
 
 1. **Errar tocando pouco > errar tocando nota errada.** Na dúvida: fundamental sem terça, pad na tônica, ou silêncio. Falso disparo é o erro mais caro.
@@ -23,7 +25,10 @@ Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad segu
 python -m venv .venv && .venv/Scripts/pip install -e .   # ou .venv/bin/pip no Linux/macOS
 python -m acompanhante.app            # app ao vivo (ou Acompanhante.bat / python tasks.py interface)
 python -m acompanhante.cli rodar --sessao sessoes/<pasta>   # reproduz uma sessão ao vivo exatamente
-python tasks.py test                  # pytest (unitários + regressão dos cenários)
+python tasks.py build [--app]         # núcleo C++ + kordia_core (+ app JUCE); precisa do VS 2022 Build Tools
+python tasks.py test                  # pytest (unitários + regressão + equivalência C++)
+python -m acompanhante.cli avaliar --todos --backend cpp   # métricas rodando o núcleo C++
+cpp/build/app/KordiaLiveTest_artefacts/Release/KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]   # fumaça ao vivo (volume 0)
 python tasks.py avaliar [versao]      # roda os 12 cenários, salva métricas e relatórios
 python -m acompanhante.cli gerar --cenario acelerando --saida dados/
 python -m acompanhante.cli rodar --entrada arquivo.wav --modo livre|metronomo|decorado [--bpm 120] [--tom C] [--progressao "C G Am F"]
@@ -62,3 +67,10 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 - `app.py`: servidor HTTP local (127.0.0.1) + fluxo de áudio duplex; `ui/index.html`: interface (HTML/CSS/JS sem dependências), aberta no Edge em modo app. A mesma interface poderá ser reaproveitada no port C++ (JUCE 8 tem WebView).
 - `session.py`: grava cada sessão; a escrita é numa thread, o callback só enfileira.
 - `?snapshot` na URL fecha o fluxo de eventos após a primeira atualização (para capturas headless).
+
+## Regra do port (Python × C++)
+
+- **Toda mudança de algoritmo ou parâmetro é feita nos dois lados na mesma rodada:** `acompanhante/*.py` e `cpp/core/`. `tests/test_cpp.py` compara parâmetros, trocas, estados, acordes ouvidos, áudio e métricas nos 12 cenários; tem que continuar verde. Depois de mexer no C++: `python tasks.py build`.
+- Python é onde se experimenta (rápido de mudar, tem métricas e relatórios); quando funciona, porta-se para o C++ com os mesmos nomes e a mesma ordem de operações. Semântica de Python a respeitar no C++: `round()` é meio-para-par (`pyround`), `%` nunca é negativo (`pymod`), `None` vira `optional`/`-1`/`0`.
+- **Thread de áudio (C++):** nada de I/O, locks bloqueantes ou alocação no callback. Estado para a interface sai por `SpinLock` com *try-lock*; sessão sai por `AbstractFifo`. Atalhos conhecidos estão marcados com `shortcut:` (ex.: o pocketfft aloca por chamada).
+- **WASAPI nesta máquina:** o modo compartilhado entrega a entrada corrompida (float lido como int32, assinatura +0,42/−0,58). O padrão é o modo exclusivo com buffer de 480 amostras (medido: 0 falhas; 256 dá falhas). O app detecta a corrupção e avisa.
