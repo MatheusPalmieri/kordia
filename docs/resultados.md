@@ -5,6 +5,58 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v9 — 2026-10-30 (consumo: nada aloca no áudio, interface leve, abertura rápida)
+
+Só desempenho: nenhum número musical mudou. Medido neste notebook, com o microfone interno e sem violão.
+
+**Som e decisões:**
+
+| o que foi comparado com a v8 | resultado |
+|---|---|
+| `metricas.csv`, 14 cenários | idêntico, inclusive `realimentacao`, em que a saída do sintetizador volta para a entrada |
+| prova, 612 músicas sintéticas | idênticas, linha a linha |
+| saída de áudio, só pad, amostra a amostra | -239 dB de diferença |
+| saída de áudio, 5 camadas | -137 dB de diferença |
+| `real_*` (240 músicas) e controle das 6 sessões | **não rodaram:** as sessões de 29 e 30/10 não estão nesta máquina. Como a análise e as decisões deram idênticas em todo o resto, não há razão para mudarem, mas isso é inferência, não medida |
+
+**App real, mesma sonda antes e depois** (janelas de 12 s, CPU em % de um núcleo, somando o Kordia e o WebView2):
+
+| | antes | depois |
+|---|---|---|
+| CPU parado ouvindo | 90 % | **29 %** |
+| CPU tocando | 82 % | **34 %** |
+| CPU tocando com a gaveta de ajustes aberta | 88 % | **38 %** |
+| GPU tocando | 29 % | **4,5 %** |
+| Memória privada tocando | 442 MB | **345 MB** |
+| Layouts da página por segundo | 60 | **9** |
+| Iniciar (janela parada) | 6,1 s | **1,1–1,5 s** |
+| Abrir o áudio (`KordiaLiveTest`) | 4,4 s | **0,9 s** |
+| Custo do callback ao vivo, média | 0,25–0,42 ms | **0,13–0,16 ms** |
+| Falhas de áudio | 0 | 0 |
+
+**Pior caso do motor** (`kordia_lab carga`, `estavel_120`, buffer de 10 ms, tempos por callback):
+
+| | média antes | média depois | p99 antes | p99 depois |
+|---|---|---|---|---|
+| só pad worship | 0,128 ms | **0,089 ms** | 0,28 ms | **0,20 ms** |
+| as 5 camadas | 0,85 ms | **0,26 ms** | 1,8 ms | **0,55 ms** |
+
+**Onde estava o custo:**
+
+- **Motor:** cabia com folga, mas violava a regra do projeto. A cada 23 ms o pocketfft recalculava o plano e chamava `malloc`, e o limiar de onsets, a autocorrelação e os motivos das decisões também alocavam. Com o heap compartilhado com a interface, isso era um risco de travada, ainda que nenhuma sessão tenha falhado por isso. Agora nada aloca: `audio_path_does_not_allocate` prova em 6 modos.
+- **Interface:** a parte mais cara. A cada 50 ms a página reescrevia diário, padrão e rodapé mesmo sem mudança, e os medidores animavam `width`, o que forçava 60 layouts por segundo. O `backdrop-filter` refazia o desfoque de cada cartão a cada quadro, sobre um fundo liso, onde ele não mudava nada visível.
+- **Abertura:** o JUCE sondava cerca de 2 mil combinações de canais, taxas e formatos por aparelho. Sobram ~0,9 s, que são do Windows.
+- **Disco:** a sessão forçava `FlushFileBuffers` 40 vezes por segundo. Agora é a cada 2 s.
+
+**O que não melhorou ou piorou:**
+
+- Uma queda de energia ou do Windows no meio da sessão pode perder até 2 s do CSV e do diário. Se só o app fechar, perde no máximo o que estava no buffer dele.
+- Com o app parado, os números de dB e % atualizam 5 vezes por segundo, e a tela toda 10 vezes. Tocando, os medidores e a batida seguem a 20.
+- Trocar de driver ou de entrada ainda para a janela por ~1 s; é a thread da interface esperando o Windows. O áudio não toca nessa hora, porque esses campos ficam travados durante a música.
+- O WebView2 continua sendo a maior parte da conta: ~30 % de um núcleo. Isso não concorre com o áudio, que roda em thread própria de prioridade Pro Audio.
+
+---
+
 ## v8 — 2026-10-30 (aprender na grade, ouvir antes de tocar, contagem; laboratório em C++)
 
 `tasks prova v8` e `tasks avaliar v8` terminaram agora, já no laboratório em C++: a pendência desta versão acabou, e a migração não mudou nenhum número (ver "Laboratório em C++" abaixo).

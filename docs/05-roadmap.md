@@ -31,8 +31,6 @@ Feito (2026-10-29): núcleo C++, app JUCE com WASAPI, interface web no WebView2,
 
 Pendente:
 - ASIO (SDK da Steinberg) para interfaces de áudio profissionais.
-- FFT pré-alocada (`juce::dsp::FFT` ou plano próprio) no lugar do pocketfft, que aloca a cada chamada.
-- Motivos de decisão sem alocação no thread de áudio (hoje `std::string`).
 - Instalador / exe assinado; ícone; guardar configurações no app.
 - VST3/AU do mesmo núcleo.
 - Baixa latência: bloco de 128–256 amostras, análise harmônica em thread separada.

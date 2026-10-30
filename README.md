@@ -12,7 +12,7 @@ Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os a
 
 - Windows 11.
 - **Visual Studio 2022 ou 2026** (os *Build Tools* bastam) com a carga "Desenvolvimento para desktop com C++". O CMake vem junto.
-- **Git** e internet no primeiro build: JUCE 8, pocketfft e o SDK do WebView2 são baixados pelo CMake na primeira configuração.
+- **Git** e internet no primeiro build: JUCE 8, pocketfft (só o laboratório) e o SDK do WebView2 são baixados pelo CMake na primeira configuração.
 - Acesso ao repositório, que é privado.
 
 **Passos**, a partir da raiz do repositório:

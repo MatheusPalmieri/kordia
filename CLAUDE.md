@@ -16,7 +16,7 @@ Projeto: **Kordia**, que **ouve o violão** e toca baixo + pad seguindo os acord
 
 - Documentação em português do Brasil; código e identificadores em inglês.
 - Todos os parâmetros numéricos em `cpp/core/include/kordia/core.h` (`namespace P`), com unidade e motivo.
-- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: JUCE (só o app), pocketfft, WebView2; interface em HTML/CSS/JS puro (sem framework).
+- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: JUCE (só o app), pocketfft (só o laboratório), WebView2; interface em HTML/CSS/JS puro (sem framework).
 - Commits pequenos, mensagens claras.
 
 ## Comandos
@@ -39,6 +39,7 @@ kordia_lab rodar --entrada arquivo.wav --modo livre|metronomo|decorado [--bpm 12
 kordia_lab prova [--versao v] [--progressao ...] [--tom ...] [--variante ...]
 kordia_lab gerar --cenario acelerando --saida dados
 kordia_lab avaliar --todos [--versao v1]
+kordia_lab carga [--cenario estavel_120] [--buffer 480] [--saida prefixo]   :: custo por callback; --saida grava o áudio para comparar versões
 cpp\build\app\KordiaLiveTest_artefacts\Release\KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]   :: fumaça ao vivo (volume 0): ouvir → Iniciar → parar; KORDIA_FIXED_BPM=90 testa a contagem; cria uma pasta em sessoes/
 ```
 
@@ -72,12 +73,14 @@ O áudio dos cenários e da prova é a régua de todas as versões em `docs/resu
 - **Sem Python no projeto, nem como ferramenta:** o app, o laboratório, os testes e as tarefas são C++ (e `tasks.bat`). Não recrie nada em Python.
 - **Melhorar o harness junto com o código:** bug achado ao vivo vira cenário ou teste; sessões gravadas (`sessoes/`) são a fonte de verdade sobre o violão real.
 - **Linguagem não é dogma:** ele aceita C++, Rust ou C# se for melhor para latência e qualidade de som. Decisões de stack ficam registradas em `docs/decisoes.md` com números.
+- **Consumo é requisito:** nenhuma ação na interface pode interferir no áudio. Mexer em ajustes com a música tocando não trava nem estala. Otimizar sem perder qualidade: compare a saída amostra a amostra (`kordia_lab carga --saida`) e meça antes e depois.
 - **Qualidade de produto:** interface moderna e apresentável (referência: apps da Apple), pad de worship (não órgão), volume alto o bastante.
 - **Logs para iterar juntos:** cada decisão do motor tem um motivo legível (`engine.reason`), mostrado no diário da interface e gravado na sessão.
 
 ## App ao vivo
 
 - `cpp/app`: `LiveEngine` (áudio e sessão) + WebView2 com `cpp/app/ui/index.html` (HTML/CSS/JS sem dependências), embutida no exe; mudou a interface, rode `tasks build --app`.
+- **Interface a 20 Hz:** escreva no DOM só por `text()`, `html()` e `level()`, que ignoram o que não mudou; nada de animar `width` nem `backdrop-filter`. O `poll()` engole exceções, então um erro em `render` não aparece: confira a tela de verdade.
 - A sessão é gravada numa thread, o callback só enfileira; `load_session` (`cpp/lab/files.cpp`) lê a pasta no laboratório. O relatório pós-sessão (`replay_<pasta>.svg`) vem do `kordia_lab rodar --sessao`, que o app chama ao parar.
 - `?snapshot` na URL pula a tela de entrada (para capturas headless do layout).
 - **O app diagnostica o áudio:** `cpp/app/AudioCheck.cpp` lê o Windows (entradas conhecidas, mudo, permissão, drivers com problema), `diagnose()` em `AudioCheck.h` decide o aviso e `/api/audio_check` leva à interface. Regra nova vai em `diagnose()` com teste `audio_check_*`. `KordiaLiveTest` imprime essa verificação.
@@ -85,8 +88,8 @@ O áudio dos cenários e da prova é a régua de todas as versões em `docs/resu
 
 ## C++ do núcleo e do app
 
-- **Thread de áudio:** nada de I/O, locks bloqueantes ou alocação no callback. Estado para a interface sai por `SpinLock` com *try-lock*; sessão sai por `AbstractFifo`. Atalhos conhecidos estão marcados com `shortcut:` (ex.: o pocketfft aloca por chamada).
-- **WASAPI:** o JUCE 8.0.15 tem um bug no modo compartilhado (lê float como int32 quando o Windows devolve `WAVE_FORMAT_IEEE_FLOAT` simples); `cpp/app/CMakeLists.txt` aplica uma correção de uma linha na configuração e falha com mensagem clara se o JUCE mudar. Outro patch, no mesmo arquivo, faz a captura compartilhada pedir áudio cru: sem ele, os efeitos de voz do microfone do notebook apagavam o sinal (-94 dB contra -44 dB). Padrão: modo compartilhado (compensa a diferença de relógio entre microfone e saída em aparelhos diferentes). O modo exclusivo com dois aparelhos derrapa e a captura morre em ~15–20 s.
+- **Thread de áudio:** nada de I/O, locks bloqueantes ou alocação no callback; `audio_path_does_not_allocate` conta cada `new`. No núcleo: `Ring` no lugar de `deque`, `say()` para motivos, memórias de trabalho reservadas no construtor. Estado para a interface sai por `SpinLock` com *try-lock*; sessão sai por `AbstractFifo`. Ganho que o usuário mexe muda em rampa de um bloco, nunca de uma vez. Atalhos conhecidos estão marcados com `shortcut:`.
+- **WASAPI:** o JUCE 8.0.15 tem um bug no modo compartilhado (lê float como int32 quando o Windows devolve `WAVE_FORMAT_IEEE_FLOAT` simples); `cpp/app/CMakeLists.txt` aplica uma correção de uma linha na configuração e falha com mensagem clara se o JUCE mudar. Outro patch, no mesmo arquivo, faz a captura compartilhada pedir áudio cru: sem ele, os efeitos de voz do microfone do notebook apagavam o sinal (-94 dB contra -44 dB). Um terceiro impede a sondagem de canais acima do formato de mixagem (4,4 s → 0,9 s para abrir). Padrão: modo compartilhado (compensa a diferença de relógio entre microfone e saída em aparelhos diferentes). O modo exclusivo com dois aparelhos derrapa e a captura morre em ~15–20 s.
 - **O violão do Matheus está meio tom abaixo**: "C G Am F" soa B F# G#m E. Ao analisar sessões, compare com a progressão um semitom abaixo.
 - **Padrões da interface ≠ padrões do laboratório:** na interface, *aprender na tônica* e *manter o padrão* vêm ligados e o tom em *Automático*; no `RunConfig` (cenários) vêm desligados, para os cenários antigos continuarem comparáveis. Cada modo novo ganha cenário/teste próprio.
 - **Com clique, a harmonia é lida por meio compasso e o padrão é aprendido na grade** (`Processor::close_slot`, `ProgressionMemory::push_slot`, `Engine::grid_out`). Sem clique, ou com progressão conhecida, segue o caminho quadro a quadro. Mudança nesse caminho se mede com o controle das sessões reais (`CONTROLS` em `cpp/lab/exam.cpp`, impresso pela prova).

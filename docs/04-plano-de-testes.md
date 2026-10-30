@@ -21,6 +21,10 @@ Gerados por `cpp/lab/scenarios.cpp` com violão Karplus-Strong (6 cordas, voicin
 | `tom_errado` | B–F#–G#m–E com o tom configurado em Dó (caso real de 2026-10-29) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 
+## Carga
+
+`kordia_lab carga [--cenario NOME] [--buffer 480] [--saida prefixo]` mede o custo por callback (média, p50, p99, pior) só com o pad e com as 5 camadas, em música real e no ritmo do ao vivo. Com `--saida`, grava a saída bruta para comparar duas versões amostra a amostra. `KordiaLiveTest` mede o tempo de abrir, iniciar e parar nos aparelhos reais. `audio_path_does_not_allocate` e `layer_change_does_not_click` guardam as duas regras do callback.
+
 ## Prova (`cpp/lab/exam.cpp`)
 
 `kordia_lab prova [--progressao ...] [--tom ...] [--variante ...] [--versao v]` → tabela e `resultados/<versao>/prova.csv`. Responde: **tocando uma música nova, em qualquer tom, o app acaba tocando o que foi tocado?** Usa a configuração da interface (aprender na tônica, manter o padrão, tom automático) e o violão meio tom abaixo. Batida (3) e BPM (72–120) giram com o tom.
