@@ -21,6 +21,7 @@
 #endif
 
 #include "../app/AudioCheck.h"
+#include "../app/SessionReport.h"
 #include "lab.h"
 
 using namespace lab;
@@ -235,6 +236,8 @@ static long long allocations_in(const std::string& scenario, LabConfig cfg, doub
         proc.analyze(audio.data() + k * P::HOP);
         proc.trim_history();
         proc.next_chord(), proc.beat_in_bar(), proc.count_left(), proc.engine().current_key();   // what publish() reads
+        int recent[16];
+        proc.memory().progress(), proc.memory().recent_chords(recent, 16);
     }
     return allocations - before;
 }
@@ -444,6 +447,33 @@ TEST(grid_silence_before_the_song_does_not_count) {
     auto lap = lap_of({"C", "F"});
     slots(m, join({{"", "", ""}, lap, lap}));
     CHECK(m.locked);
+}
+
+TEST(grid_progress_shows_what_is_missing_to_lock) {
+    // Real session of 30/10, 18:40: the second half of bar 2 misheard, then the second lap comes right.
+    ProgressionMemory m(std::nullopt);
+    auto lap = lap_of({"F#", "C#", "Ebm", "B"});
+    auto first = lap;
+    first[3] = "F#m";
+    long long n = slots(m, join({first, cut(lap, 0, 6)}));
+    auto p = m.progress();
+    CHECK(!m.locked && p.size == 8 && p.tail == 6 && p.hits == 5 && p.roots == 4 && !p.recent);   // the misheard slot is still in the last 3
+    CHECK(m.slot_labels().size() == 14 && m.slots_heard == 14 && m.slot_labels()[3] == chord_index("F#m"));
+    CHECK(m.slot_scores()[0] > 0.5 && m.slot_scores()[0] <= 1.0001);
+    slots(m, cut(lap, 6, 8), n);
+    CHECK(m.locked);
+
+    ProgressionMemory empty(std::nullopt);
+    CHECK(empty.progress().size == 0);
+    slots(empty, lap_of({"C"}));
+    CHECK(empty.progress().size == 0);   // one chord is no lap yet
+}
+
+TEST(free_play_lists_the_chords_in_order) {
+    ProgressionMemory m(std::nullopt);
+    for (int i = 0; i < 20; ++i) m.push(i % 2 ? chord_index("G") : chord_index("C"), 4 * i);
+    int out[4];
+    CHECK(m.recent_chords(out, 4) == 4 && out[2] == chord_index("C") && out[3] == chord_index("G"));
 }
 
 TEST(silence_and_noise_play_nothing) {
@@ -805,6 +835,26 @@ static AudioSystem stomp_unplugged() {
                 {"Stereo Mix (Realtek(R) Audio)", AudioInput::DISABLED},
                 {BUILTIN, AudioInput::ACTIVE}};
     return s;
+}
+
+TEST(session_report_reduces_the_frames_to_columns) {
+    const std::string csv =
+        "t,db,onset,bpm,tempo_conf,ouvido,conf,estado,nivel,tocando,proc_ms,falha\n"
+        "0.1,-60,0,,0,N,0.3,OCIOSO,PERDIDO,-,0.1,0\n"                    // nothing yet
+        "1.1,-20,1,98,1,F#,0.7,OUVINDO,CONFIANTE,tônica,0.1,0\n"         // learning: no chord played to disagree with
+        "2.1,-20,0,98,1,Ebm,0.8,TRAVADO,CONFIANTE,Ebm,0.1,0\n"
+        "2.2,-20,0,98,1,Ebm,0.6,TRAVADO,CONFIANTE,Ebm,0.1,0\n"
+        "2.3,-20,0,98,1,C#,0.9,TRAVADO,CONFIANTE,Ebm,0.1,0\n"            // outvoted inside the column
+        "3.1,-20,0,98,1,E,0.8,TRAVADO,CONFIANTE,Eb(sem terça),0.1,0\n"   // E is not Eb
+        "4.1,-20,0,98,1,Ebm,0.8,TRAVADO,CONFIANTE,Eb(sem terça),0.1,0\n" // same root, the third is what differs
+        "5.1,-20,0";                                                     // cut short
+    auto c = report_columns(csv, 1.0);
+    CHECK(c.size() == 5);
+    CHECK(c[0].heard.empty() && c[0].played.empty() && !c[0].miss);
+    CHECK(c[1].heard == "F#" && c[1].played == "tônica" && !c[1].miss);
+    CHECK(c[2].heard == "Ebm" && c[2].conf == 70 && c[2].played == "Ebm" && !c[2].miss && c[2].t == 2.0);
+    CHECK(c[3].miss);
+    CHECK(!c[4].miss);
 }
 
 TEST(audio_check_names_the_interface_that_is_missing) {

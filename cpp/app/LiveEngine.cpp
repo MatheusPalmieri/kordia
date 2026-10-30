@@ -1,6 +1,7 @@
 #include "LiveEngine.h"
 
 #include "AudioCheck.h"
+#include "SessionReport.h"
 
 using namespace kordia;
 
@@ -310,6 +311,8 @@ juce::String LiveEngine::start(const juce::var& q, bool preview) {
     info->setProperty("saida", setup.outputDeviceName);
     info->setProperty("taxa_dispositivo", sr_);
     info->setProperty("buffer", dev->getCurrentBufferSizeSamples());
+    info->setProperty("instrumento", q["instrumento"]);   // the report shows them; the engine never reads them
+    info->setProperty("afinacao", q["afinacao"]);
     if (!preview) {
         session_ = juce::File(KORDIA_REPO_DIR).getChildFile("sessoes").getChildFile(
             juce::Time::getCurrentTime().formatted("%Y-%m-%d_%H-%M-%S"));
@@ -366,6 +369,86 @@ void LiveEngine::setLive(const juce::var& q) {
     if (q.hasProperty("baixo")) bassGain_ = (float)juce::jlimit(0.0, 2.0, (double)q["baixo"]);
     if (q.hasProperty("bpm") && (q["bpm"].isDouble() || q["bpm"].isInt()))
         pendingBpm_ = juce::jlimit(30.0, 250.0, (double)q["bpm"]);
+    if (q.hasProperty("testar_som") && preview_) testTone_ = true;
+}
+
+// ------------------------------------------------------------------ recorded sessions
+static juce::File sessionsRoot() { return juce::File(KORDIA_REPO_DIR).getChildFile("sessoes"); }
+
+// The name comes from the page: it must be a folder directly inside sessoes/, never a path that leaves it.
+static juce::File sessionFolder(const juce::String& name) {
+    auto dir = sessionsRoot().getChildFile(name);
+    return name.isNotEmpty() && dir.isDirectory() && dir.getParentDirectory() == sessionsRoot() ? dir : juce::File();
+}
+
+static juce::var readJson(const juce::File& f) { return juce::JSON::parse(f.loadFileAsString()); }
+
+static juce::var firstLock(const juce::File& dir) {
+    juce::StringArray lines;
+    dir.getChildFile("decisoes.jsonl").readLines(lines);
+    for (auto& l : lines)
+        if (l.contains("travei")) return juce::JSON::parse(l)["t"];
+    return {};
+}
+
+juce::var LiveEngine::sessions() {
+    auto dirs = sessionsRoot().findChildFiles(juce::File::findDirectories, false);
+    dirs.sort();   // the folder name is the date
+    juce::Array<juce::var> list;
+    for (int i = dirs.size() - 1; i >= 0 && list.size() < 200; --i) {
+        const auto summary = dirs[i].getChildFile("resumo.json");
+        if (!summary.existsAsFile()) continue;   // still recording, or cut short
+        auto config = readJson(dirs[i].getChildFile("config.json"));
+        auto resumo = readJson(summary);
+        auto* o = new juce::DynamicObject();
+        o->setProperty("name", dirs[i].getFileName());
+        o->setProperty("duracao_s", resumo["duracao_s"]);
+        o->setProperty("falhas", resumo["falhas_de_audio"]);
+        o->setProperty("tom", config["run"]["tom"]);
+        o->setProperty("bpm", config["run"]["bpm"]);
+        o->setProperty("clique", config["run"]["clique"]);
+        o->setProperty("travou", firstLock(dirs[i]));
+        list.add(juce::var(o));
+    }
+    return juce::var(list);
+}
+
+juce::var LiveEngine::session(const juce::String& name) {
+    auto dir = sessionFolder(name);
+    if (dir == juce::File()) return {};
+    auto resumo = readJson(dir.getChildFile("resumo.json"));
+    // a column of 0.5 s reads as the chord of that half bar; long sessions keep about 160 columns on screen
+    const double seconds = juce::jmax(0.5, (double)resumo["duracao_s"] / 160.0);
+    juce::Array<juce::var> columns;
+    for (const auto& c : report_columns(dir.getChildFile("quadros.csv").loadFileAsString().toStdString(), seconds)) {
+        auto* o = new juce::DynamicObject();
+        o->setProperty("t", c.t);
+        o->setProperty("heard", juce::String::fromUTF8(c.heard.c_str()));
+        o->setProperty("conf", c.conf);
+        o->setProperty("played", juce::String::fromUTF8(c.played.c_str()));
+        o->setProperty("miss", c.miss);
+        columns.add(juce::var(o));
+    }
+    juce::StringArray lines;
+    dir.getChildFile("decisoes.jsonl").readLines(lines);
+    juce::Array<juce::var> decisions;
+    for (auto& l : lines)
+        if (l.isNotEmpty()) decisions.add(juce::JSON::parse(l));
+    auto* o = new juce::DynamicObject();
+    o->setProperty("name", dir.getFileName());
+    o->setProperty("config", readJson(dir.getChildFile("config.json")));
+    o->setProperty("resumo", resumo);
+    o->setProperty("travou", firstLock(dir));
+    o->setProperty("colunas", columns);
+    o->setProperty("decisoes", decisions);
+    o->setProperty("relatorio", dir.getChildFile("replay_" + name + ".svg").existsAsFile());
+    return juce::var(o);
+}
+
+void LiveEngine::openSession(const juce::String& name, bool svg) {
+    auto dir = sessionFolder(name);
+    if (dir == juce::File()) return;
+    (svg ? dir.getChildFile("replay_" + name + ".svg") : dir).startAsProcess();
 }
 
 void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int numIn, float* const* out, int numOut,
@@ -436,6 +519,16 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
         }
     }
     outVolume_ = vol;
+    if (testTone_.exchange(false)) tonePos_ = 0;
+    if (tonePos_ >= 0) {   // a short bass note: three harmonics of A2 that fade out
+        const double w = 2 * juce::MathConstants<double>::pi * 110.0 / sr_, level = 0.3 * volume_.load();
+        for (int i = 0; i < n; ++i, ++tonePos_) {
+            const double t = tonePos_ * w;
+            const float s = (float)(level * std::exp(-tonePos_ / (0.35 * sr_)) * (std::sin(t) + 0.5 * std::sin(2 * t) + 0.25 * std::sin(3 * t)));
+            for (int c = 0; c < numOut; ++c) out[c][i] = juce::jlimit(-1.0f, 1.0f, out[c][i] + s);
+        }
+        if (tonePos_ > (int)(1.5 * sr_)) tonePos_ = -1;
+    }
     double ms = juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks() - t0) * 1000;
     costSum_ += ms;
     costMax_ = juce::jmax(costMax_ * 0.999, ms);   // slowly decaying peak
@@ -531,6 +624,29 @@ void LiveEngine::publish() {
     for (int i = 0; i < s.nPad; ++i) s.padNotes[i] = proc_->acc().pad()[(size_t)i];
     s.nDiary = diaryCount_;
     for (int i = 0; i < diaryCount_; ++i) s.diary[i] = diary_[(diaryHead_ - 1 - i + 24) % 12];   // newest first
+    // log compression keeps every pitch class high: the spread is what shows the chord
+    const double lo = *std::min_element(chroma.begin(), chroma.end()), hi = *std::max_element(chroma.begin(), chroma.end());
+    for (int i = 0; i < 12; ++i) s.chroma[(size_t)i] = hi > lo ? (int)(100 * (chroma[(size_t)i] - lo) / (hi - lo)) : 0;
+    const auto& evidence = proc_->evidence();
+    for (int k = 0; k < 3; ++k) s.top[k] = -1, s.topConf[k] = -1;
+    for (int i = 0; i < 24; ++i) {
+        int c = (int)(100 * evidence[(size_t)i] + 0.5), at = i;
+        for (int k = 0; k < 3; ++k)
+            if (c > s.topConf[k]) std::swap(c, s.topConf[k]), std::swap(at, s.top[k]);
+    }
+    s.grid = eng.grid;
+    const auto& labels = mem.slot_labels();
+    const auto& scores = mem.slot_scores();
+    s.nSlots = juce::jmin(kMaxSlots, (int)labels.size());
+    for (int i = 0; i < s.nSlots; ++i) {
+        const size_t k = labels.size() - (size_t)s.nSlots + (size_t)i;
+        s.slotLabel[i] = labels[k];
+        s.slotScore[i] = (int)(100 * scores[k]);
+    }
+    s.slotsHeard = mem.slots_heard;
+    s.progress = mem.progress();
+    s.nSeq = mem.recent_chords(s.seq, 16);
+    for (int k = 0; k < P::N_LAYERS; ++k) s.layerRms[k] = proc_->synth().layer_rms[(size_t)k];
 }
 
 juce::var LiveEngine::snapshot() {
@@ -543,12 +659,25 @@ juce::var LiveEngine::snapshot() {
     auto* o = new juce::DynamicObject();
     bool running = running_ && proc_ && !preview_;
     o->setProperty("running", running);
+    auto hearing = [&] {   // the input panel, with it playing or not
+        juce::Array<juce::var> chroma, top;
+        for (int v : s.chroma) chroma.add(v);
+        for (int k = 0; k < 3 && s.top[k] >= 0; ++k) {
+            auto* c = new juce::DynamicObject();
+            c->setProperty("c", juce::String(label(s.top[k])));
+            c->setProperty("p", s.topConf[k]);
+            top.add(juce::var(c));
+        }
+        o->setProperty("chroma", chroma);
+        o->setProperty("top", top);
+    };
     if (running_ && proc_ && preview_) {   // before Iniciar: only what it hears
         o->setProperty("listening", true);
         o->setProperty("heard", s.heard == N_IDX ? juce::var() : juce::var(juce::String(label(s.heard))));
         o->setProperty("note", s.note >= 0 ? juce::var(juce::String(label(s.note))) : juce::var());
         o->setProperty("conf", s.conf);
         o->setProperty("db", s.db);
+        hearing();
     }
     juce::String err = error_;
     if (inputCorrupt_ && err.isEmpty())
@@ -611,6 +740,31 @@ juce::var LiveEngine::snapshot() {
     o->setProperty("heard", s.heard == N_IDX ? juce::var() : juce::var(juce::String(label(s.heard))));
     o->setProperty("conf", s.conf);
     o->setProperty("db", s.db);
+    hearing();
+    if (s.learning) {   // what it has understood so far; once locked the pattern says it all
+        o->setProperty("grid", s.grid);
+        auto* learn = new juce::DynamicObject();
+        juce::Array<juce::var> slots, seq;
+        for (int i = 0; i < s.nSlots; ++i) {
+            auto* c = new juce::DynamicObject();
+            c->setProperty("c", s.slotLabel[i] == N_IDX ? juce::var() : juce::var(juce::String(label(s.slotLabel[i]))));
+            c->setProperty("s", s.slotScore[i]);
+            slots.add(juce::var(c));
+        }
+        for (int i = 0; i < s.nSeq; ++i) seq.add(juce::String(label(s.seq[i])));
+        learn->setProperty("slots", slots);
+        learn->setProperty("heard", (juce::int64)s.slotsHeard);
+        learn->setProperty("seq", seq);
+        learn->setProperty("size", s.progress.size);
+        learn->setProperty("tail", s.progress.tail);
+        learn->setProperty("hits", s.progress.hits);
+        learn->setProperty("roots", s.progress.roots);
+        learn->setProperty("recent", s.progress.recent);
+        learn->setProperty("match", P::GRID_MATCH);
+        learn->setProperty("laps", P::GRID_LOCK_LAPS);
+        learn->setProperty("last", P::GRID_TAIL);
+        o->setProperty("learn", juce::var(learn));
+    }
     o->setProperty("bpm", s.bpm > 0 ? juce::var(s.bpm) : juce::var());
     o->setProperty("beat", s.beat ? juce::var(s.beat) : juce::var());
     o->setProperty("count", s.count);
@@ -629,6 +783,9 @@ juce::var LiveEngine::snapshot() {
     juce::Array<juce::var> pad;
     for (int i = 0; i < s.nPad; ++i) pad.add(noteName(s.padNotes[i]));
     out->setProperty("pad", pad);
+    juce::Array<juce::var> layers;
+    for (double rms : s.layerRms) layers.add(rms);
+    out->setProperty("layers", layers);
     o->setProperty("out", juce::var(out));
     if (s.nPattern > 0) {
         juce::Array<juce::var> p;

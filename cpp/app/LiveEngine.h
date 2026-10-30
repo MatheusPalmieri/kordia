@@ -25,6 +25,9 @@ public:
     void setLive(const juce::var& request);
     juce::var snapshot();
     juce::File sessionDir() const { return session_; }
+    juce::var sessions();                                  // the finished sessions, newest first
+    juce::var session(const juce::String& name);           // one of them, for the report screen; void if unknown
+    void openSession(const juce::String& name, bool svg);  // its folder, or the SVG the lab drew
 
     void audioDeviceIOCallbackWithContext(const float* const* in, int numIn, float* const* out, int numOut, int n,
                                           const juce::AudioIODeviceCallbackContext&) override;
@@ -32,6 +35,7 @@ public:
     void audioDeviceStopped() override {}
     void audioDeviceError(const juce::String& message) override { error_ = message; }
 
+    static constexpr int kMaxSlots = 32;   // two laps of the longest cycle
     // What the UI shows, copied out of the audio thread after each analysis block (fixed size, no allocation).
     struct Diary { double t; int state; int chord; int mode; char reason[160]; };
     struct Snap {
@@ -46,6 +50,14 @@ public:
         int bassNote = -1, nPad = 0, padNotes[8] = {};
         Diary diary[12] = {};
         int nDiary = 0;
+        // what it understands, for the learning screen and the input panel
+        int chroma[12] = {}, top[3] = {}, topConf[3] = {};   // chroma 0..100; the 3 likeliest chords, %
+        bool grid = false;
+        int nSlots = 0, slotLabel[kMaxSlots] = {}, slotScore[kMaxSlots] = {};   // newest half bars, oldest first
+        long long slotsHeard = 0;
+        kordia::ProgressionMemory::CycleCheck progress;
+        int nSeq = 0, seq[16] = {};                          // free play: newest chords, oldest first
+        double layerRms[kordia::P::N_LAYERS] = {};
     };
 
 private:
@@ -99,6 +111,8 @@ private:
     std::atomic<float> layerGain_[kordia::P::N_LAYERS] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     std::atomic<float> bassGain_{1.0f};
     std::atomic<bool> learn_{true};
+    std::atomic<bool> testTone_{false};   // Testar o som, only while it just listens
+    int tonePos_ = -1;                    // audio thread: samples into the test note (-1: none)
     int xrunWindowStart_ = 0;             // UI thread: dropout rate over the last ~5 s
     juce::uint32 xrunWindowT_ = 0;
     bool xrunStorm_ = false;

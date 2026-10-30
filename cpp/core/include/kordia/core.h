@@ -331,16 +331,25 @@ public:
     std::vector<int> cycle;            // click grid: chord of each slot of the lap (empty = none)
     bool has_slot() const { return last_slot_.has_value(); }
     bool corrected = false;            // the last push_slot changed the cycle
+    // One lap size held against the half bars heard: what find_cycle decides on, and what the UI shows while learning.
+    struct CycleCheck { int size = 0, tail = 0, hits = 0, roots = 0; bool recent = false; };
+    CycleCheck progress() const;       // the lap it is closest to locking on (size 0: none yet)
+    const std::vector<int>& slot_labels() const { return labels_; }      // oldest first, N_IDX = nothing played
+    const std::vector<double>& slot_scores() const { return scores_; }   // how well each half bar fits its chord (0..1)
+    long long slots_heard = 0;         // half bars heard since the reset; slot_labels() keeps only the newest
+    int recent_chords(int* out, int max) const;   // free play: the newest chords in order, oldest first; returns how many
 private:
     void try_lock();
     std::vector<int> chords_;          // scratch of try_lock()
     int read(const Chroma& c) const;
     void append(const Chroma& c);
+    CycleCheck check_cycle(int size) const;
     int find_cycle() const;            // 0 = none
     bool adopt(int size);
     std::array<std::array<double, 12>, 24> T_;
     std::vector<Chroma> slots_;        // click grid: one entry per half bar, oldest first (bounded, no reallocation)
     std::vector<int> labels_, next_;
+    std::vector<double> scores_;
     std::optional<long long> last_slot_;
     int misses_ = 0;
     std::vector<int> fixed_;
@@ -452,6 +461,7 @@ public:
     void handle(const Event& e);
     void render(double t0, int n, double* left, double* right);  // adds nothing: overwrites; a gain change ramps over the block
     double bass_rms = 0.0, pad_rms = 0.0;   // last block, for the UI meters
+    std::array<double, P::N_LAYERS> layer_rms{};   // same, one per pad layer (before the low-pass and the reverb)
     std::array<double, P::N_LAYERS> layers{1.0, 0.0, 0.0, 0.0, 0.0};   // gain per layer (live); default worship only
     double bass_gain = 1.0;
 private:

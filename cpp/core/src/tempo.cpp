@@ -240,6 +240,7 @@ ProgressionMemory::ProgressionMemory(const std::optional<std::string>& progressi
     chords_.reserve(258);
     slots_.reserve(P::GRID_HISTORY + 1);
     labels_.reserve(P::GRID_HISTORY + 1);
+    scores_.reserve(P::GRID_HISTORY + 1);
     next_.reserve(P::GRID_MAX_SLOTS);
     cycle.reserve(P::GRID_MAX_SLOTS);
     known.reserve(P::GRID_MAX_SLOTS);
@@ -255,6 +256,8 @@ void ProgressionMemory::reset() {
     pos = -1;
     slots_.clear();
     labels_.clear();
+    scores_.clear();
+    slots_heard = 0;
     last_slot_.reset();
     cycle.clear();
     misses_ = 0;
@@ -342,11 +345,17 @@ int ProgressionMemory::read(const Chroma& c) const {
 void ProgressionMemory::append(const Chroma& c) {
     int label = read(c);
     if (slots_.empty() && label == N_IDX) return;   // the song has not started: an empty lap counts against every cycle
+    double score = 0;
+    if (label != N_IDX)
+        for (int k = 0; k < 12; ++k) score += T_[label][k] * c[k];
     slots_.push_back(c);
     labels_.push_back(label);
+    scores_.push_back(score);
+    ++slots_heard;
     if ((int)slots_.size() > P::GRID_HISTORY) {
         slots_.erase(slots_.begin());
         labels_.erase(labels_.begin());
+        scores_.erase(scores_.begin());
     }
 }
 
@@ -378,28 +387,45 @@ int ProgressionMemory::push_slot(long long slot, const Chroma& chroma, int max_m
     return heard;
 }
 
-int ProgressionMemory::find_cycle() const {
+ProgressionMemory::CycleCheck ProgressionMemory::check_cycle(int size) const {
     int n = (int)labels_.size();
+    CycleCheck c;
+    c.size = size;
+    c.tail = std::max(0, std::min(size, n - size));
+    c.recent = true;
+    for (int i = 0; i < c.tail; ++i) {
+        bool same = same_chord(labels_[n - c.tail + i], labels_[n - c.tail - size + i]);
+        c.hits += same;
+        if (i >= c.tail - P::GRID_TAIL) c.recent = c.recent && same;
+    }
+    std::array<bool, 12> roots{};
+    for (int i = std::max(0, n - size); i < n; ++i)
+        if (labels_[i] != N_IDX) roots[labels_[i] % 12] = true;
+    c.roots = (int)std::count(roots.begin(), roots.end(), true);
+    return c;
+}
+
+int ProgressionMemory::find_cycle() const {
     for (int size = P::BEATS_PER_BAR / P::SLOT_BEATS; size <= P::GRID_MAX_SLOTS; size += P::BEATS_PER_BAR / P::SLOT_BEATS) {
-        int tail = std::min(size, n - size);
-        if (tail < round_even((P::GRID_LOCK_LAPS - 1) * size)) continue;
-        int hits = 0;
-        bool recent = true;
-        for (int i = 0; i < tail; ++i) {
-            bool same = same_chord(labels_[n - tail + i], labels_[n - tail - size + i]);
-            hits += same;
-            if (i >= tail - P::GRID_TAIL) recent = recent && same;
-        }
-        bool two_roots = false;
-        int root = -1;
-        for (int i = n - size; i < n; ++i) {
-            if (labels_[i] == N_IDX) continue;
-            if (root >= 0 && labels_[i] % 12 != root) two_roots = true;
-            root = labels_[i] % 12;
-        }
-        if (hits >= P::GRID_MATCH * tail && recent && two_roots) return size;
+        CycleCheck c = check_cycle(size);
+        if (c.tail < round_even((P::GRID_LOCK_LAPS - 1) * size)) continue;
+        if (c.hits >= P::GRID_MATCH * c.tail && c.recent && c.roots >= 2) return size;
     }
     return 0;
+}
+
+ProgressionMemory::CycleCheck ProgressionMemory::progress() const {
+    for (int size = P::BEATS_PER_BAR / P::SLOT_BEATS; size <= P::GRID_MAX_SLOTS; size += P::BEATS_PER_BAR / P::SLOT_BEATS) {
+        CycleCheck c = check_cycle(size);   // same order as find_cycle: the smallest lap that repeats so far
+        if (c.tail > 0 && c.hits >= P::GRID_MATCH * c.tail && c.roots >= 2) return c;
+    }
+    return {};
+}
+
+int ProgressionMemory::recent_chords(int* out, int max) const {
+    int n = std::min(max, (int)seq_.size());
+    for (int i = 0; i < n; ++i) out[i] = seq_[seq_.size() - (size_t)n + (size_t)i].first;
+    return n;
 }
 
 bool ProgressionMemory::adopt(int size) {

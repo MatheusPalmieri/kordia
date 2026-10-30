@@ -192,6 +192,7 @@ void Synth::render(double t0, int n, double* left, double* right) {
                                  [&](const Voice& v) { return v.off >= 0 && t0 > v.off + release(v); }),
                   voices_.end());
     static const double TANH_DRIVE = std::tanh(2.2);
+    std::array<double, P::N_LAYERS> layer_energy{};
     for (const auto& v : voices_) {
         double f = hz(v.pitch), amp = v.vel / 127.0, rel = release(v);
         if (v.inst == Inst::Click) {
@@ -234,10 +235,13 @@ void Synth::render(double t0, int n, double* left, double* right) {
                     sig *= (1 - r) * (1 - r);
                 }
                 gain += step;
-                bus[s] += gain * amp * sig;
+                double x = gain * amp * sig;
+                bus[s] += x;
+                layer_energy[(size_t)k] += x * x;
             }
         }
     }
+    for (int k = 0; k < P::N_LAYERS; ++k) layer_rms[(size_t)k] = std::sqrt(layer_energy[(size_t)k] / n);
     layers_from_ = layers;
     bass_from_ = bass_gain;
     double eb = 0, ep = 0;

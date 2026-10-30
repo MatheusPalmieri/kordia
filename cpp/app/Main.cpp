@@ -18,7 +18,7 @@ public:
                        .withResourceProvider([this](const auto& url) { return provide(url); })) {
         addAndMakeVisible(browser_);
         browser_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
-        setSize(1240, 880);
+        setSize(1360, 900);
     }
 
     void resized() override { browser_.setBounds(getLocalBounds()); }
@@ -57,10 +57,9 @@ private:
         if (path == "/api/listen") return json(ok(engine_.start(q, true)));
         if (path == "/api/stop") return engine_.stop(), json(ok());
         if (path == "/api/live") return engine_.setLive(q), json(ok());
-        if (path == "/api/open") {
-            if (engine_.sessionDir().isDirectory()) engine_.sessionDir().startAsProcess();
-            return json(ok());
-        }
+        if (path == "/api/open") return engine_.openSession(q["name"].toString(), (bool)q["svg"]), json(ok());
+        if (path == "/api/sessions") return json(engine_.sessions());
+        if (path == "/api/session") return json(engine_.session(q["name"].toString()));
         return std::nullopt;
     }
 
