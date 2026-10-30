@@ -86,7 +86,10 @@ void Grid::start(double t0, double p) {
 }
 
 // ------------------------------------------------------------------ TempoTracker
-TempoTracker::TempoTracker(double frame) : frame_(frame), env_max_((size_t)(P::TEMPO_ENV_SECONDS / frame)) { reset(); }
+TempoTracker::TempoTracker(double frame) : frame_(frame), env_max_((size_t)(P::TEMPO_ENV_SECONDS / frame)) {
+    now = 0.0;
+    reset();
+}
 
 void TempoTracker::reset() {
     if (frozen_) return;   // a fixed BPM survives the end of a song
@@ -94,7 +97,21 @@ void TempoTracker::reset() {
     env_.clear();
     frames_ = 0;
     disagree_ = 0;
+    if (seeded()) apply_seed();   // the click grid keeps its phase across songs
+}
+
+void TempoTracker::seed(double bpm, double t0) {
+    seed_bpm_ = bpm, seed_t0_ = t0;
     now = 0.0;
+    apply_seed();
+}
+
+void TempoTracker::apply_seed() {
+    period = 60.0 / seed_bpm_;
+    first_onset = seed_t0_;
+    long long k = std::max(0LL, (long long)std::ceil((now - seed_t0_) / period));
+    next_beat = seed_t0_ + k * period;
+    next_index = k;
 }
 
 void TempoTracker::update(double t, double flux, const std::optional<Onset>& onset) {

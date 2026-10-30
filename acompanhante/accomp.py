@@ -33,14 +33,16 @@ def voice(chord, mode, key):
     Open worship voicing: root, fifth, octave, third an octave up (tenth), quiet shimmer two octaves up."""
     if mode is None:
         return None, []
-    if mode == "tonic":
-        root, third, bass = theory.note_pc(key), None, None
+    if mode == "tonic":   # chord carries the key's tonic (configured or detected)
+        root, third, bass = (chord % 12 if chord is not None else theory.note_pc(key)), None, None
     else:
         root, third_pc, _ = theory.chord_pcs(chord)
         third = None if mode == "root5" else (third_pc - root) % 12
         bass = P.BASS_LOW + root
     r = P.PAD_ROOT_LOW + root
     pad = [(r, 1.0), (r + 7, 0.9), (r + 12, 0.8)]
+    if mode == "tonic":
+        pad = [(p, s * P.LEARN_TONIC_SCALE) for p, s in pad]
     if third is not None:
         pad.append((r + 12 + third, 0.8))
     pad.append((r + 24, P.PAD_SHIMMER))

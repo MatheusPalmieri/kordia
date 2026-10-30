@@ -212,3 +212,19 @@ def test_fallback_is_silent_when_the_key_does_not_fit():
     eng2 = Engine(TempoTracker(), ProgressionMemory(), key="C")
     eng2.recent.extend(theory.chord_index(c) for c in ["C", "G", "Am", "F"])
     assert eng2._fallback_out(1.0).mode == "tonic"
+
+
+def test_click_before_playing_in_follow_mode():
+    from acompanhante.pipeline import Processor
+    proc = Processor(RunConfig(tom="C", clique=True, bpm_inicial=100), keep_log=False)
+    for _ in range(int(2.5 * P.SR) // P.HOP):
+        proc.process(np.zeros(P.HOP))                     # nobody playing yet: the click already runs
+    clicks = [e["t"] for e in proc.acc.events if e["inst"] == "click"]
+    assert abs(clicks[0] - 0.5) < 1e-6 and np.allclose(np.diff(clicks), 0.6)
+
+
+def test_detect_key_from_chords():
+    ix = lambda cs: [theory.chord_index(c) for c in cs]
+    assert theory.detect_key(ix(["B", "F#", "G#m", "E"])) == theory.note_pc("B")
+    assert theory.detect_key(ix(["C", "G", "Am", "F"])) == 0
+    assert theory.detect_key(ix(["C", "G"])) is None

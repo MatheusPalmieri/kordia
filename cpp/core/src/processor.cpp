@@ -39,7 +39,10 @@ Processor::Processor(const RunConfig& cfg, double lookahead, double sr, double o
       acc_(key_of(cfg)),
       synth_(out_sr > 0 ? out_sr : sr) {
     engine_.set_frame(P::HOP / sr);
+    if (cfg.modo != "metronomo" && cfg.clique && cfg.bpm_inicial)
+        if (auto* tt = dynamic_cast<TempoTracker*>(tracker_.get())) tt->seed(*cfg.bpm_inicial, 0.5 + lookahead);
     engine_.hold = cfg.manter_padrao;
+    engine_.learn = cfg.aprender_na_tonica;
     evs_.reserve(64);
 }
 
@@ -86,7 +89,8 @@ void Processor::analyze(const double* x) {
         if (tb < t + lookahead_ + frame_dur) acc_.beat(tb, tracker.bar_pos(bi) % 2 == 0, tracker.period, vel, evs_);
     }
     if (click && tracker.has_period()) {
-        bool guide = dynamic_cast<FixedGrid*>(tracker_.get()) != nullptr || tracker.frozen();   // the click is the guide
+        auto* tt = dynamic_cast<TempoTracker*>(tracker_.get());
+        bool guide = !tt || tracker.frozen() || tt->seeded();   // the click is the guide: always on
         bool active = engine_.state == State::Ouvindo || engine_.state == State::Travado || engine_.state == State::Fallback;
         if (guide || (active && tracker.confidence() >= 0.5)) {
             long long bi = (long long)std::ceil(tracker.beat_phase(t + lookahead_));

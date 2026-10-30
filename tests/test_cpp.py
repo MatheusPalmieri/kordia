@@ -35,7 +35,8 @@ def test_live_lookahead_and_click_match():
     cfg = RunConfig(tom="C", clique=True)
     py, cpp = run(audio, cfg, lookahead=0.12), run(audio, cfg, lookahead=0.12, backend="cpp")
     assert [e for e in py.events if e["inst"] == "click"] == [e for e in cpp.events if e["inst"] == "click"]
-    assert [c[:3] for c in py.changes] == [c[:3] for c in cpp.changes]
+    key = lambda changes: [(round(t, 6), label, mode) for t, label, mode in changes]   # float noise ~1e-15
+    assert key(py.changes) == key(cpp.changes)
 
 
 def test_core_is_rate_independent():
@@ -46,3 +47,14 @@ def test_core_is_rate_independent():
     res = run(a24, RunConfig.from_dict(truth["run"]), backend="cpp", sr=24000.0)
     m = evaluate(res, truth)
     assert m["acc_total"] >= 0.85 and m["falso_disparo_s"] == 0 and m["lat_travado_ms"] < 80
+
+
+def test_layers_learning_and_seeded_click_match():
+    audio, _ = scenarios.build("tom_errado")
+    audio = audio[: 22050 * 20]
+    cfg = RunConfig(tom="C", clique=True, bpm_inicial=96, aprender_na_tonica=True, manter_padrao=True)
+    kw = dict(lookahead=0.03, layers=[0.7, 0.5, 0.6, 0.4, 0.8], bass_gain=0.5)
+    py, cpp = run(audio, cfg, **kw), run(audio, cfg, backend="cpp", **kw)
+    key = lambda changes: [(round(t, 6), label, mode) for t, label, mode in changes]
+    assert key(py.changes) == key(cpp.changes)
+    assert np.abs(py.accomp - cpp.accomp).max() < 1e-9

@@ -67,3 +67,18 @@ def test_hold_is_better_than_following_when_the_musician_slips():
     held = evaluate(run(audio, RunConfig(tom="C", manter_padrao=True)), truth)
     follow = evaluate(run(audio, RunConfig(tom="C", manter_padrao=False)), truth)
     assert held["acc_total"] > follow["acc_total"]
+
+
+@pytest.mark.parametrize("name", ["estavel_120", "tom_errado", "erros_com_padrao"])
+def test_learning_holds_the_tonic_until_the_pattern_locks(name):
+    """'Aprender na tônica': before the lock only the key's tonic (quiet pad), never a chase of chords;
+    the key is the configured one if it fits, else detected (tom_errado: set to C, music in B)."""
+    from acompanhante import theory
+    from acompanhante.pipeline import RunConfig, run
+    audio, truth = scenarios.build(name)
+    res = run(audio, RunConfig.from_dict({**truth["run"], "aprender_na_tonica": True, "manter_padrao": True}))
+    lock = next(t for t, s in zip(res.log["t"], res.log["state"]) if s == 2)
+    before = [c for c in res.changes if c[0] < lock]
+    assert all(mode in ("tonic", None) for _, _, mode in before) and len(before) <= 2
+    tonic = {c[1] for c in before if c[2] == "tonic"}
+    assert tonic == {"B"} if name == "tom_errado" else tonic == {"C"}

@@ -101,6 +101,8 @@ class Synth:
         self.zi = np.zeros(2)
         self.reverb = Reverb()
         self.levels = (0.0, 0.0)   # RMS of the bass and pad buses in the last block (for the UI meters)
+        self.layers = [1.0, 0.0, 0.0, 0.0, 0.0]   # gain per P.LAYERS (live setting); default: worship pad only
+        self.bass_gain = 1.0
 
     def handle(self, ev):
         if ev["type"] == "on":
@@ -114,15 +116,55 @@ class Synth:
         elif ev["type"] == "expr":
             self.expr_from, self.expr_to, self.expr_t = self.expr_to, ev["value"], ev["t"]
 
+    _LAYER_RELEASE = (P.PAD_RELEASE, P.ORGAN_RELEASE, P.PIANO_RELEASE, P.GTRPAD_RELEASE, P.STRINGS_RELEASE)
+
     def _release(self, v):
         if v["rel"] is not None:
             return v["rel"]
-        return {"bass": P.BASS_RELEASE, "pad": P.PAD_RELEASE, "click": 0.0}[v["inst"]]
+        if v["inst"] == "pad":
+            return max([r for r, g in zip(self._LAYER_RELEASE, self.layers) if g > 0], default=P.PAD_RELEASE)
+        return {"bass": P.BASS_RELEASE, "click": 0.0}[v["inst"]]
+
+    @staticmethod
+    def _swell(dt, attack):
+        return 0.5 - 0.5 * np.cos(np.pi * np.clip(dt / attack, 0, 1))
+
+    def _pad_layer(self, k, f, t, dt):
+        """(osc * attack/decay envelope * level, warm bus?) of pad layer k for one note."""
+        if k == 0:     # worship: 3 detuned band-limited saws, smooth swell
+            tab = _saw(f)
+            osc = sum(_lookup(tab, f * c * t) for c in (0.996, 1.0, 1.004)) / 3
+            return P.PAD_LEVEL * self._swell(dt, P.PAD_ATTACK) * osc, True
+        if k == 1:     # organ: drawbar harmonics, quick attack, 6.5 Hz tremolo
+            osc = np.zeros(len(t))
+            for h, w in ((1, 1.0), (2, 0.8), (3, 0.6), (4, 0.5), (6, 0.3), (8, 0.2)):
+                if h * f < P.SR / 2:
+                    osc += w * np.sin(2 * np.pi * h * f * t)
+            osc = osc / 3.4 * (1 + 0.12 * np.sin(2 * np.pi * 6.5 * t))
+            return P.ORGAN_LEVEL * np.clip(dt / P.ORGAN_ATTACK, 0, 1) * osc, False
+        if k == 2:     # electric piano: struck, bell partials decay fast, body decays slow
+            d = np.maximum(dt, 0)
+            osc = (np.sin(2 * np.pi * f * t) + 0.35 * np.exp(-d / 0.4) * np.sin(2 * np.pi * 2 * f * t)
+                   + 0.15 * np.exp(-d / 0.2) * np.sin(2 * np.pi * 3 * f * t))
+            env = np.clip(dt / 0.004, 0, 1) * (0.35 + 0.65 * np.exp(-d / 1.2))
+            return P.PIANO_LEVEL * env * osc, False
+        if k == 3:     # ambient guitar pad: soft triangle + octave, very slow swell
+            osc = np.zeros(len(t))
+            for h in (1, 3, 5, 7, 9):
+                if h * f < P.SR / 2:
+                    osc += (1 if (h // 2) % 2 == 0 else -1) / (h * h) * np.sin(2 * np.pi * h * f * t)
+            osc = osc * (8 / np.pi ** 2) + 0.35 * np.sin(2 * np.pi * 2 * f * t)
+            return P.GTRPAD_LEVEL * self._swell(dt, P.GTRPAD_ATTACK) * osc, True
+        # strings: 5 detuned saws with 5 Hz vibrato (phase integral of f(1 + 0.003 sin))
+        tab = _saw(f)
+        vib = t - 0.003 / (2 * np.pi * 5) * np.cos(2 * np.pi * 5 * t)
+        osc = sum(_lookup(tab, f * c * vib) for c in (0.993, 0.997, 1.0, 1.003, 1.007)) / 5
+        return P.STRINGS_LEVEL * self._swell(dt, P.STRINGS_ATTACK) * osc, True
 
     def render(self, t0, n):
         """(n, 2) stereo block starting at time t0."""
         t = t0 + np.arange(n) / P.SR
-        bass, pad, click = np.zeros(n), np.zeros(n), np.zeros(n)
+        bass, warm, bright, click = np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n)
         alive = []
         for v in self.voices:
             rel = self._release(v)
@@ -137,25 +179,29 @@ class Synth:
                 click += P.CLICK_LEVEL * amp * env * np.sin(2 * np.pi * (1500 if v["pitch"] == 77 else 1000) * dt)
                 continue
             if v["inst"] == "bass":
+                if self.bass_gain <= 0:
+                    continue
                 env = np.clip(dt / 0.008, 0, 1) * (0.7 + 0.3 * np.exp(-np.maximum(dt, 0) / 0.5))
                 ph = 2 * np.pi * f * t
                 osc = np.tanh(2.2 * np.sin(ph)) / np.tanh(2.2) + 0.25 * np.sin(2 * ph)
-                target = bass
-                level = P.BASS_LEVEL
-            else:
-                a = np.clip(dt / P.PAD_ATTACK, 0, 1)
-                env = 0.5 - 0.5 * np.cos(np.pi * a)          # smooth swell
-                tab = _saw(f)
-                osc = sum(_lookup(tab, f * c * t) for c in (0.996, 1.0, 1.004)) / 3
-                target = pad
-                level = P.PAD_LEVEL
-            if v["off"] is not None:
-                r = np.clip((t - v["off"]) / max(rel, 1e-3), 0, 1)
-                env = env * (1 - r) ** 2
-            target += level * amp * env * osc
+                if v["off"] is not None:
+                    r = np.clip((t - v["off"]) / max(rel, 1e-3), 0, 1)
+                    env = env * (1 - r) ** 2
+                bass += self.bass_gain * P.BASS_LEVEL * amp * env * osc
+                continue
+            for k, g in enumerate(self.layers):
+                if g <= 0:
+                    continue
+                sig, is_warm = self._pad_layer(k, f, t, dt)
+                if v["off"] is not None:
+                    lr = v["rel"] if v["rel"] is not None else self._LAYER_RELEASE[k]
+                    r = np.clip((t - v["off"]) / max(lr, 1e-3), 0, 1)
+                    sig = sig * (1 - r) ** 2
+                (warm if is_warm else bright)[:] += g * amp * sig
         self.voices = alive
 
-        pad, self.zi = lfilter(self.b_lp, self.a_lp, pad, zi=self.zi)
+        warm, self.zi = lfilter(self.b_lp, self.a_lp, warm, zi=self.zi)   # warm layers are low-passed
+        pad = warm + bright
         self.levels = (float(np.sqrt(np.mean(bass ** 2))), float(np.sqrt(np.mean(pad ** 2))))
         wet = self.reverb(pad)
         mix = (bass + P.PAD_DRY * pad)[:, None] + P.PAD_WET * wet

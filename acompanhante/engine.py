@@ -26,6 +26,7 @@ class Engine:
         self.tracker, self.memory, self.key, self.metronome = tracker, memory, key, metronome
         self.lookahead = lookahead   # live: audio output latency; scheduled events are emitted this much earlier
         self.hold = False            # "manter o padrão": once locked, trust the pattern over the audio (live setting)
+        self.learn = False           # "aprender na tônica": until the pattern locks, only a quiet tonic pad
         self.cur = (None, None)
         self._forget()
 
@@ -45,7 +46,8 @@ class Engine:
         self.disagree_since = None   # hold mode: since when the audio confidently disagrees with the pattern
         self.root5_tc = None         # when a 'no third' chord started (its full version keeps that start)
         self.last_change_t = -np.inf
-        self.recent = deque(maxlen=8)   # last chords played: does the configured key match the music?
+        self.heard = deque(maxlen=12)   # last chords heard with confidence: key fit / key detection
+        self.last_heard = None
         self.reason = ""
         self.stop_at = None
         self.memory.reset()
@@ -59,8 +61,6 @@ class Engine:
         if (chord, mode) == self.cur:
             return None
         self.cur = (chord, mode)
-        if mode == "full":
-            self.recent.append(chord)
         if reason is not None:
             self.reason = reason
         return Output(chord, mode, t)
@@ -79,14 +79,23 @@ class Engine:
         """Musical time of a change heard now: the strum that started it (detection lags it)."""
         return self.last_onset if self.last_onset is not None and t - self.last_onset < 0.4 else t
 
+    def current_key(self):
+        """Tonic pitch class: the configured key while it fits what was heard, else the key detected from it."""
+        heard = list(self.heard)
+        if self.key is not None and theory.key_fits(theory.note_pc(self.key), heard):
+            return theory.note_pc(self.key)
+        return theory.detect_key(heard)
+
+    def _tonic_out(self, t, why):
+        k = self.current_key()
+        if k is None:
+            if self.key is not None:   # configured key contradicted and nothing better yet: its tonic would be wrong
+                return self._set(None, None, t, f"{why}; o tom configurado não bate com o que ouvi: silêncio")
+            return self._set(None, None, t, f"{why}; ainda sem tom: silêncio")
+        return self._set(k, "tonic", t, f"{why}: pad na tônica ({theory.NOTE_NAMES[k]})")
+
     def _fallback_out(self, t):
-        if self.key is None:
-            return self._set(None, None, t, "perdido sem tom: silêncio")
-        d = theory.diatonic(theory.note_pc(self.key))
-        if sum(c in d for c in self.recent) * 2 < len(self.recent):
-            # what we heard is mostly outside the configured key: its tonic would be a wrong note
-            return self._set(None, None, t, "perdido; o tom configurado não bate com o que ouvi: silêncio")
-        return self._set(None, "tonic", t, "perdido: pad na tônica")
+        return self._tonic_out(t, "perdido")
 
     # --- main step ---
     def step(self, t, onset, idx, conf, evidence):
@@ -164,6 +173,8 @@ class Engine:
         self.memory.unlock()
         self.state = OUVINDO
         self.tracker.observe_change(self._change_time(t))
+        if self.learn:
+            return self._reactive_change(t, idx)
         return self._set(idx, "full", t, f"você mudou de verdade (2 compassos diferentes do padrão): ouvi {theory.LABELS[idx]}, reaprendendo")
 
     def _reactive(self, t, idx, evidence):
@@ -174,11 +185,14 @@ class Engine:
         if self.level == CONFIANTE:
             # a chord change is born from a strum: ignore drifts between strums (noise, voice, decay)
             fresh = self.last_onset is not None and t - self.last_onset < P.CHANGE_AFTER_ONSET
-            if fresh and self.cur != (idx, "full") and not (self.pending and self.pending[0] == idx):
+            new = idx != self.last_heard if self.learn else self.cur != (idx, "full")
+            if fresh and new and not (self.pending and self.pending[0] == idx):
                 return self._reactive_change(t, idx)
             return None
         # major/minor ambiguity on the same root: play root + fifth, no third
         # (if we already play one of the two, holding it is the safer choice and avoids retriggering)
+        if self.learn:
+            return None
         a, b = np.argsort(evidence[:24])[-2:]
         if (self.level == DUVIDA and a % 12 == b % 12 and evidence[a] + evidence[b] >= P.CONF_HIGH
                 and self.cur[0] not in (a, b)):
@@ -187,6 +201,8 @@ class Engine:
         return None
 
     def _reactive_change(self, t, idx):
+        self.heard.append(idx)
+        self.last_heard = idx
         tc = self._change_time(t)
         if self.cur[1] == "root5" and self.cur[0] is not None and self.cur[0] % 12 == idx % 12 and self.root5_tc is not None:
             tc = self.root5_tc   # same chord, now with its third: it started when the root did
@@ -201,6 +217,8 @@ class Engine:
                 self.confirm_at = t + P.LOCK_CONFIRM_BEATS * self.tracker.period
                 self.expected = None
                 self.misses = 0
+        if self.learn and self.state != TRAVADO:   # learning: hold a quiet tonic, do not chase every chord
+            return self._tonic_out(t, "aprendendo o padrão")
         if self.metronome and self.tracker.period:
             ph = self.tracker.beat_phase(tc)
             k = int(np.floor(ph))
@@ -253,6 +271,8 @@ class Engine:
                 self.memory.unlock()
                 self.state = OUVINDO
                 self.tracker.observe_change(self._change_time(t))
+                if self.learn:
+                    return self._reactive_change(t, idx)
                 return self._set(idx, "full", t, f"contradição sustentada: ouvi {theory.LABELS[idx]}, destravei")
         else:
             self.contra = None

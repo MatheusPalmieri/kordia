@@ -46,6 +46,8 @@ constexpr int LOCK_MAX_MISSES = 3;
 constexpr double LOCK_CONTRA_BEATS = 0.5, LOCK_LATE_BEATS = 1.0;
 constexpr int CYCLE_MIN = 2, CYCLE_MAX = 8;
 constexpr double HOLD_STOP_BARS = 1.25, HOLD_CONTRA_BARS = 1.5;
+constexpr double KEY_ROLE_WEIGHTS[6] = {1.6, 1.2, 1.2, 1.0, 0.7, 0.7};   // I, IV, V, vi, ii, iii
+constexpr double LEARN_TONIC_SCALE = 0.6;
 constexpr double METRO_LATE_BEATS = 0.5;
 constexpr double DYN_DB_LOW = -45.0, DYN_DB_HIGH = -12.0;
 constexpr int DYN_VEL_LOW = 60, DYN_VEL_HIGH = 120;
@@ -55,6 +57,12 @@ constexpr double PAD_SHIMMER = 0.35;
 constexpr double PAD_ATTACK = 0.9, PAD_RELEASE = 2.2, PAD_CUTOFF = 1800.0, PAD_LEVEL = 0.16, PAD_DRY = 0.75,
                  PAD_WET = 0.6, REVERB_ROOM = 0.86, REVERB_DAMP = 0.35, BASS_LEVEL = 0.45, BASS_RELEASE = 0.15,
                  CLICK_LEVEL = 0.5, STOP_FADE = 0.6;
+// pad layers: worship, orgao, piano, guitarra, cordas (every pad note is played by each layer with gain > 0)
+constexpr int N_LAYERS = 5;
+constexpr double ORGAN_LEVEL = 0.13, ORGAN_ATTACK = 0.015, ORGAN_RELEASE = 0.12;
+constexpr double PIANO_LEVEL = 0.08, PIANO_RELEASE = 0.35;
+constexpr double GTRPAD_LEVEL = 0.09, GTRPAD_ATTACK = 1.2, GTRPAD_RELEASE = 2.5;
+constexpr double STRINGS_LEVEL = 0.19, STRINGS_ATTACK = 0.6, STRINGS_RELEASE = 1.2;
 }  // namespace P
 
 constexpr double INF = std::numeric_limits<double>::infinity();
@@ -72,6 +80,8 @@ std::array<int, 3> chord_pcs(int idx);           // root, third, fifth
 std::array<std::array<double, 12>, 24> templates();
 std::array<double, 25> key_prior(std::optional<int> key_pc);
 bool is_diatonic(int idx, int key_pc);   // I, IV, V, ii, iii, vi of a major key
+bool key_fits(int key_pc, const std::deque<int>& chords);          // at least half diatonic (empty fits)
+std::optional<int> detect_key(const std::deque<int>& chords);      // None with < 3 distinct chords
 
 // ------------------------------------------------------------------ config
 struct RunConfig {
@@ -79,8 +89,10 @@ struct RunConfig {
     std::optional<std::string> tom;    // main key, e.g. "C"
     std::optional<double> bpm;         // metronome mode
     std::optional<std::string> progressao;
+    std::optional<double> bpm_inicial;   // follow mode + click: click starts at Iniciar at this tempo
     bool clique = false;
     bool manter_padrao = false;   // hold: once learned, the pattern keeps playing through mistakes
+    bool aprender_na_tonica = false;   // until the pattern locks: only a quiet tonic pad
 };
 
 // ------------------------------------------------------------------ analysis
@@ -162,7 +174,11 @@ public:
     bool frozen() const override { return frozen_; }
     void set_frozen(bool f) { frozen_ = f && period > 0; }
     void set_bpm(double bpm) { if (frozen_) period = 60.0 / bpm; }
+    void seed(double bpm, double t0);   // click before playing: a starting tempo guess, then follow the strums
+    bool seeded() const { return seed_bpm_ > 0; }
 private:
+    void apply_seed();
+    double seed_bpm_ = 0.0, seed_t0_ = 0.0;
     void pll(double to);
     void acf();
     double best_phase(const std::vector<double>& recent, double period) const;
@@ -248,13 +264,17 @@ private:
     double confirm_at_ = 0.0, changed_at_ = 0.0, contra_since_ = 0.0, last_change_t_ = -INF, stop_at_ = 0.0;
     std::optional<int> expected_, prev_chord_, contra_;
     int misses_ = 0;
-    std::deque<int> recent_;   // last chords played: does the configured key match the music?
+    std::deque<int> heard_;    // last chords heard with confidence: key fit / key detection
+    int last_heard_ = -1;
+    std::optional<Output> tonic_out(double t, const std::string& why);
     std::optional<double> disagree_since_;   // hold mode: since when the audio confidently disagrees
     std::optional<double> root5_tc_;         // when a 'no third' chord started
     std::optional<Output> held_check(double t, int idx, bool late);
     bool held() const { return hold && memory_.locked; }
 public:
     bool hold = false;          // "manter o padrão": once locked, trust the pattern over the audio (live setting)
+    bool learn = false;         // "aprender na tônica": until the pattern locks, only a quiet tonic pad
+    std::optional<int> current_key() const;   // configured key while it fits, else detected
 private:
 public:
     void set_frame(double f) { frame_ = f; }
@@ -302,6 +322,8 @@ public:
     void handle(const Event& e);
     void render(double t0, int n, double* left, double* right);  // adds nothing: overwrites
     double bass_rms = 0.0, pad_rms = 0.0;   // last block, for the UI meters
+    std::array<double, P::N_LAYERS> layers{1.0, 0.0, 0.0, 0.0, 0.0};   // gain per layer (live); default worship only
+    double bass_gain = 1.0;
 private:
     struct Voice { Inst inst; int pitch, vel; double on, off, rel; };   // off < 0: held
     struct Comb { int D; double g, d; std::vector<double> buf; int i = 0; double process(double x); };
@@ -315,7 +337,8 @@ private:
     double expr_from_ = 1.0, expr_to_ = 1.0, expr_t_ = 0.0;
     double b0_, b1_, b2_, a1_, a2_, z1_ = 0.0, z2_ = 0.0;
     Channel ch_[2];
-    std::vector<double> bass_, pad_, click_;
+    std::vector<double> bass_, pad_, bright_, click_;
+    double pad_layer(int k, double f, double t, double dt, const std::vector<double>* tab, bool& warm) const;
 };
 
 // ------------------------------------------------------------------ processor
@@ -345,7 +368,9 @@ public:
     void freeze_tempo(bool on);
     void set_bpm(double bpm);   // live: fixed BPM (metronome mode or frozen tempo), keeping the beat phase
     void set_hold(bool on) { engine_.hold = on; }   // live: "manter o padrão"
+    void set_learn(bool on) { engine_.learn = on; } // live: "aprender na tônica"
     const Synth& synth() const { return synth_; }
+    Synth& synth() { return synth_; }
     std::optional<int> next_chord() const;
     std::optional<int> beat_in_bar() const;
 

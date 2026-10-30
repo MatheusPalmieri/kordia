@@ -94,6 +94,8 @@ class _Grid:
 class TempoTracker(_Grid):
     def __init__(self):
         self.frozen = False   # live "fixar BPM": keep period and phase, stop following the strums
+        self.seed_bpm = None  # click before playing: a starting tempo guess (the PLL/ACF take over with strums)
+        self.now = 0.0
         self.reset()
 
     def reset(self):
@@ -103,7 +105,19 @@ class TempoTracker(_Grid):
         self.env = deque(maxlen=int(P.TEMPO_ENV_SECONDS / FRAME))
         self.frame = 0
         self.disagree = 0
+        if self.seed_bpm:
+            self._seed()      # the click grid keeps its phase across songs
+
+    def seed(self, bpm, t0):
+        self.seed_bpm, self.seed_t0 = bpm, t0
         self.now = 0.0
+        self._seed()
+
+    def _seed(self):
+        self.period = 60.0 / self.seed_bpm
+        self.first_onset = self.seed_t0
+        k = max(0, int(np.ceil((self.now - self.seed_t0) / self.period)))
+        self.next_beat, self.next_index = self.seed_t0 + k * self.period, k
 
     def update(self, t, flux, onset=None):
         self.now = t

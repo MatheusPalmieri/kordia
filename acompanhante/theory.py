@@ -65,6 +65,26 @@ def diatonic(key_pc):
     return {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12, 12 + (k + 9) % 12}
 
 
+def key_fits(key_pc, chords):
+    """At least half of the chords belong to the key (an empty list fits)."""
+    d = diatonic(key_pc)
+    return sum(c in d for c in chords) * 2 >= len(chords)
+
+
+def detect_key(chords):
+    """Major key that best explains the heard chords (tonic, IV, V weigh more), or None with < 3 distinct chords."""
+    if len(set(chords)) < 3:
+        return None
+    best, best_s = None, 0.0
+    for k in range(12):
+        roles = [k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 9) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12]
+        w = dict(zip(roles, P.KEY_ROLE_WEIGHTS))
+        s = sum(w.get(c, 0.0) for c in chords)
+        if s > best_s:
+            best, best_s = k, s
+    return best
+
+
 def key_prior(key):
     """Prior over the 25 states: diatonic triads 1.0, others KEY_PRIOR_OUT, N 1.0. key=None -> uniform."""
     w = np.ones(25)

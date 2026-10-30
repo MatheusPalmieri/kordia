@@ -24,8 +24,8 @@ static void voice(int chord, Mode mode, std::optional<int> key_pc, int& bass,
     pad.clear();
     if (mode == Mode::Silence) return;
     int root, third = -1;
-    if (mode == Mode::Tonic) {
-        root = *key_pc;
+    if (mode == Mode::Tonic) {   // chord carries the key's tonic (configured or detected)
+        root = chord >= 0 ? chord % 12 : *key_pc;
     } else {
         auto pcs = chord_pcs(chord);
         root = pcs[0];
@@ -34,6 +34,8 @@ static void voice(int chord, Mode mode, std::optional<int> key_pc, int& bass,
     }
     int r = P::PAD_ROOT_LOW + root;
     pad = {{r, 1.0}, {r + 7, 0.9}, {r + 12, 0.8}};
+    if (mode == Mode::Tonic)
+        for (auto& p : pad) p.second *= P::LEARN_TONIC_SCALE;
     if (third >= 0) pad.push_back({r + 12 + third, 0.8});
     pad.push_back({r + 24, P::PAD_SHIMMER});
 }

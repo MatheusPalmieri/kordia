@@ -70,6 +70,8 @@ LOCK_LATE_BEATS = 1.0         # hearing the previous chord up to 1 beat after a 
 CYCLE_MIN, CYCLE_MAX = 2, 8   # cycle length in chords
 # "manter o padrão" (hold): once the cycle is locked it is trusted over the audio
 HOLD_STOP_BARS = 1.25         # with a held pattern, stop only after 5 beats of silence (late entries keep playing)
+KEY_ROLE_WEIGHTS = (1.6, 1.2, 1.2, 1.0, 0.7, 0.7)   # I, IV, V, vi, ii, iii: key detection from heard chords
+LEARN_TONIC_SCALE = 0.6       # pad level while learning / in fallback (quiet, only the pad)
 HOLD_CONTRA_BARS = 1.5         # (2.0 tested: key change without a pause 0.88 vs 0.90; mistakes scenario equal)        # confident disagreement this long = the musician really changed: relearn
 METRO_LATE_BEATS = 0.5        # metronome mode: change heard up to this after a strong beat applies now
 
@@ -94,4 +96,10 @@ REVERB_ROOM, REVERB_DAMP = 0.86, 0.35
 BASS_LEVEL = 0.45
 BASS_RELEASE = 0.15
 CLICK_LEVEL = 0.5
+# pad layers (each pad note is played by every layer with gain > 0): worship, orgao, piano, guitarra, cordas
+LAYERS = ("worship", "orgao", "piano", "guitarra", "cordas")
+ORGAN_LEVEL, ORGAN_ATTACK, ORGAN_RELEASE = 0.13, 0.015, 0.12
+PIANO_LEVEL, PIANO_RELEASE = 0.08, 0.35
+GTRPAD_LEVEL, GTRPAD_ATTACK, GTRPAD_RELEASE = 0.09, 1.2, 2.5
+STRINGS_LEVEL, STRINGS_ATTACK, STRINGS_RELEASE = 0.19, 0.6, 1.2
 STOP_FADE = 0.6               # s: release used when the musician stops (short, not the long pad release)

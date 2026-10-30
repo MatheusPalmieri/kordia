@@ -23,6 +23,8 @@ class RunConfig:
     feedback: dict | None = None  # test only: {'gain': 0.5, 'delay': 0.03} closed loop output -> input
     clique: bool = False          # audible metronome click (in metronome mode the grid then starts at Iniciar)
     manter_padrao: bool = False   # hold: once learned, the pattern keeps playing through mistakes (UI default: on)
+    aprender_na_tonica: bool = False  # until the pattern locks: only a quiet tonic pad (UI default: on)
+    bpm_inicial: float | None = None  # follow mode + click: the click starts at Iniciar at this tempo, then follows
 
     @classmethod
     def from_dict(cls, d):
@@ -59,6 +61,8 @@ class Processor:
         # at most), not at the first strum
         start = 0.5 + lookahead if cfg.clique else None
         self.tracker = FixedGrid(cfg.bpm, start) if cfg.modo == "metronomo" else TempoTracker()
+        if cfg.modo != "metronomo" and cfg.clique and cfg.bpm_inicial:
+            self.tracker.seed(cfg.bpm_inicial, 0.5 + lookahead)
         self.click = cfg.clique
         self.click_vel = 100
         self.last_click_t = -np.inf
@@ -69,6 +73,7 @@ class Processor:
         self.lookahead = lookahead
         self.engine = Engine(self.tracker, self.memory, cfg.tom, metronome=cfg.modo == "metronomo", lookahead=lookahead)
         self.engine.hold = cfg.manter_padrao
+        self.engine.learn = cfg.aprender_na_tonica
         self.onsets, self.chords = OnsetDetector(), ChordTracker(cfg.tom)
         self.acc, self.dyn, self.synth = Accompanist(cfg.tom), Dynamics(), Synth()
         self.wo, self.wc = np.hanning(P.ONSET_WIN), np.hanning(P.CHROMA_WIN)
@@ -127,7 +132,7 @@ class Processor:
             if tb < t + self.lookahead + P.HOP / P.SR:
                 evs += acc.beat(tb, tracker.bar_pos(bi) % 2 == 0, tracker.period, vel)
         if self.click and tracker.period:
-            guide = isinstance(tracker, FixedGrid) or tracker.frozen   # the click is the guide: always on
+            guide = isinstance(tracker, FixedGrid) or tracker.frozen or bool(tracker.seed_bpm)   # click = guide: always on
             if guide or (engine.state in (OUVINDO, TRAVADO, FALLBACK) and tracker.confidence >= 0.5):
                 bi = int(np.ceil(tracker.beat_phase(t + self.lookahead)))
                 tb = tracker.time_of_beat(bi)
@@ -182,18 +187,22 @@ class Processor:
         return self.tracker.bar_pos(int(np.floor(self.tracker.beat_phase(self.s / P.SR)))) + 1
 
 
-def run(audio, cfg: RunConfig, lookahead=0.0, backend="py", sr=P.SR):
+def run(audio, cfg: RunConfig, lookahead=0.0, backend="py", sr=P.SR, layers=None, bass_gain=1.0):
     """Offline run. lookahead: only to replay a live session exactly (same decisions, same timing).
     backend="cpp": the same algorithm in the C++ core (cpp/, built by `python tasks.py build`); only the C++ core
     runs at another analysis rate `sr` (live sessions recorded on 48 kHz devices are analysed at 24 kHz)."""
     if backend == "cpp":
         from . import kordia_core
-        r = kordia_core.run_offline(np.asarray(audio, dtype=np.float64), cfg.__dict__, lookahead, sr)
+        r = kordia_core.run_offline(np.asarray(audio, dtype=np.float64), cfg.__dict__, lookahead, sr,
+                                    list(layers or [1.0, 0.0, 0.0, 0.0, 0.0]), bass_gain)
         return Result(r["audio"], r["accomp"], r["log"], r["events"], r["changes"], r["onsets"])
     if sr != P.SR:
         raise ValueError(f"o núcleo Python só analisa a {P.SR} Hz; use backend='cpp' para {sr} Hz")
     audio = np.asarray(audio, dtype=np.float64).copy()
     proc = Processor(cfg, lookahead=lookahead)
+    if layers is not None:
+        proc.synth.layers = list(layers)
+    proc.synth.bass_gain = bass_gain
     out = np.zeros((len(audio), 2))
     fb_gain, fb_delay = (cfg.feedback["gain"], int(cfg.feedback["delay"] * P.SR)) if cfg.feedback else (0.0, 0)
     for k in range(len(audio) // P.HOP):

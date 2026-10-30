@@ -23,7 +23,8 @@ void Engine::forget() {
     contra_.reset();
     contra_since_ = 0.0;
     last_change_t_ = -INF;
-    recent_.clear();
+    heard_.clear();
+    last_heard_ = -1;
     disagree_since_.reset();
     root5_tc_.reset();
     reason.clear();
@@ -35,10 +36,6 @@ void Engine::forget() {
 std::optional<Output> Engine::set(int chord, Mode mode, double t, const char* why) {
     if (cur.first == chord && cur.second == mode) return std::nullopt;
     cur = {chord, mode};
-    if (mode == Mode::Full) {
-        recent_.push_back(chord);
-        if (recent_.size() > 8) recent_.pop_front();
-    }
     if (why) reason = why;
     return Output{chord, mode, t};
 }
@@ -114,16 +111,26 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
         memory_.unlock();
         reason = "dúvida por mais de 1 compasso";
         pending_.reset();
-        if (!key_pc) return set(-1, Mode::Silence, t, "perdido sem tom: silêncio");
-        int in_key = 0;
-        for (int c : recent_) in_key += is_diatonic(c, *key_pc);
-        if (in_key * 2 < (int)recent_.size())   // heard mostly outside the configured key: its tonic would be wrong
-            return set(-1, Mode::Silence, t, "perdido; o tom configurado não bate com o que ouvi: silêncio");
-        return set(-1, Mode::Tonic, t, "perdido: pad na tônica");
+        return tonic_out(t, "perdido");
     }
 
     if (state == State::Travado) return locked(t, idx);
     return reactive(t, idx, evidence);
+}
+
+std::optional<int> Engine::current_key() const {
+    if (key_pc && key_fits(*key_pc, heard_)) return key_pc;
+    return detect_key(heard_);
+}
+
+std::optional<Output> Engine::tonic_out(double t, const std::string& why) {
+    auto k = current_key();
+    if (!k) {
+        if (key_pc)   // configured key contradicted and nothing better yet: its tonic would be wrong
+            return set(-1, Mode::Silence, t, why + "; o tom configurado não bate com o que ouvi: silêncio");
+        return set(-1, Mode::Silence, t, why + "; ainda sem tom: silêncio");
+    }
+    return set(*k, Mode::Tonic, t, why + ": pad na tônica (" + label(*k) + ")");
 }
 
 // Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement sustained
@@ -144,6 +151,7 @@ std::optional<Output> Engine::held_check(double t, int idx, bool late) {
     memory_.unlock();
     state = State::Ouvindo;
     tracker_.observe_change(change_time(t));
+    if (learn) return reactive_change(t, idx);
     return set(idx, Mode::Full, t, "você mudou de verdade (2 compassos diferentes do padrão): ouvi " + label(idx) + ", reaprendendo");
 }
 
@@ -156,10 +164,11 @@ std::optional<Output> Engine::reactive(double t, int idx, const std::array<doubl
     if (level == Level::Confiante) {
         // a chord change is born from a strum: ignore drifts between strums (noise, voice, decay)
         bool fresh = last_onset && t - *last_onset < P::CHANGE_AFTER_ONSET;
-        bool same = cur.first == idx && cur.second == Mode::Full;
-        if (fresh && !same && !(pending_ && pending_->first == idx)) return reactive_change(t, idx);
+        bool fresh_chord = learn ? idx != last_heard_ : !(cur.first == idx && cur.second == Mode::Full);
+        if (fresh && fresh_chord && !(pending_ && pending_->first == idx)) return reactive_change(t, idx);
         return std::nullopt;
     }
+    if (learn) return std::nullopt;
     // major/minor ambiguity on the same root: play root + fifth, no third
     // (if we already play one of the two, holding it is the safer choice and avoids retriggering)
     int b = 0;
@@ -178,6 +187,9 @@ std::optional<Output> Engine::reactive(double t, int idx, const std::array<doubl
 }
 
 std::optional<Output> Engine::reactive_change(double t, int idx) {
+    heard_.push_back(idx);
+    if (heard_.size() > 12) heard_.pop_front();
+    last_heard_ = idx;
     double tc = change_time(t);
     if (cur.second == Mode::Root5 && cur.first >= 0 && cur.first % 12 == idx % 12 && root5_tc_)
         tc = *root5_tc_;   // same chord, now with its third: it started when the root did
@@ -194,6 +206,7 @@ std::optional<Output> Engine::reactive_change(double t, int idx) {
             misses_ = 0;
         }
     }
+    if (learn && state != State::Travado) return tonic_out(t, "aprendendo o padrão");   // hold a quiet tonic
     if (metronome && tracker_.has_period()) {
         double ph = tracker_.beat_phase(tc);
         long long k = (long long)std::floor(ph);
@@ -250,6 +263,7 @@ std::optional<Output> Engine::locked(double t, int idx) {
             memory_.unlock();
             state = State::Ouvindo;
             tracker_.observe_change(change_time(t));
+            if (learn) return reactive_change(t, idx);
             return set(idx, Mode::Full, t, "contradição sustentada: ouvi " + label(idx) + ", destravei");
         }
     } else {

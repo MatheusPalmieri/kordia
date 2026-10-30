@@ -20,8 +20,11 @@ static RunConfig cfg_from(const py::dict& d) {
     c.tom = str("tom");
     c.progressao = str("progressao");
     if (d.contains("bpm") && !d["bpm"].is_none()) c.bpm = d["bpm"].cast<double>();
+    if (d.contains("bpm_inicial") && !d["bpm_inicial"].is_none()) c.bpm_inicial = d["bpm_inicial"].cast<double>();
     if (d.contains("clique") && !d["clique"].is_none()) c.clique = d["clique"].cast<bool>();
     if (d.contains("manter_padrao") && !d["manter_padrao"].is_none()) c.manter_padrao = d["manter_padrao"].cast<bool>();
+    if (d.contains("aprender_na_tonica") && !d["aprender_na_tonica"].is_none())
+        c.aprender_na_tonica = d["aprender_na_tonica"].cast<bool>();
     return c;
 }
 
@@ -43,7 +46,7 @@ static py::dict event_dict(const Event& e) {
 }
 
 static py::dict run_offline(py::array_t<double, py::array::c_style | py::array::forcecast> audio_in, const py::dict& cfg,
-                            double lookahead, double SR) {
+                            double lookahead, double SR, std::vector<double> layers, double bass_gain) {
     std::vector<double> a(audio_in.data(), audio_in.data() + audio_in.size());
     RunConfig c = cfg_from(cfg);
     double fb_gain = 0.0;
@@ -54,6 +57,8 @@ static py::dict run_offline(py::array_t<double, py::array::c_style | py::array::
         fb_delay = (long long)(fb["delay"].cast<double>() * SR);
     }
     Processor proc(c, lookahead, SR);
+    for (int k = 0; k < P::N_LAYERS && k < (int)layers.size(); ++k) proc.synth().layers[k] = layers[k];
+    proc.synth().bass_gain = bass_gain;
     size_t n = a.size(), blocks = n / P::HOP;
     std::vector<double> out(n * 2, 0.0), L(P::HOP), R(P::HOP);
     std::vector<double> t, db, flux, bpm, tconf, conf, expr;
@@ -119,7 +124,9 @@ static py::dict params() {
     K(HMM_P_CHANGE_STRONG); K(HMM_ONSET_BOOST_TIME); K(KEY_PRIOR_OUT); K(CONF_BETA); K(CONF_SMOOTH); K(CONF_HIGH);
     K(CONF_LOW); K(CHANGE_AFTER_ONSET); K(DOUBT_TO_FALLBACK_BARS); K(STOP_BEATS); K(STOP_IOI_FACTOR);
     K(STOP_DEFAULT_SECONDS); K(FORGET_BARS); K(LOCK_CONFIRM_BEATS); K(LOCK_MAX_MISSES); K(LOCK_CONTRA_BEATS);
-    K(LOCK_LATE_BEATS); K(CYCLE_MIN); K(CYCLE_MAX); K(HOLD_STOP_BARS); K(HOLD_CONTRA_BARS); K(METRO_LATE_BEATS); K(DYN_DB_LOW); K(DYN_DB_HIGH); K(DYN_VEL_LOW);
+    K(LOCK_LATE_BEATS); K(CYCLE_MIN); K(CYCLE_MAX); K(HOLD_STOP_BARS); K(HOLD_CONTRA_BARS); K(LEARN_TONIC_SCALE);
+    d["KEY_ROLE_WEIGHTS"] = py::make_tuple(P::KEY_ROLE_WEIGHTS[0], P::KEY_ROLE_WEIGHTS[1], P::KEY_ROLE_WEIGHTS[2],
+                                           P::KEY_ROLE_WEIGHTS[3], P::KEY_ROLE_WEIGHTS[4], P::KEY_ROLE_WEIGHTS[5]); K(METRO_LATE_BEATS); K(DYN_DB_LOW); K(DYN_DB_HIGH); K(DYN_VEL_LOW);
     K(DYN_VEL_HIGH); K(DYN_SMOOTH); K(DYN_SILENCE_DECAY); K(BASS_LOW); K(PAD_ROOT_LOW); K(PAD_SHIMMER); K(PAD_ATTACK);
     K(PAD_RELEASE); K(PAD_CUTOFF); K(PAD_LEVEL); K(PAD_DRY); K(PAD_WET); K(REVERB_ROOM); K(REVERB_DAMP); K(BASS_LEVEL);
     K(BASS_RELEASE); K(CLICK_LEVEL); K(STOP_FADE);
@@ -130,6 +137,7 @@ static py::dict params() {
 PYBIND11_MODULE(kordia_core, m) {
     m.doc() = "Kordia C++ core (same algorithm as the Python reference in acompanhante/)";
     m.def("run_offline", &run_offline, py::arg("audio"), py::arg("cfg"), py::arg("lookahead") = 0.0,
-          py::arg("sr") = 22050.0);   // sessions from 48 kHz devices are analysed at 24 kHz
+          py::arg("sr") = 22050.0,   // sessions from 48 kHz devices are analysed at 24 kHz
+          py::arg("layers") = std::vector<double>{1.0, 0.0, 0.0, 0.0, 0.0}, py::arg("bass_gain") = 1.0);
     m.def("params", &params);
 }

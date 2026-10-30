@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stdexcept>
 
 #include "kordia/core.h"
@@ -55,6 +56,29 @@ bool is_diatonic(int idx, int k) {
     for (int x : d)
         if (x == idx) return true;
     return false;
+}
+
+bool key_fits(int key_pc, const std::deque<int>& chords) {
+    int n = 0;
+    for (int c : chords) n += is_diatonic(c, key_pc);
+    return n * 2 >= (int)chords.size();
+}
+
+std::optional<int> detect_key(const std::deque<int>& chords) {
+    std::vector<int> u(chords.begin(), chords.end());
+    std::sort(u.begin(), u.end());
+    if (std::unique(u.begin(), u.end()) - u.begin() < 3) return std::nullopt;
+    std::optional<int> best;
+    double best_s = 0.0;
+    for (int k = 0; k < 12; ++k) {
+        int roles[6] = {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 9) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12};
+        double s = 0;
+        for (int c : chords)
+            for (int r = 0; r < 6; ++r)
+                if (c == roles[r]) { s += P::KEY_ROLE_WEIGHTS[r]; break; }
+        if (s > best_s) best = k, best_s = s;
+    }
+    return best;
 }
 
 std::array<double, 25> key_prior(std::optional<int> key_pc) {
