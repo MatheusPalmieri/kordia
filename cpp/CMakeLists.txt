@@ -11,8 +11,9 @@ option(KORDIA_APP "Build the JUCE live app" ON)
 
 include(FetchContent)
 # header-only FFT for the core (no JUCE dependency: the lab and the tests stay light)
-FetchContent_Declare(pocketfft GIT_REPOSITORY https://github.com/mreineck/pocketfft.git GIT_TAG cpp
-                     GIT_SHALLOW TRUE SOURCE_SUBDIR none)
+# pinned, not the branch: the exam's room FFT is part of the measurements, and a commit needs no network on reconfigure
+FetchContent_Declare(pocketfft GIT_REPOSITORY https://github.com/mreineck/pocketfft.git GIT_TAG 4d865cba24359b05b37da4e75aee24498c3b78e7
+                     SOURCE_SUBDIR none)
 FetchContent_MakeAvailable(pocketfft)
 
 add_library(kordia STATIC

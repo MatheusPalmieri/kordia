@@ -158,3 +158,4 @@ Relato: as trocas erravam o tempo ("com metrônomo, troca na cabeça") e o padr�
 109. **Testes em `cpp/tests/tests.cpp`, sem biblioteca externa** (`TEST`/`CHECK`): a lista cabe em ~700 linhas e uma dependência a mais não traria nada. Os parametrizados viraram laços, então são 56 testes onde o pytest contava 81 casos. Saíram só os 5 que comparavam Python com C++.
 110. **`tasks.bat` substitui `tasks.py` e o `Makefile`.** `.bat` roda em qualquer Windows sem instalar nada e sem política de execução, ao contrário de um `.ps1`.
 111. **Interface em `cpp/app/ui/index.html`** e parâmetros em `core.h`, com unidade e motivo. `pyround` e `pymod` viraram `round_even` e `floor_mod`.
+112. **pocketfft fixado num commit** (antes: branch `cpp`). Um build de clone limpo falhou uma vez ao atualizar esse branch pela rede. Fixar evita a consulta a cada reconfiguração e impede que uma mudança externa altere a FFT da sala da prova, que faz parte das medições.
