@@ -123,6 +123,16 @@ def test_memory_decorated_aligns_on_first_chord():
     assert m.locked and m.predict() == (theory.chord_index("F"), 4)
 
 
+def test_cycle_durations_come_from_the_newest_lap():
+    """C | Bb | F | C: the tonic lasts 2 bars, but the song's first one is cut to 1 (found by the exam: 0/24)."""
+    m = ProgressionMemory()
+    c, bb, f = (theory.chord_index(x) for x in "C Bb F".split())
+    for chord, beat in [(c, 8), (bb, 12), (f, 16), (c, 20), (bb, 28)]:
+        m.push(chord, beat)
+    assert m.locked and m.known == [c, bb, f] and m.lengths == [8, 4, 4]
+    assert m.predict() == (f, 32)
+
+
 def test_silence_and_noise_play_nothing():
     rng = np.random.default_rng(0)
     res = run(rng.standard_normal(P.SR * 4) * 1e-3, RunConfig(tom="C"))

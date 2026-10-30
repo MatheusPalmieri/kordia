@@ -61,7 +61,10 @@ class ProgressionMemory:
             if len(set(cyc)) < 2:
                 continue
             self.known = cyc
-            self.lengths = self._lens(self.seq[-k - p:-k + 1])
+            # durations of the newest closed lap, rotated to `cyc`: the song's first chord may be cut short
+            # (a two-bar tonic that closes the cycle shows up as one bar when the song starts on it)
+            lens = self._lens(self.seq[-p - 1:])
+            self.lengths = lens[-(k - 1):] + lens[:-(k - 1)]
             self.locked, self.pos = True, k - 1  # the current chord is cyc[k-1]
             return
 

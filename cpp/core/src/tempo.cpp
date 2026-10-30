@@ -293,8 +293,12 @@ void ProgressionMemory::try_lock() {
         known = cyc;
         lengths.clear();
         const int half = P::BEATS_PER_BAR / 2;
-        for (int i = n - k - p; i < n - k; ++i)
+        // durations of the newest closed lap, rotated to `cyc`: the song's first chord may be cut short
+        // (a two-bar tonic that closes the cycle shows up as one bar when the song starts on it)
+        for (int j = 0; j < p; ++j) {
+            int i = n - 1 - p + (j - k + 1 + p) % p;
             lengths.push_back((int)std::max<long long>(half, pyround((seq_[i + 1].second - seq_[i].second) / (double)half) * half));
+        }
         locked = true, pos = k - 1;   // the current chord is cyc[k-1]
         return;
     }
