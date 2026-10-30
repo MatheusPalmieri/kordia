@@ -65,12 +65,12 @@ COLS = ["acc_total", "acc_confiante", "cobertura", "lat_media_ms", "lat_p95_ms",
         "recuperacao_pulsos", "corr_dinamica"]
 
 
-def evaluate_all(names, versao, save=True):
+def evaluate_all(names, versao, save=True, backend="py"):
     rows = {}
     out = Path("resultados") / versao
     for name in names:
         audio, truth = scenarios.build(name)
-        res = run(audio, RunConfig.from_dict(truth["run"]))
+        res = run(audio, RunConfig.from_dict(truth["run"]), backend=backend)
         rows[name] = evaluate(res, truth)
         if save:
             _save_outputs(res, out / "relatorios", name, truth, f"{name} — {truth['description']}", out / "audio")
@@ -111,7 +111,7 @@ def print_table(rows):
 
 def cmd_avaliar(a):
     names = list(scenarios.SCENARIOS) if a.todos or not a.cenario else [a.cenario]
-    rows = evaluate_all(names, a.versao)
+    rows = evaluate_all(names, a.versao, backend=a.backend)
     print_table(rows)
     print(f"\nresultados em {(Path('resultados') / a.versao).resolve()}")
 
@@ -136,6 +136,7 @@ def main(argv=None):
     v.add_argument("--todos", action="store_true")
     v.add_argument("--cenario", choices=list(scenarios.SCENARIOS))
     v.add_argument("--versao", default="dev")
+    v.add_argument("--backend", choices=["py", "cpp"], default="py", help="cpp: o núcleo C++ (python tasks.py build)")
     sub.add_parser("interface", help="abre o app ao vivo (entrada de áudio -> baixo + pad)")
     a = p.parse_args(argv)
     if a.cmd == "interface":

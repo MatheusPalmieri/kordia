@@ -23,6 +23,7 @@ class ProgressionMemory:
         if self.seq and self.seq[-1][0] == idx:
             return
         self.seq.append([idx, beat])
+        del self.seq[:-256]   # only the tail is ever used (bounded for live sessions; same in C++)
         if not self.locked:
             self._try_lock()
 
@@ -75,6 +76,7 @@ class ProgressionMemory:
         """The predicted change happened at `beat`."""
         self.pos = (self.pos + 1) % len(self.known)
         self.seq.append([self.known[self.pos], beat])
+        del self.seq[:-256]
 
     def unlock(self):
         self.locked, self.pos = False, None

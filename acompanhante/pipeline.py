@@ -162,8 +162,13 @@ class Processor:
         return self.tracker.bar_pos(int(np.floor(self.tracker.beat_phase(self.s / P.SR)))) + 1
 
 
-def run(audio, cfg: RunConfig, lookahead=0.0):
-    """Offline run. lookahead: only to replay a live session exactly (same decisions, same timing)."""
+def run(audio, cfg: RunConfig, lookahead=0.0, backend="py"):
+    """Offline run. lookahead: only to replay a live session exactly (same decisions, same timing).
+    backend="cpp": the same algorithm in the C++ core (cpp/, built by `python tasks.py build`)."""
+    if backend == "cpp":
+        from . import kordia_core
+        r = kordia_core.run_offline(np.asarray(audio, dtype=np.float64), cfg.__dict__, lookahead)
+        return Result(r["audio"], r["accomp"], r["log"], r["events"], r["changes"], r["onsets"])
     audio = np.asarray(audio, dtype=np.float64).copy()
     proc = Processor(cfg, lookahead=lookahead)
     out = np.zeros((len(audio), 2))

@@ -7,3 +7,5 @@ saida/
 resultados/*/relatorios/
 resultados/*/audio/
 sessoes/
+cpp/build/
+*.pyd
