@@ -8,6 +8,13 @@ HOP = 512             # block size = analysis hop (~23 ms)
 ONSET_WIN = 1024      # FFT for onset flux (~46 ms): time resolution
 CHROMA_WIN = 4096     # FFT for chroma (~186 ms): ~5.4 Hz/bin, enough for low E (82 Hz)
 
+# --- input level (automatic gain before analysis) ---
+# Flux and chroma compression depend on level: a quiet mic (-45 dB, 3rd live session) lost 3/4 of the strums.
+AGC_TARGET_DB = -28.0         # playing level the analysis was calibrated for (synthetic scenarios ~ -28 dB)
+AGC_UP, AGC_DOWN = 0.05, 0.01 # per-block tracking rates: louder fast (~0.5 s), softer slow (~2.3 s)
+AGC_MIN_DB, AGC_MAX_DB = -6.0, 24.0
+# (it only adapts on blocks above SILENCE_DB: room noise never pumps the gain up)
+
 # --- onsets ---
 ONSET_FMIN, ONSET_FMAX = 150.0, 5000.0   # ignores our own bass attacks (feedback risk)
 ONSET_MEDIAN_FRAMES = 32                 # adaptive threshold history (~0.75 s)

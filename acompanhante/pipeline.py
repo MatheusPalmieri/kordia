@@ -80,6 +80,8 @@ class Processor:
         self.last_onset_t = -np.inf
         self.last_onset_strong = False
         self.db, self.idx, self.conf = -120.0, 24, 0.0   # latest values, read by the GUI
+        self.agc_level = P.AGC_TARGET_DB
+        self.agc_gain_db = 0.0
 
     def render(self):
         """Output for the current block, decided during the previous one (1 block of structural latency)."""
@@ -88,10 +90,14 @@ class Processor:
     def analyze(self, x):
         """Consume one input block of HOP samples."""
         tracker, engine, acc, dyn = self.tracker, self.engine, self.acc, self.dyn
-        self.buf = np.concatenate([self.buf[P.HOP:], x])
+        db = 10 * np.log10(np.mean(x ** 2) + 1e-12)   # raw level: silence and dynamics are absolute
+        if db > P.SILENCE_DB:
+            rate = P.AGC_UP if db > self.agc_level else P.AGC_DOWN
+            self.agc_level += rate * (db - self.agc_level)
+        self.agc_gain_db = float(np.clip(P.AGC_TARGET_DB - self.agc_level, P.AGC_MIN_DB, P.AGC_MAX_DB))
+        self.buf = np.concatenate([self.buf[P.HOP:], x * 10 ** (self.agc_gain_db / 20)])
         self.s += P.HOP
         t = self.s / P.SR
-        db = 10 * np.log10(np.mean(x ** 2) + 1e-12)
 
         onset = self.onsets.process(_norm_mag(self.buf[-P.ONSET_WIN:], self.wo), t - P.ONSET_WIN / 2 / P.SR, db)
         tracker.update(t, self.onsets.flux, onset)

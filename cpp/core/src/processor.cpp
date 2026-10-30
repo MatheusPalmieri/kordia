@@ -1,4 +1,5 @@
 // The whole system for one block at a time (Python: pipeline.Processor).
+#include <algorithm>
 #include <stdexcept>
 
 #include "kordia/core.h"
@@ -43,13 +44,16 @@ Processor::Processor(const RunConfig& cfg, double lookahead, double sr, double o
 }
 
 void Processor::analyze(const double* x) {
-    std::copy(buf_.begin() + P::HOP, buf_.end(), buf_.begin());
-    std::copy(x, x + P::HOP, buf_.end() - P::HOP);
-    s_ += P::HOP;
-    double t = s_ / sr_;
     double ms = 0;
     for (int i = 0; i < P::HOP; ++i) ms += x[i] * x[i];
-    double db = 10 * std::log10(ms / P::HOP + 1e-12);
+    double db = 10 * std::log10(ms / P::HOP + 1e-12);   // raw level: silence and dynamics are absolute
+    if (db > P::SILENCE_DB) agc_level_ += (db > agc_level_ ? P::AGC_UP : P::AGC_DOWN) * (db - agc_level_);
+    agc_gain_db = std::clamp(P::AGC_TARGET_DB - agc_level_, P::AGC_MIN_DB, P::AGC_MAX_DB);
+    const double g = std::pow(10.0, agc_gain_db / 20);
+    std::copy(buf_.begin() + P::HOP, buf_.end(), buf_.begin());
+    for (int i = 0; i < P::HOP; ++i) buf_[P::CHROMA_WIN - P::HOP + i] = x[i] * g;
+    s_ += P::HOP;
+    double t = s_ / sr_;
 
     auto onset = onsets_.process(spec_onset_(buf_.data() + P::CHROMA_WIN - P::ONSET_WIN), t - P::ONSET_WIN / 2.0 / sr_, db);
     Grid& tracker = *tracker_;

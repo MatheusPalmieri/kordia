@@ -22,6 +22,7 @@ namespace kordia {
 // Mirrors acompanhante/params.py (checked by tests/test_cpp.py::test_params_match).
 namespace P {
 constexpr int HOP = 512, ONSET_WIN = 1024, CHROMA_WIN = 4096;
+constexpr double AGC_TARGET_DB = -28.0, AGC_UP = 0.05, AGC_DOWN = 0.01, AGC_MIN_DB = -6.0, AGC_MAX_DB = 24.0;
 constexpr double ONSET_FMIN = 150.0, ONSET_FMAX = 5000.0;
 constexpr int ONSET_MEDIAN_FRAMES = 32;
 constexpr double ONSET_K = 1.5, ONSET_DELTA = 0.25, ONSET_REFRACTORY = 0.10, SILENCE_DB = -55.0;
@@ -374,6 +375,10 @@ private:
     Dynamics dyn_;
     Synth synth_;
     double last_onset_t_ = -INF, last_click_t_ = -INF;
+    double agc_level_ = P::AGC_TARGET_DB;   // automatic input gain before analysis
+public:
+    double agc_gain_db = 0.0;
+private:
     bool last_onset_strong_ = false;
     std::vector<Event> evs_;
 };
