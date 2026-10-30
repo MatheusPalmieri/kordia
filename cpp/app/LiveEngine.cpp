@@ -1,16 +1,8 @@
 #include "LiveEngine.h"
 
-#include <cstring>
-
 #include "AudioCheck.h"
 
 using namespace kordia;
-
-static void copyText(char* dst, size_t cap, const std::string& s) {
-    size_t n = std::min(cap - 1, s.size());
-    std::memcpy(dst, s.data(), n);
-    dst[n] = 0;
-}
 
 // ------------------------------------------------------------------ session recording
 // Folder layout documented in cpp/lab/lab.h; `kordia_lab rodar --sessao` replays it.
@@ -65,9 +57,13 @@ private:
     }
 
     void run() override {
-        while (!threadShouldExit()) {
+        for (int tick = 1; !threadShouldExit(); ++tick) {
             wait(50);
             drain();
+            if (tick % 40 == 0) {   // flush() goes all the way to the disk (FlushFileBuffers): every 2 s, not every drain
+                csv_->flush();
+                jsonl_->flush();
+            }
         }
     }
 
@@ -114,8 +110,6 @@ private:
                 jsonl_->writeText(juce::JSON::toString(juce::var(o), true) + "\n", false, false, nullptr);
             }
         decFifo_.finishedRead(n1 + n2);
-        csv_->flush();
-        jsonl_->flush();
     }
 
     juce::File dir_;
@@ -269,6 +263,7 @@ juce::String LiveEngine::start(const juce::var& q, bool preview) {
     hop_.assign(P::HOP, 0.0);
     L_.assign(8192, 0.0);
     R_.assign(8192, 0.0);
+    outVolume_ = 0.0;
     outPos_ = 0;
     seenDecisions_ = 0;
     if (!preview) {   // the diary and the report of the last song stay on screen while it only listens
@@ -293,10 +288,6 @@ juce::String LiveEngine::start(const juce::var& q, bool preview) {
         dm_.closeAudioDevice();
         return e.what();
     }
-    proc_->decisions.reserve(512);
-    proc_->onset_list.reserve(512);
-    proc_->acc().events.reserve(1024);
-    proc_->acc().changes.reserve(512);
     setLive(q);
 
     auto run = new juce::DynamicObject();
@@ -380,6 +371,7 @@ void LiveEngine::setLive(const juce::var& q) {
 void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int numIn, float* const* out, int numOut,
                                                   int n, const juce::AudioIODeviceCallbackContext&) {
     auto t0 = juce::Time::getHighResolutionTicks();
+    const juce::ScopedNoDenormals noDenormals;   // a reverb tail fading out must not make the filters slower
     if (!running_ || !proc_ || n > (int)L_.size()) {
         for (int c = 0; c < numOut; ++c) juce::FloatVectorOperations::clear(out[c], n);
         return;
@@ -404,7 +396,6 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     rawChannels_ = numIn;
     for (int i = 0; x && i < n; ++i) {
         zeroRun_ = x[i] == 0.0f ? zeroRun_ + 1 : 0;
-        inputDead_ = zeroRun_ > (long long)(2 * sr_);
         float a = std::abs(x[i]);
         corruptCount_ += a > 0.3f && a < 0.75f;
         if (++corruptTotal_ == 22050) {   // ~0.5 s
@@ -412,14 +403,17 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
             corruptCount_ = corruptTotal_ = 0;
         }
     }
+    inputDead_ = zeroRun_ > (long long)(2 * sr_);
     const int taps = (int)fir_.size();
     for (int i = 0; i < n; ++i) {
         hist_[(size_t)histPos_] = x ? x[i] * g : 0.0;
-        histPos_ = (histPos_ + 1) % taps;
+        histPos_ = histPos_ + 1 == taps ? 0 : histPos_ + 1;
         if (++phase_ < factor_) continue;
         phase_ = 0;
         double y = 0;
-        for (int k = 0; k < taps; ++k) y += fir_[(size_t)k] * hist_[(size_t)((histPos_ + k) % taps)];
+        const double* h = fir_.data();   // oldest sample first: from the write position to the end, then from the start
+        for (int k = histPos_; k < taps; ++k) y += *h++ * hist_[(size_t)k];
+        for (int k = 0; k < histPos_; ++k) y += *h++ * hist_[(size_t)k];
         hop_[(size_t)hopFill_++] = y;
         if (hopFill_ == P::HOP) {
             analyzeHop();
@@ -431,13 +425,17 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     if (outPos_ < (long long)(0.5 * sr_) && outPos_ + n >= (long long)(0.5 * sr_))
         if (auto* d = dm_.getCurrentAudioDevice()) xrunBase_ = juce::jmax(0, d->getXRunCount());
     outPos_ += n;
-    const float vol = preview_ ? 0.0f : volume_.load();
+    const double vol = preview_ ? 0.0 : (double)volume_.load(), step = (vol - outVolume_) / n;
     const bool mon = monitor_;
     for (int c = 0; c < numOut; ++c) {
         const double* src = (c % 2) ? R_.data() : L_.data();
-        for (int i = 0; i < n; ++i)
-            out[c][i] = (float)juce::jlimit(-1.0, 1.0, src[i] * vol + (mon && x ? x[i] * g : 0.0));
+        double v = outVolume_;
+        for (int i = 0; i < n; ++i) {
+            v += step;
+            out[c][i] = (float)juce::jlimit(-1.0, 1.0, src[i] * v + (mon && x ? x[i] * g : 0.0));
+        }
     }
+    outVolume_ = vol;
     double ms = juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks() - t0) * 1000;
     costSum_ += ms;
     costMax_ = juce::jmax(costMax_ * 0.999, ms);   // slowly decaying peak
@@ -454,9 +452,15 @@ int LiveEngine::xruns() const {
     return dev && outPos_ >= (long long)(0.5 * sr_) ? juce::jmax(0, dev->getXRunCount() - xrunBase_) : 0;
 }
 
+void LiveEngine::writeDiary(const Diary& e) {
+    diary_[diaryHead_] = e;
+    diaryHead_ = (diaryHead_ + 1) % 12;
+    diaryCount_ = juce::jmin(12, diaryCount_ + 1);
+    if (rec_) rec_->pushDecision(e);
+}
+
 void LiveEngine::analyzeHop() {
     auto t0 = juce::Time::getHighResolutionTicks();
-    std::string& lastReason = lastReason_;
     proc_->analyze(hop_.data());
     const auto& eng = proc_->engine();
     // new decisions -> diary + session
@@ -465,40 +469,27 @@ void LiveEngine::analyzeHop() {
     for (long long k = juce::jmin<long long>(fresh, (long long)dec.size()); k > 0; --k) {
         const auto& d = dec[dec.size() - (size_t)k];
         Diary e{d.t, (int)d.state, d.chord, (int)d.mode, {}};
-        copyText(e.reason, sizeof(e.reason), d.reason);
-        diary_[diaryHead_] = e;
-        diaryHead_ = (diaryHead_ + 1) % 12;
-        diaryCount_ = juce::jmin(12, diaryCount_ + 1);
-        if (rec_) rec_->pushDecision(e);
-        lastReason = eng.reason;
+        copy_text(e.reason, sizeof e.reason, d.reason);
+        writeDiary(e);
+        lastReason_ = eng.reason;
     }
-    if (!preview_ && fresh == 0 && eng.reason != lastReason) {   // a reason without a sound change (lock, unlock, scheduled)
-        lastReason = eng.reason;
+    if (!preview_ && fresh == 0 && eng.reason != lastReason_) {   // a reason without a sound change (lock, unlock, scheduled)
+        lastReason_ = eng.reason;
         Diary e{proc_->time(), (int)eng.state, -2, 0, {}};
-        copyText(e.reason, sizeof(e.reason), eng.reason);
-        diary_[diaryHead_] = e;
-        diaryHead_ = (diaryHead_ + 1) % 12;
-        diaryCount_ = juce::jmin(12, diaryCount_ + 1);
-        if (rec_) rec_->pushDecision(e);
+        copy_text(e.reason, sizeof e.reason, eng.reason.c_str());
+        writeDiary(e);
     }
     seenDecisions_ = proc_->n_decisions;
-    // live mode: bounded history (erase does not allocate)
-    if (dec.size() > 256) dec.erase(dec.begin(), dec.end() - 64);
-    if (proc_->onset_list.size() > 256) proc_->onset_list.erase(proc_->onset_list.begin(), proc_->onset_list.end() - 64);
-    auto& evs = proc_->acc().events;
-    if (evs.size() > 512) evs.erase(evs.begin(), evs.end() - 64);
-    auto& ch = proc_->acc().changes;
-    if (ch.size() > 256) ch.erase(ch.begin(), ch.end() - 64);
+    proc_->trim_history();
 
     const Frame& f = proc_->frame;
-    int& lastXruns = lastXruns_;
     int xr = xruns();
     double ms = juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks() - t0) * 1000;
     if (rec_)
         rec_->push(hop_.data(), P::HOP,
                    Row{f.t, f.db, f.bpm, f.tempo_conf, f.conf, ms, (int)f.onset, f.heard, (int)f.state, (int)f.level,
-                       eng.cur.first, (int)eng.cur.second, xr > lastXruns ? 1 : 0});
-    lastXruns = xr;
+                       eng.cur.first, (int)eng.cur.second, xr > lastXruns_ ? 1 : 0});
+    lastXruns_ = xr;
     publish();
 }
 

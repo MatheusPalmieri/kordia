@@ -51,6 +51,7 @@ public:
 private:
     void analyzeHop();
     void publish();
+    void writeDiary(const Diary& e);
 
     juce::AudioDeviceManager dm_;
     std::unique_ptr<kordia::Processor> proc_;
@@ -67,6 +68,7 @@ private:
     int hopFill_ = 0;
     long long outPos_ = 0;
     std::vector<double> L_, R_;
+    double outVolume_ = 0.0;          // where the last block ended: a volume change ramps, it never clicks
     long long seenDecisions_ = 0;
     Diary diary_[12] = {};
     int diaryHead_ = 0, diaryCount_ = 0;

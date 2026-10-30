@@ -47,6 +47,10 @@ Processor::Processor(const RunConfig& cfg, double lookahead, double sr, double o
     engine_.learn = cfg.aprender_na_tonica;
     engine_.grid = anchored && tracker_->has_period() && !cfg.progressao;
     evs_.reserve(64);
+    decisions.reserve(512);   // trim_history() keeps them below this: live, nothing grows on the audio thread
+    onset_list.reserve(512);
+    acc_.events.reserve(1024);
+    acc_.changes.reserve(512);
 }
 
 void Processor::analyze(const double* x) {
@@ -83,8 +87,9 @@ void Processor::analyze(const double* x) {
     evs_.clear();
     if (decision) {
         acc_.apply(*decision, vel, evs_);
-        decisions.push_back({std::nearbyint(decision->t * 1e3) / 1e3, engine_.state, decision->chord, decision->mode,
-                             engine_.reason});
+        Decision d{std::nearbyint(decision->t * 1e3) / 1e3, engine_.state, decision->chord, decision->mode, {}};
+        copy_text(d.reason, sizeof d.reason, engine_.reason.c_str());
+        decisions.push_back(d);
         ++n_decisions;
     }
     double frame_dur = P::HOP / sr_;
@@ -115,6 +120,15 @@ void Processor::analyze(const double* x) {
     auto bpm = tracker.bpm();
     frame = {t, db, onsets_.flux, onset.has_value(), bpm ? *bpm : std::nan(""), tracker.confidence(), idx, conf,
              engine_.state, engine_.level, expr, vel};
+}
+
+void Processor::trim_history() {
+    if (decisions.size() > 256) decisions.erase(decisions.begin(), decisions.end() - 64);
+    if (onset_list.size() > 256) onset_list.erase(onset_list.begin(), onset_list.end() - 64);
+    auto& evs = acc_.events;
+    if (evs.size() > 512) evs.erase(evs.begin(), evs.end() - 64);
+    auto& ch = acc_.changes;
+    if (ch.size() > 256) ch.erase(ch.begin(), ch.end() - 64);
 }
 
 std::optional<Engine::Slot> Processor::close_slot(double t, double db) {

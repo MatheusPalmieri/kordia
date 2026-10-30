@@ -5,8 +5,8 @@
 #include <array>
 #include <cmath>
 #include <complex>
+#include <cstring>
 #include <memory>
-#include <deque>
 #include <limits>
 #include <map>
 #include <optional>
@@ -137,6 +137,40 @@ constexpr double INF = std::numeric_limits<double>::infinity();
 // round() half to even; % that is never negative.
 inline long long round_even(double x) { return (long long)std::nearbyint(x); }
 inline long long floor_mod(long long a, long long m) { long long r = a % m; return r < 0 ? r + m : r; }
+inline void copy_text(char* dst, size_t cap, const char* s) {
+    size_t n = std::strlen(s);
+    if (n >= cap) n = cap - 1;
+    std::memcpy(dst, s, n);
+    dst[n] = 0;
+}
+
+// Fixed-capacity FIFO: std::deque allocates as it slides, and this runs on the audio thread. Full: the oldest goes.
+template <typename T, int N>
+class Ring {
+public:
+    void push_back(const T& v) {
+        if (n_ == N) pop_front();
+        a_[(size_t)((head_ + n_++) % N)] = v;
+    }
+    void pop_front() { head_ = (head_ + 1) % N, --n_; }
+    void clear() { head_ = n_ = 0; }
+    bool empty() const { return n_ == 0; }
+    size_t size() const { return (size_t)n_; }
+    const T& front() const { return a_[(size_t)head_]; }
+    const T& operator[](size_t i) const { return a_[(head_ + i) % N]; }
+    struct iterator {
+        const Ring* r;
+        size_t i;
+        const T& operator*() const { return (*r)[i]; }
+        iterator& operator++() { ++i; return *this; }
+        bool operator!=(const iterator& o) const { return i != o.i; }
+    };
+    iterator begin() const { return {this, 0}; }
+    iterator end() const { return {this, size()}; }
+private:
+    std::array<T, N> a_{};
+    int head_ = 0, n_ = 0;
+};
 
 // ------------------------------------------------------------------ theory
 constexpr int N_IDX = 24;  // vocabulary: 0..11 major, 12..23 minor, 24 = no chord
@@ -147,8 +181,9 @@ std::array<int, 3> chord_pcs(int idx);           // root, third, fifth
 std::array<std::array<double, 12>, 24> templates();
 std::array<double, 25> key_prior(std::optional<int> key_pc);
 bool is_diatonic(int idx, int key_pc);   // I, IV, V, ii, iii, vi of a major key
-bool key_fits(int key_pc, const std::deque<int>& chords);          // at least half diatonic (empty fits)
-std::optional<int> detect_key(const std::deque<int>& chords);      // None with < 3 distinct chords
+using Heard = Ring<int, 13>;                               // last chords heard with confidence (12, plus the newest)
+bool key_fits(int key_pc, const Heard& chords);            // at least half diatonic (empty fits)
+std::optional<int> detect_key(const Heard& chords);        // None with < 3 distinct chords
 
 // ------------------------------------------------------------------ config
 struct RunConfig {
@@ -166,14 +201,15 @@ struct RunConfig {
 using Chroma = std::array<double, 12>;
 
 // ------------------------------------------------------------------ analysis
-class Spectrum {  // windowed real FFT, magnitudes normalized so a sinusoid of amplitude A reads A
+class Spectrum {  // windowed real FFT (n a power of 2), magnitudes normalized so a sinusoid of amplitude A reads A
 public:
     explicit Spectrum(int n);
     const std::vector<double>& operator()(const double* x);
 private:
     int n_;
-    std::vector<double> win_, buf_, mag_;
-    std::vector<std::complex<double>> spec_;
+    std::vector<double> win_, mag_;
+    std::vector<int> rev_;                          // bit reversal of the half-size FFT
+    std::vector<std::complex<double>> z_, tw_;      // work buffer; e^(-2 pi i k / n), k = 0..n/2
     double norm_;
 };
 
@@ -188,7 +224,9 @@ private:
     std::vector<int> band_;
     std::vector<double> prev_, lm_;
     bool has_prev_ = false;
-    std::deque<double> hist_;
+    Ring<double, P::ONSET_MEDIAN_FRAMES + 1> hist_;
+    double median();
+    std::array<double, P::ONSET_MEDIAN_FRAMES + 1> sorted_;
     double last_t_ = -INF, last_flux_ = 0.0, prev_flux_ = 0.0;
 };
 
@@ -232,9 +270,10 @@ public:
 protected:
     void advance(double t);
     void start(double t0, double period);
-    std::deque<double> onsets_, pending_;
-    std::deque<bool> hits_;
-    std::deque<long long> votes_;
+    Ring<double, 65> onsets_;
+    Ring<double, 8> pending_;   // beats waiting for their window: one or two
+    Ring<bool, P::TEMPO_CONF_BEATS + 1> hits_;
+    Ring<long long, 9> votes_;
 };
 
 class TempoTracker : public Grid {
@@ -255,8 +294,9 @@ private:
     double best_phase(const std::vector<double>& recent, double period) const;
     double frame_;
     bool frozen_ = false;
-    std::deque<double> env_;
+    Ring<double, 600> env_;     // 8 s at any device rate (the analysis rate stays below 33 kHz)
     size_t env_max_;
+    std::vector<double> recent_, e_, acf_;   // scratch of acf()
     long long frames_ = 0;
     int disagree_ = 0;
 };
@@ -293,6 +333,7 @@ public:
     bool corrected = false;            // the last push_slot changed the cycle
 private:
     void try_lock();
+    std::vector<int> chords_;          // scratch of try_lock()
     int read(const Chroma& c) const;
     void append(const Chroma& c);
     int find_cycle() const;            // 0 = none
@@ -334,7 +375,8 @@ private:
     void forget();
     double bar() const { return tracker_.has_period() ? P::BEATS_PER_BAR * tracker_.period : 2.0; }
     std::optional<Output> set(int chord, Mode mode, double t, const char* why = nullptr);
-    std::optional<Output> set(int chord, Mode mode, double t, const std::string& why) { return set(chord, mode, t, why.c_str()); }
+    template <typename... A> const char* say(const char* format, A... args);
+    char why_[160] = {};       // the text say() built
     double stop_gap() const;
     double change_time(double t) const;
     std::optional<Output> reactive(double t, int idx, const std::array<double, 25>& evidence);
@@ -342,20 +384,20 @@ private:
     std::optional<Output> locked(double t, int idx);
     void learn_slot(double t, const Slot& slot);
     std::optional<Output> grid_out(double t, bool closed);
-    std::string slot_why_;     // what the last closed half bar changed in the pattern
+    char slot_why_[160] = {};  // what the last closed half bar changed in the pattern
 
     Grid& tracker_;
     ProgressionMemory& memory_;
     double lookahead_, frame_;
-    std::deque<double> iois_;
+    Ring<double, 9> iois_;
     std::optional<std::pair<int, double>> pending_;
     std::optional<double> doubt_since_;
     double confirm_at_ = 0.0, changed_at_ = 0.0, contra_since_ = 0.0, last_change_t_ = -INF, stop_at_ = 0.0;
     std::optional<int> expected_, prev_chord_, contra_;
     int misses_ = 0;
-    std::deque<int> heard_;    // last chords heard with confidence: key fit / key detection
+    Heard heard_;              // key fit / key detection
     int last_heard_ = -1;
-    std::optional<Output> tonic_out(double t, const std::string& why);
+    std::optional<Output> tonic_out(double t, const char* why);
     std::optional<double> disagree_since_;   // hold mode: since when the audio confidently disagrees
     std::optional<double> root5_tc_;         // when a 'no third' chord started
     std::optional<Output> held_check(double t, int idx, bool late);
@@ -365,8 +407,6 @@ public:
     bool learn = false;         // "aprender na tônica": until the pattern locks, only a quiet tonic pad
     bool grid = false;          // the click is heard: harmony read per half bar, pattern learned on the grid
     std::optional<int> current_key() const;   // configured key while it fits, else detected
-private:
-public:
     void set_frame(double f) { frame_ = f; }
 };
 
@@ -388,7 +428,7 @@ private:
 
 class Accompanist {
 public:
-    explicit Accompanist(std::optional<int> key_pc) : key_pc_(key_pc) {}
+    explicit Accompanist(std::optional<int> key_pc) : key_pc_(key_pc) { pad_.reserve(8); }
     void apply(const Output& out, int vel, std::vector<Event>& evs);
     void beat(double t, bool strong, double period, int vel, std::vector<Event>& evs);
     void click(double t, bool accent, int vel, std::vector<Event>& evs);
@@ -410,7 +450,7 @@ class Synth {
 public:
     explicit Synth(double sr);
     void handle(const Event& e);
-    void render(double t0, int n, double* left, double* right);  // adds nothing: overwrites
+    void render(double t0, int n, double* left, double* right);  // adds nothing: overwrites; a gain change ramps over the block
     double bass_rms = 0.0, pad_rms = 0.0;   // last block, for the UI meters
     std::array<double, P::N_LAYERS> layers{1.0, 0.0, 0.0, 0.0, 0.0};   // gain per layer (live); default worship only
     double bass_gain = 1.0;
@@ -427,8 +467,10 @@ private:
     double expr_from_ = 1.0, expr_to_ = 1.0, expr_t_ = 0.0;
     double b0_, b1_, b2_, a1_, a2_, z1_ = 0.0, z2_ = 0.0;
     Channel ch_[2];
-    std::vector<double> bass_, pad_, bright_, click_;
-    double pad_layer(int k, double f, double t, double dt, const std::vector<double>* tab, bool& warm) const;
+    std::vector<double> bass_, pad_, bright_, click_, t_, sig_, trem_, vib_;
+    std::array<double, P::N_LAYERS> layers_from_{1.0, 0.0, 0.0, 0.0, 0.0};   // gains the last block ended on
+    double bass_from_ = 1.0;
+    bool pad_layer(int k, double f, double on, double t0, int n, const double* tab);   // fills sig_; true: goes through the low-pass
 };
 
 // ------------------------------------------------------------------ processor
@@ -444,7 +486,7 @@ struct Frame {   // per-block log row
     int vel;
 };
 
-struct Decision { double t; State state; int chord; Mode mode; std::string reason; };
+struct Decision { double t; State state; int chord; Mode mode; char reason[160]; };
 
 class Processor {
 public:
@@ -454,6 +496,7 @@ public:
     void render(double t0, int n, double* left, double* right) { synth_.render(t0, n, left, right); }
     // Consume one block of HOP input samples at the analysis rate.
     void analyze(const double* x);
+    void trim_history();   // live: the histories the lab keeps whole stay bounded (erase does not allocate)
     double time() const { return s_ / sr_; }   // analysis time (end of last block)
     void freeze_tempo(bool on);
     void set_bpm(double bpm);   // live: fixed BPM (metronome mode or frozen tempo), keeping the beat phase

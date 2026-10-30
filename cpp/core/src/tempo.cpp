@@ -48,13 +48,10 @@ void Grid::observe_change(double t) {
     // Counter.most_common(1): highest count, ties broken by first appearance
     long long best = 0;
     int best_n = 0;
-    std::vector<long long> seen;
-    for (long long v : votes_) {
-        if (std::find(seen.begin(), seen.end(), v) != seen.end()) continue;
-        seen.push_back(v);
-        int n = (int)std::count(votes_.begin(), votes_.end(), v);
-        if (n > best_n) best = v, best_n = n;
-    }
+    std::array<int, P::BEATS_PER_BAR> count{};
+    for (long long v : votes_) ++count[(size_t)v];
+    for (long long v : votes_)
+        if (count[(size_t)v] > best_n) best = v, best_n = count[(size_t)v];
     if (best != 0 && best_n >= 3) {
         bar_offset = floor_mod(bar_offset + best, P::BEATS_PER_BAR);
         votes_.clear();
@@ -87,6 +84,9 @@ void Grid::start(double t0, double p) {
 
 // ------------------------------------------------------------------ TempoTracker
 TempoTracker::TempoTracker(double frame) : frame_(frame), env_max_((size_t)(P::TEMPO_ENV_SECONDS / frame)) {
+    recent_.reserve(65);
+    e_.reserve(600);
+    acf_.reserve(128);
     now = 0.0;
     reset();
 }
@@ -139,26 +139,26 @@ void TempoTracker::pll(double to) {
 }
 
 void TempoTracker::acf() {
-    std::vector<double> recent;
+    recent_.clear();
     for (double o : onsets_)
-        if (o > now - P::TEMPO_ENV_SECONDS) recent.push_back(o);
-    if ((int)recent.size() < P::TEMPO_MIN_ONSETS) return;
-    std::vector<double> e(env_.begin(), env_.end());
+        if (o > now - P::TEMPO_ENV_SECONDS) recent_.push_back(o);
+    if ((int)recent_.size() < P::TEMPO_MIN_ONSETS) return;
+    e_.clear();
     double mean = 0;
-    for (double v : e) mean += v;
-    mean /= e.size();
-    for (double& v : e) v -= mean;
-    long long n = (long long)e.size();
+    for (double v : env_) e_.push_back(v), mean += v;
+    mean /= e_.size();
+    for (double& v : e_) v -= mean;
+    long long n = (long long)e_.size();
     long long lmin = (long long)(60 / P::TEMPO_BPM_MAX / frame_);
     long long lmax = std::min((long long)(60 / P::TEMPO_BPM_MIN / frame_), n / 2);
     if (lmax <= lmin + 2) return;
-    std::vector<double> acfv;
+    acf_.clear();
     int best = 0;
     double best_score = -INF;
     for (long long lag = lmin; lag <= lmax; ++lag) {
         double d = 0;
-        for (long long i = 0; i < n - lag; ++i) d += e[i] * e[i + lag];
-        acfv.push_back(d);
+        for (long long i = 0; i < n - lag; ++i) d += e_[i] * e_[i + lag];
+        acf_.push_back(d);
         double bpm = 60 / (lag * frame_);
         double w = std::exp(-0.5 * std::pow(std::log2(bpm / P::TEMPO_PRIOR_BPM) / P::TEMPO_PRIOR_OCTAVES, 2));
         double score = std::max(d, 0.0) * w;
@@ -166,14 +166,14 @@ void TempoTracker::acf() {
     }
     if (best_score <= 0) return;
     double lag = (double)(lmin + best);   // parabolic interpolation on the raw ACF for sub-frame lag
-    if (best > 0 && best < (int)acfv.size() - 1) {
-        double a = acfv[best - 1], b = acfv[best], c = acfv[best + 1];
+    if (best > 0 && best < (int)acf_.size() - 1) {
+        double a = acf_[best - 1], b = acf_[best], c = acf_[best + 1];
         double denom = a - 2 * b + c;
         if (denom < 0) lag += 0.5 * (a - c) / denom;
     }
     double p = lag * frame_;
     if (!has_period()) {
-        start(best_phase(recent, p), p);
+        start(best_phase(recent_, p), p);
     } else if (std::abs(p - period) / period > P::TEMPO_RESET_DEV) {
         if (++disagree_ >= 3) period = p, disagree_ = 0;
     } else {
@@ -236,6 +236,8 @@ ProgressionMemory::ProgressionMemory(const std::optional<std::string>& progressi
         }
     }
     T_ = templates();
+    seq_.reserve(258);
+    chords_.reserve(258);
     slots_.reserve(P::GRID_HISTORY + 1);
     labels_.reserve(P::GRID_HISTORY + 1);
     next_.reserve(P::GRID_MAX_SLOTS);
@@ -274,7 +276,8 @@ void ProgressionMemory::correct(int idx) {
 }
 
 void ProgressionMemory::try_lock() {
-    std::vector<int> L;
+    auto& L = chords_;
+    L.clear();
     for (auto& s : seq_) L.push_back(s.first);
     int n = (int)L.size();
     // 1) re-lock onto a known cycle: last two chords are consecutive in it
@@ -299,20 +302,20 @@ void ProgressionMemory::try_lock() {
         int k = std::max(P::CYCLE_MIN, (p + 1) / 2);
         if (n < p + k) continue;
         if (!std::equal(L.end() - k, L.end(), L.end() - k - p)) continue;
-        std::vector<int> cyc(L.end() - k - p, L.end() - k);   // one complete (closed) lap
-        std::vector<int> u = cyc;
-        std::sort(u.begin(), u.end());
-        if (std::unique(u.begin(), u.end()) - u.begin() < 2) continue;
-        known = cyc;
+        std::array<int, P::CYCLE_MAX> u;
+        std::copy(L.end() - k - p, L.end() - k, u.begin());
+        std::sort(u.begin(), u.begin() + p);
+        if (std::unique(u.begin(), u.begin() + p) - u.begin() < 2) continue;
+        known.assign(L.end() - k - p, L.end() - k);   // one complete (closed) lap
         lengths.clear();
         const int half = P::BEATS_PER_BAR / 2;
-        // durations of the newest closed lap, rotated to `cyc`: the song's first chord may be cut short
+        // durations of the newest closed lap, rotated to `known`: the song's first chord may be cut short
         // (a two-bar tonic that closes the cycle shows up as one bar when the song starts on it)
         for (int j = 0; j < p; ++j) {
             int i = n - 1 - p + (j - k + 1 + p) % p;
             lengths.push_back((int)std::max<long long>(half, round_even((seq_[i + 1].second - seq_[i].second) / (double)half) * half));
         }
-        locked = true, pos = k - 1;   // the current chord is cyc[k-1]
+        locked = true, pos = k - 1;   // the current chord is known[k-1]
         return;
     }
 }

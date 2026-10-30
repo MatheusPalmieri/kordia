@@ -18,11 +18,10 @@ double Dynamics::expression(double t, std::optional<double> last_onset, double p
 }
 
 // Open worship voicing: root, fifth, octave, third an octave up (tenth), quiet shimmer two octaves up.
-static void voice(int chord, Mode mode, std::optional<int> key_pc, int& bass,
-                  std::vector<std::pair<int, double>>& pad) {
+using Voicing = std::array<std::pair<int, double>, 5>;
+static int voice(int chord, Mode mode, std::optional<int> key_pc, int& bass, Voicing& pad) {
     bass = -1;
-    pad.clear();
-    if (mode == Mode::Silence) return;
+    if (mode == Mode::Silence) return 0;
     int root, third = -1;
     if (mode == Mode::Tonic) {   // chord carries the key's tonic (configured or detected)
         root = chord >= 0 ? chord % 12 : *key_pc;
@@ -32,12 +31,12 @@ static void voice(int chord, Mode mode, std::optional<int> key_pc, int& bass,
         if (mode != Mode::Root5) third = (int)floor_mod(pcs[1] - root, 12);
         bass = P::BASS_LOW + root;
     }
-    int r = P::PAD_ROOT_LOW + root;
-    pad = {{r, 1.0}, {r + 7, 0.9}, {r + 12, 0.8}};
-    if (mode == Mode::Tonic)
-        for (auto& p : pad) p.second *= P::LEARN_TONIC_SCALE;
-    if (third >= 0) pad.push_back({r + 12 + third, 0.8});
-    pad.push_back({r + 24, P::PAD_SHIMMER});
+    int r = P::PAD_ROOT_LOW + root, n = 3;
+    double scale = mode == Mode::Tonic ? P::LEARN_TONIC_SCALE : 1.0;
+    pad[0] = {r, 1.0 * scale}, pad[1] = {r + 7, 0.9 * scale}, pad[2] = {r + 12, 0.8 * scale};
+    if (third >= 0) pad[n++] = {r + 12 + third, 0.8};
+    pad[n++] = {r + 24, P::PAD_SHIMMER};
+    return n;
 }
 
 Event& Accompanist::ev(double t, EvType type, Inst inst, int pitch, int vel) {
@@ -51,12 +50,12 @@ void Accompanist::apply(const Output& out, int vel, std::vector<Event>& evs) {
     if (bass_ >= 0) evs.push_back(ev(out.t, EvType::Off, Inst::Bass, bass_));
     if (out.mode == Mode::Silence)   // the musician stopped: short fade, not the long crossfade release
         for (size_t i = first; i < evs.size(); ++i) evs[i].rel = P::STOP_FADE;
-    std::vector<std::pair<int, double>> pad;
-    voice(out.chord, out.mode, key_pc_, bass_, pad);
+    Voicing pad;
+    int notes = voice(out.chord, out.mode, key_pc_, bass_, pad);
     pad_.clear();
-    for (auto& [p, scale] : pad) {
-        pad_.push_back(p);
-        evs.push_back(ev(out.t, EvType::On, Inst::Pad, p, (int)std::max<long long>(1, round_even(vel * scale))));
+    for (int i = 0; i < notes; ++i) {
+        pad_.push_back(pad[i].first);
+        evs.push_back(ev(out.t, EvType::On, Inst::Pad, pad[i].first, (int)std::max<long long>(1, round_even(vel * pad[i].second))));
     }
     if (bass_ >= 0) {
         evs.push_back(ev(out.t, EvType::On, Inst::Bass, bass_, vel));

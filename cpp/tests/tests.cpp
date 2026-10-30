@@ -4,7 +4,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <complex>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -22,6 +24,16 @@
 #include "lab.h"
 
 using namespace lab;
+
+// Every allocation of this thread: the audio path must not make any.
+static thread_local long long allocations = 0;
+void* operator new(std::size_t n) {
+    ++allocations;
+    if (void* p = std::malloc(n ? n : 1)) return p;
+    throw std::bad_alloc();
+}
+void operator delete(void* p) noexcept { std::free(p); }
+void operator delete(void* p, std::size_t) noexcept { std::free(p); }
 
 // ------------------------------------------------------------------ harness
 struct Test { const char* name; void (*fn)(); };
@@ -175,6 +187,90 @@ TEST(truth_file_round_trip) {
     int surprises = 0;
     for (const auto& c : back.changes) surprises += c.surprise;
     CHECK(surprises >= 3);
+}
+
+TEST(spectrum_matches_a_plain_dft) {
+    const int n = 64;
+    Spectrum spectrum(n);
+    std::vector<double> x(n);
+    double sum = 0;
+    for (int i = 0; i < n; ++i) {
+        x[i] = std::sin(0.7 * i) + 0.3 * std::cos(2.1 * i + 1) + 0.1 * (i % 5);
+        sum += 0.5 - 0.5 * std::cos(2 * 3.14159265358979323846 * i / (n - 1));
+    }
+    const auto& mag = spectrum(x.data());
+    for (int k = 0; k <= n / 2; ++k) {
+        std::complex<double> X = 0;
+        for (int i = 0; i < n; ++i) {
+            const double w = 0.5 - 0.5 * std::cos(2 * 3.14159265358979323846 * i / (n - 1));
+            X += std::polar(x[i] * w, -2 * 3.14159265358979323846 * k * i / n);
+        }
+        NEAR(mag[k], std::abs(X) * 2 / sum, 1e-12);
+    }
+}
+
+TEST(ring_keeps_the_newest_in_order) {
+    Ring<int, 3> r;
+    for (int i = 0; i < 5; ++i) r.push_back(i);
+    CHECK(r.size() == 3 && r.front() == 2 && r[2] == 4);
+    r.pop_front();
+    int sum = 0;
+    for (int v : r) sum += v;
+    CHECK(sum == 7);
+    r.clear();
+    CHECK(r.empty());
+}
+
+// One song through the live path, as LiveEngine runs it: after the Processor exists, nothing may be allocated.
+static long long allocations_in(const std::string& scenario, LabConfig cfg, double out_sr) {
+    Song song = build_scenario(scenario);
+    std::vector<double> audio = to_double(song.audio);
+    const double lookahead = 0.02;
+    Processor proc(cfg, lookahead, SR, out_sr);
+    proc.synth().layers = {1, 1, 1, 1, 1};
+    std::vector<double> L(8192), R(8192);
+    const long long before = allocations;
+    for (size_t k = 0; k + 1 < audio.size() / P::HOP; ++k) {
+        proc.render(proc.time() + lookahead, 480, L.data(), R.data());
+        proc.analyze(audio.data() + k * P::HOP);
+        proc.trim_history();
+        proc.next_chord(), proc.beat_in_bar(), proc.count_left(), proc.engine().current_key();   // what publish() reads
+    }
+    return allocations - before;
+}
+
+TEST(audio_path_does_not_allocate) {
+    LabConfig free_play;
+    free_play.manter_padrao = free_play.aprender_na_tonica = true;
+    LabConfig click = free_play;
+    click.modo = "metronomo", click.bpm = 120.0, click.clique = click.contagem = true;
+    LabConfig known;
+    known.modo = "decorado", known.progressao = "C G Am F";
+    CHECK(allocations_in("estavel_120", free_play, 48000.0) == 0);
+    CHECK(allocations_in("estavel_120", LabConfig{}, 44100.0) == 0);     // chords change by ear, reasons with text
+    CHECK(allocations_in("pausa_e_fim", free_play, 48000.0) == 0);       // stops and forgets
+    CHECK(allocations_in("troca_de_tom", LabConfig{}, 48000.0) == 0);    // unlocks and relearns
+    CHECK(allocations_in("estavel_120", click, 48000.0) == 0);           // click grid
+    CHECK(allocations_in("estavel_120", known, 48000.0) == 0);
+}
+
+TEST(layer_change_does_not_click) {
+    Synth synth(44100.0);
+    synth.handle({0.0, EvType::On, Inst::Pad, 60, 100});
+    const int n = 480;
+    std::vector<double> L((size_t)n), R((size_t)n);
+    auto jump = [&](double t0) {
+        double last = L[(size_t)n - 1], worst = 0;
+        synth.render(t0, n, L.data(), R.data());
+        for (int i = 0; i < n; ++i) worst = std::max(worst, std::abs(L[(size_t)i] - last)), last = L[(size_t)i];
+        return worst;
+    };
+    double t = 0;
+    for (; t < 2.0; t += n / 44100.0) jump(t);
+    synth.layers[1] = 1.0;   // organ on at full level, with the note already sounding
+    double during = jump(t);
+    t += n / 44100.0;
+    CHECK(during <= 1.5 * jump(t));   // no worse than the organ's own slope, a block later
 }
 
 TEST(onsets_count_and_timing) {
@@ -512,7 +608,9 @@ TEST(count_in) {
 TEST(detect_key_from_chords) {
     auto keys = [](const std::vector<std::string>& cs) {
         auto ix = indices(cs);
-        return detect_key(std::deque<int>(ix.begin(), ix.end()));
+        Heard heard;
+        for (int i : ix) heard.push_back(i);
+        return detect_key(heard);
     };
     CHECK(keys({"B", "F#", "G#m", "E"}) == note_pc("B") && keys({"C", "G", "Am", "F"}) == 0 && !keys({"C", "G"}));
 }

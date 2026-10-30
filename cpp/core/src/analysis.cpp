@@ -3,28 +3,46 @@
 #include <complex>
 
 #include "kordia/core.h"
-#include "pocketfft_hdronly.h"
 
 namespace kordia {
 
 static constexpr double PI = 3.14159265358979323846;
 
-Spectrum::Spectrum(int n) : n_(n), win_(n), buf_(n), mag_(n / 2 + 1), spec_(n / 2 + 1) {
+Spectrum::Spectrum(int n) : n_(n), win_(n), mag_(n / 2 + 1), rev_(n / 2), z_(n / 2), tw_(n / 2 + 1) {
     double s = 0;
     for (int i = 0; i < n; ++i) {   // np.hanning
         win_[i] = 0.5 - 0.5 * std::cos(2 * PI * i / (n - 1));
         s += win_[i];
     }
     norm_ = 2.0 / s;
+    for (int k = 0; k <= n / 2; ++k) tw_[k] = std::polar(1.0, -2 * PI * k / n);
+    const int h = n / 2;
+    for (int i = 0, j = 0; i < h; ++i) {
+        rev_[i] = j;
+        int bit = h >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j |= bit;
+    }
 }
 
+// Real FFT through a complex one of half the size, tables ready beforehand: on the audio thread nothing is allocated.
 const std::vector<double>& Spectrum::operator()(const double* x) {
-    for (int i = 0; i < n_; ++i) buf_[i] = x[i] * win_[i];
-    // shortcut: pocketfft allocates scratch per call; swap for a preallocated FFT (juce::dsp::FFT) if it shows up
-    // in the live cost log
-    pocketfft::r2c<double>({(size_t)n_}, {sizeof(double)}, {sizeof(std::complex<double>)}, 0, true, buf_.data(),
-                           spec_.data(), 1.0);
-    for (int i = 0; i <= n_ / 2; ++i) mag_[i] = std::abs(spec_[i]) * norm_;
+    const int h = n_ / 2;
+    for (int i = 0; i < h; ++i) z_[rev_[i]] = {x[2 * i] * win_[2 * i], x[2 * i + 1] * win_[2 * i + 1]};
+    for (int size = 2; size <= h; size *= 2)
+        for (int start = 0; start < h; start += size)
+            for (int k = 0; k < size / 2; ++k) {
+                auto& a = z_[start + k];
+                auto& b = z_[start + k + size / 2];
+                auto t = b * tw_[k * (n_ / size)];
+                b = a - t;
+                a += t;
+            }
+    for (int k = 0; k <= h; ++k) {
+        auto a = z_[k % h], b = std::conj(z_[(h - k) % h]);
+        auto X = 0.5 * (a + b) + std::complex<double>(0, -0.5) * tw_[k] * (a - b);
+        mag_[k] = std::sqrt(X.real() * X.real() + X.imag() * X.imag()) * norm_;
+    }
     return mag_;
 }
 
@@ -43,11 +61,11 @@ OnsetDetector::OnsetDetector(double sr) : band_(band_bins(P::ONSET_WIN, sr, P::O
     lm_.resize(band_.size());
 }
 
-static double median(const std::deque<double>& d) {
-    std::vector<double> v(d.begin(), d.end());
-    std::sort(v.begin(), v.end());
-    size_t n = v.size();
-    return n % 2 ? v[n / 2] : 0.5 * (v[n / 2 - 1] + v[n / 2]);
+double OnsetDetector::median() {
+    size_t n = 0;
+    for (double v : hist_) sorted_[n++] = v;
+    std::sort(sorted_.begin(), sorted_.begin() + n);
+    return n % 2 ? sorted_[n / 2] : 0.5 * (sorted_[n / 2 - 1] + sorted_[n / 2]);
 }
 
 std::optional<Onset> OnsetDetector::process(const std::vector<double>& mag, double t, double rms_db) {
@@ -59,7 +77,7 @@ std::optional<Onset> OnsetDetector::process(const std::vector<double>& mag, doub
     }
     std::swap(prev_, lm_);
     has_prev_ = true;
-    double thr = (hist_.empty() ? 0.0 : median(hist_)) * P::ONSET_K + P::ONSET_DELTA;
+    double thr = (hist_.empty() ? 0.0 : median()) * P::ONSET_K + P::ONSET_DELTA;
     if (t - last_t_ < P::ONSET_MASK_TIME) thr = std::max(thr, P::ONSET_MASK * last_flux_);   // own ringing
     hist_.push_back(f);
     if ((int)hist_.size() > P::ONSET_MEDIAN_FRAMES) hist_.pop_front();

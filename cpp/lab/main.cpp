@@ -3,8 +3,10 @@
 #include <chrono>
 #include <cmath>
 #include <format>
+#include <fstream>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <set>
 
 #ifdef _WIN32
@@ -151,6 +153,56 @@ int prova(const Args& a) {
     return 0;
 }
 
+// What the live callback spends on a real song: one output block per device buffer, one analysis per HOP.
+int carga(const Args& a) {
+    const double out_sr = 48000.0, lookahead = 0.02;
+    const int n = a.has("buffer") ? std::stoi(a.get("buffer")) : 480;
+    const double budget = 1000.0 * n / out_sr;
+    Song song = build_scenario(a.get("cenario", "estavel_120"));
+    std::vector<double> audio(song.audio.begin(), song.audio.end());
+#ifdef _WIN32
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);   // measures the code, not the other programs
+#endif
+    using Clock = std::chrono::steady_clock;
+    auto ms = [](Clock::duration d) { return std::chrono::duration<double, std::milli>(d).count(); };
+    auto pct = [](std::vector<double> v, double p) {
+        std::sort(v.begin(), v.end());
+        return v[(size_t)(p * (double)(v.size() - 1))];
+    };
+    std::cout << std::format("{} s de {}, buffer {} ({:.1f} ms)\n", audio.size() / SR, a.get("cenario", "estavel_120"), n, budget);
+    std::cout << std::format("{:18s}{:>9s}{:>9s}{:>9s}{:>9s}{:>11s}{:>11s}\n", "", "média", "p50", "p99", "pior", "% orçam.", "análise");
+    const std::vector<std::pair<std::string, Layers>> cases = {{"so pad worship", {1, 0, 0, 0, 0}}, {"todas as camadas", {1, 1, 1, 1, 1}}};
+    for (const auto& [name, layers] : cases) {
+        LabConfig cfg;
+        cfg.manter_padrao = true;
+        Processor proc(cfg, lookahead, SR, out_sr);
+        proc.synth().layers = layers;
+        std::vector<double> L((size_t)n), R((size_t)n), cost, hop;
+        std::ofstream dump;   // the raw output: two builds can be compared sample by sample
+        if (a.has("saida")) dump.open(a.get("saida") + "_" + std::to_string(layers[1] > 0) + ".raw", std::ios::binary);
+        size_t in = 0;
+        for (long long b = 0; in + P::HOP <= audio.size(); ++b) {
+            auto t0 = Clock::now();
+            size_t target = (size_t)((double)(b + 1) * n / out_sr * SR);
+            while (in + P::HOP <= target && in + P::HOP <= audio.size()) {
+                auto h0 = Clock::now();
+                proc.analyze(audio.data() + in);
+                in += P::HOP;
+                proc.trim_history();
+                hop.push_back(ms(Clock::now() - h0));
+            }
+            proc.render((double)b * n / out_sr + lookahead, n, L.data(), R.data());
+            cost.push_back(ms(Clock::now() - t0));
+            if (dump) dump.write((const char*)L.data(), n * sizeof(double)).write((const char*)R.data(), n * sizeof(double));
+        }
+        double mean = std::accumulate(cost.begin(), cost.end(), 0.0) / (double)cost.size();
+        std::cout << std::format("{:18s}{:9.3f}{:9.3f}{:9.3f}{:9.3f}{:10.1f}%{:10.3f}\n", name, mean, pct(cost, 0.5), pct(cost, 0.99),
+                                 *std::max_element(cost.begin(), cost.end()), 100 * pct(cost, 0.99) / budget,
+                                 std::accumulate(hop.begin(), hop.end(), 0.0) / (double)hop.size());
+    }
+    return 0;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -162,7 +214,8 @@ int main(int argc, char** argv) {
         "     kordia_lab rodar   --entrada a.wav [--modo livre|metronomo|decorado] [--bpm 120] [--tom C] [--progressao \"C G Am F\"] [--verdade a.json] [--saida saida]\n"
         "     kordia_lab rodar   --sessao sessoes/<pasta> [--saida saida]\n"
         "     kordia_lab avaliar [--todos | --cenario NOME] [--versao v]\n"
-        "     kordia_lab prova   [--versao v] [--progressao a b] [--tom C F#] [--variante clique livre]\n";
+        "     kordia_lab prova   [--versao v] [--progressao a b] [--tom C F#] [--variante clique livre]\n"
+        "     kordia_lab carga   [--cenario NOME] [--buffer 480] [--saida prefixo]\n";
     if (argc < 2) {
         std::cerr << usage;
         return 2;
@@ -174,6 +227,7 @@ int main(int argc, char** argv) {
         if (cmd == "rodar") return rodar(a);
         if (cmd == "avaliar") return avaliar(a);
         if (cmd == "prova") return prova(a);
+        if (cmd == "carga") return carga(a);
         std::cerr << usage;
         return 2;
     } catch (const std::exception& e) {

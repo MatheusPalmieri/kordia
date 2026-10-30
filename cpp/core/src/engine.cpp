@@ -1,10 +1,20 @@
 // Decision engine: state machine, confidence ladder, stop rules, prediction scheduling.
+#include <cstdio>
+
 #include "kordia/core.h"
 
 namespace kordia {
 
+// The text of a decision: built in a fixed buffer, this runs on the audio thread.
+template <typename... A>
+const char* Engine::say(const char* format, A... args) {
+    std::snprintf(why_, sizeof why_, format, args...);
+    return why_;
+}
+
 Engine::Engine(Grid& tracker, ProgressionMemory& memory, std::optional<int> key, bool metro, double lookahead)
     : key_pc(key), metronome(metro), tracker_(tracker), memory_(memory), lookahead_(lookahead), frame_(P::HOP / 22050.0) {
+    reason.reserve(256);
     forget();
 }
 
@@ -27,7 +37,7 @@ void Engine::forget() {
     last_heard_ = -1;
     disagree_since_.reset();
     root5_tc_.reset();
-    slot_why_.clear();
+    slot_why_[0] = 0;
     reason.clear();
     stop_at_ = 0.0;
     memory_.reset();
@@ -132,14 +142,14 @@ std::optional<int> Engine::current_key() const {
     return detect_key(heard_);
 }
 
-std::optional<Output> Engine::tonic_out(double t, const std::string& why) {
+std::optional<Output> Engine::tonic_out(double t, const char* why) {
     auto k = current_key();
     if (!k) {
         if (key_pc)   // configured key contradicted and nothing better yet: its tonic would be wrong
-            return set(-1, Mode::Silence, t, why + "; o tom configurado não bate com o que ouvi: silêncio");
-        return set(-1, Mode::Silence, t, why + "; ainda sem tom: silêncio");
+            return set(-1, Mode::Silence, t, say("%s; o tom configurado não bate com o que ouvi: silêncio", why));
+        return set(-1, Mode::Silence, t, say("%s; ainda sem tom: silêncio", why));
     }
-    return set(*k, Mode::Tonic, t, why + ": pad na tônica (" + label(*k) + ")");
+    return set(*k, Mode::Tonic, t, say("%s: pad na tônica (%s)", why, label(*k).c_str()));
 }
 
 void Engine::learn_slot(double t, const Slot& slot) {
@@ -152,10 +162,11 @@ void Engine::learn_slot(double t, const Slot& slot) {
         if (heard_.size() > 12) heard_.pop_front();
         last_heard_ = heard;
     }
-    if (memory_.locked && !was_locked) slot_why_ = "padrão reconhecido, travei";
-    else if (memory_.locked && memory_.corrected) slot_why_ = "corrigi o padrão pelo que ouvi";
-    else if (was_locked && !memory_.locked) slot_why_ = "ouvi " + label(heard) + " fora do padrão: reaprendendo";
-    else slot_why_.clear();
+    const char* why = "";
+    if (memory_.locked && !was_locked) why = "padrão reconhecido, travei";
+    else if (memory_.locked && memory_.corrected) why = "corrigi o padrão pelo que ouvi";
+    else if (was_locked && !memory_.locked) why = say("ouvi %s fora do padrão: reaprendendo", label(heard).c_str());
+    copy_text(slot_why_, sizeof slot_why_, why);
 }
 
 // Click grid: the pattern plays on the grid; until it locks, the tonic (or the last half bar read).
@@ -163,7 +174,7 @@ std::optional<Output> Engine::grid_out(double t, bool closed) {
     if (memory_.locked) {
         state = State::Travado;
         std::optional<Output> out;
-        if (closed) out = set(memory_.known[memory_.pos], Mode::Full, t, slot_why_.empty() ? nullptr : slot_why_.c_str());
+        if (closed) out = set(memory_.known[memory_.pos], Mode::Full, t, slot_why_[0] ? slot_why_ : nullptr);
         return out ? out : locked(t, N_IDX);
     }
     if (state == State::Travado) {
@@ -173,7 +184,7 @@ std::optional<Output> Engine::grid_out(double t, bool closed) {
     if (!closed) return std::nullopt;
     if (learn) return tonic_out(t, "aprendendo o padrão");
     if (last_heard_ < 0) return std::nullopt;
-    return set(last_heard_, Mode::Full, t, "ouvi " + label(last_heard_));
+    return set(last_heard_, Mode::Full, t, say("ouvi %s", label(last_heard_).c_str()));
 }
 
 // Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement sustained
@@ -195,7 +206,7 @@ std::optional<Output> Engine::held_check(double t, int idx, bool late) {
     state = State::Ouvindo;
     tracker_.observe_change(change_time(t));
     if (learn) return reactive_change(t, idx);
-    return set(idx, Mode::Full, t, "você mudou de verdade (2 compassos diferentes do padrão): ouvi " + label(idx) + ", reaprendendo");
+    return set(idx, Mode::Full, t, say("você mudou de verdade (2 compassos diferentes do padrão): ouvi %s, reaprendendo", label(idx).c_str()));
 }
 
 std::optional<Output> Engine::reactive(double t, int idx, const std::array<double, 25>& evidence) {
@@ -224,7 +235,7 @@ std::optional<Output> Engine::reactive(double t, int idx, const std::array<doubl
         cur.first != b)
     {
         root5_tc_ = change_time(t);
-        return set(b, Mode::Root5, t, "dúvida " + label(a) + "/" + label(b) + ": sem terça");
+        return set(b, Mode::Root5, t, say("dúvida %s/%s: sem terça", label(a).c_str(), label(b).c_str()));
     }
     return std::nullopt;
 }
@@ -257,13 +268,12 @@ std::optional<Output> Engine::reactive_change(double t, int idx) {
         if (ph - k > P::METRO_LATE_BEATS) {   // early (or mid-bar): wait for the next strong beat
             k += 2;
             pending_ = std::make_pair(idx, tracker_.time_of_beat(k));
-            reason = "metrônomo: " + label(idx) + " agendado para o tempo forte";
+            reason = say("metrônomo: %s agendado para o tempo forte", label(idx).c_str());
             return std::nullopt;
         }
     }
     pending_.reset();
-    std::string why = "ouvi " + label(idx) + (state == State::Travado ? " — padrão reconhecido, travei" : "");
-    return set(idx, Mode::Full, t, why);
+    return set(idx, Mode::Full, t, say("ouvi %s%s", label(idx).c_str(), state == State::Travado ? " — padrão reconhecido, travei" : ""));
 }
 
 std::optional<Output> Engine::locked(double t, int idx) {
@@ -301,13 +311,13 @@ std::optional<Output> Engine::locked(double t, int idx) {
         } else if (t - contra_since_ >= P::LOCK_CONTRA_BEATS * period) {
             contra_.reset();
             if (cur.first >= 0 && idx % 12 == cur.first % 12)   // same root, other third: keep pattern, drop third
-                return set(cur.first, Mode::Root5, t, "dúvida maior/menor (" + label(idx) + "): sem terça");
+                return set(cur.first, Mode::Root5, t, say("dúvida maior/menor (%s): sem terça", label(idx).c_str()));
             memory_.correct(idx);   // the audio wins: forget the lock and relearn
             memory_.unlock();
             state = State::Ouvindo;
             tracker_.observe_change(change_time(t));
             if (learn) return reactive_change(t, idx);
-            return set(idx, Mode::Full, t, "contradição sustentada: ouvi " + label(idx) + ", destravei");
+            return set(idx, Mode::Full, t, say("contradição sustentada: ouvi %s, destravei", label(idx).c_str()));
         }
     } else {
         contra_.reset();

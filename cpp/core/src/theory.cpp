@@ -58,16 +58,18 @@ bool is_diatonic(int idx, int k) {
     return false;
 }
 
-bool key_fits(int key_pc, const std::deque<int>& chords) {
+bool key_fits(int key_pc, const Heard& chords) {
     int n = 0;
     for (int c : chords) n += is_diatonic(c, key_pc);
     return n * 2 >= (int)chords.size();
 }
 
-std::optional<int> detect_key(const std::deque<int>& chords) {
-    std::vector<int> u(chords.begin(), chords.end());
-    std::sort(u.begin(), u.end());
-    if (std::unique(u.begin(), u.end()) - u.begin() < 3) return std::nullopt;
+std::optional<int> detect_key(const Heard& chords) {
+    std::array<int, 13> u;
+    size_t n = 0;
+    for (int c : chords) u[n++] = c;
+    std::sort(u.begin(), u.begin() + n);
+    if (std::unique(u.begin(), u.begin() + n) - u.begin() < 3) return std::nullopt;
     std::optional<int> best;
     double best_s = 0.0;
     for (int k = 0; k < 12; ++k) {
