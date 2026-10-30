@@ -3,8 +3,10 @@ rem Tarefas do Kordia: tasks build [--app] ^| test [filtro] ^| avaliar [versao] 
 setlocal
 cd /d "%~dp0"
 set "LAB=cpp\build\Release\kordia_lab.exe"
+rem o CMake que vem com o Visual Studio instalado conhece essa versao; sem ele, usa o do PATH
 set "CMAKE=cmake"
-where cmake >nul 2>nul || set "CMAKE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+for /f "usebackq delims=" %%p in (`call "%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe 2^>nul`) do set "CMAKE=%%p"
 
 if "%~1"=="build" goto build
 if "%~1"=="" goto test
@@ -17,10 +19,11 @@ echo tarefa desconhecida: %~1
 exit /b 2
 
 :build
-rem nucleo + laboratorio + testes (+ app JUCE); precisa do Visual Studio 2022 Build Tools
+rem nucleo + laboratorio + testes (+ app JUCE); precisa do Visual Studio 2022 ou 2026 (Build Tools bastam)
 set "APP=OFF"
 if "%~2"=="--app" set "APP=ON"
-"%CMAKE%" -S cpp -B cpp/build -G "Visual Studio 17 2022" -A x64 -DKORDIA_APP=%APP% || exit /b 1
+rem sem -G: o CMake escolhe o Visual Studio mais novo instalado
+"%CMAKE%" -S cpp -B cpp/build -A x64 -DKORDIA_APP=%APP% || exit /b 1
 "%CMAKE%" --build cpp/build --config Release --parallel
 exit /b %errorlevel%
 

@@ -22,7 +22,7 @@ Projeto: **Kordia**, que **ouve o violão** e toca baixo + pad seguindo os acord
 ## Comandos
 
 ```bat
-tasks build [--app]                   :: núcleo + laboratório + testes (+ app JUCE); precisa do VS 2022 Build Tools
+tasks build [--app]                   :: núcleo + laboratório + testes (+ app JUCE); precisa do VS 2022 ou 2026 (Build Tools bastam)
 tasks test [filtro]                   :: kordia_tests (unitários + regressão + referências + prova resumida), ~30 s
 tasks avaliar [versao]                :: roda os 14 cenários, salva métricas e relatórios
 tasks prova [versao]                  :: músicas novas nos 12 tons + controle com as 6 sessões reais (~5 min; usa sessoes/)

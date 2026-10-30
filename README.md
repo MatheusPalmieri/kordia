@@ -8,14 +8,30 @@ Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os a
 
 ## Instalação
 
+**Pré-requisitos:**
+
+- Windows 11.
+- **Visual Studio 2022 ou 2026** (os *Build Tools* bastam) com a carga "Desenvolvimento para desktop com C++". O CMake vem junto.
+- **Git** e internet no primeiro build: JUCE 8, pocketfft e o SDK do WebView2 são baixados pelo CMake na primeira configuração.
+- Acesso ao repositório, que é privado.
+
+**Passos**, a partir da raiz do repositório:
+
 ```bat
+git clone https://github.com/MatheusPalmieri/kordia.git
+cd kordia
 tasks build --app           :: núcleo + laboratório + testes + app JUCE (Kordia.exe)
+tasks test                  :: confere o build
 tasks atalho                :: cria Kordia.lnk na raiz, o atalho com a logo
 ```
 
-O build precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `tasks build` (sem `--app`) compila só o núcleo, o laboratório e os testes.
+No PowerShell, escreva `.\tasks` em vez de `tasks`. O primeiro build pode levar alguns minutos, e `tasks build` (sem `--app`) compila só o núcleo, o laboratório e os testes.
+
+O `tasks.bat` usa o CMake do Visual Studio mais novo instalado e, sem Visual Studio, o CMake do PATH. Se trocar a versão do Visual Studio, apague `cpp/build` e compile de novo. Se mover a pasta do projeto, faça o mesmo e rode `tasks atalho`, porque o exe e o atalho guardam caminhos absolutos.
 
 O app em si só precisa do WebView2, que já vem no Windows 11.
+
+**Clone novo não traz as sessões reais:** `sessoes/` fica fora do git. Sem as pastas, `tasks test` mostra `(sem sessoes/: pulado)` nos testes com o violão real, e a `prova` roda sem as variantes `real_*` e sem o controle das sessões, então a nota não é comparável com [`docs/resultados.md`](docs/resultados.md). Para comparar, copie as pastas de `sessoes/` da máquina onde foram gravadas.
 
 ## Uso ao vivo (app)
 
