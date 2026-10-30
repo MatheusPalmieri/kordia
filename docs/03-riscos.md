@@ -13,9 +13,9 @@ Cada risco tem mitigação e um cenário de teste que o exercita (ver `04-plano-
 | 7 | **Excesso de confiança no padrão.** Quanto mais confia, mais insiste quando o músico improvisa. | Contradição forte destrava imediatamente; fraca, só depois de 2 seguidas. Esse equilíbrio é o principal parâmetro a calibrar. | `acorde_fora_do_tom` (modo decorado), `troca_de_tom`. Métrica de recuperação. |
 | 8 | **Trocas no meio do compasso.** O modo previsão assume troca no tempo 1. | Memória guarda a duração de cada acorde em tempos (arredondada a meio compasso). | Ainda sem cenário dedicado (pendência). |
 | 9 | **Capotraste e voicings variados.** | Detecta-se o som real; templates não dependem da forma. | `troca_de_tom` usa formas de Dó com capotraste na 2ª casa para tocar em Ré. |
+| 10 | **Falsos disparos** (tocar quando não devia): o erro mais caro. | Parada por ausência de onsets, fim de compasso + fade, esquecimento após silêncio longo, escada de confiança. | Métrica de falsos disparos e de parada em todos os cenários (todos terminam com silêncio). |
 | 11 | **Driver entregando entrada corrompida** (WASAPI compartilhado nesta máquina: float lido como int32). | Modo exclusivo como padrão; detector de corrupção avisa na interface. | `KordiaLiveTest.exe "Windows Audio" 0` mostra o aviso; padrão sem aviso. |
 | 12 | **Modo exclusivo toma a placa** (outros programas mudos). | Documentado; opção de driver na interface. | Manual. |
-| 10 | **Falsos disparos** (tocar quando não devia): o erro mais caro. | Parada por ausência de onsets, fim de compasso + fade, esquecimento após silêncio longo, escada de confiança. | Métrica de falsos disparos e de parada em todos os cenários (todos terminam com silêncio). |
 
 ## Riscos de método (do próprio protótipo)
 
