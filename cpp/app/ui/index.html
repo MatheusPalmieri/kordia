@@ -70,7 +70,7 @@ header { display: flex; align-items: center; gap: 16px; }
 .layer label { font-weight: 500; }
 .layer input[type=range]:disabled { opacity: .35; }
 .col { display: flex; flex-direction: column; gap: 18px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); backdrop-filter: blur(24px) saturate(1.6); padding: 16px 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); contain: content; padding: 16px 18px; }
 .card h2 { margin: 0 0 12px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; padding-top: 0; }
@@ -93,7 +93,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px;
 .switch input:checked + span::after { transform: translateX(18px); }
 .switch input:disabled + span { opacity: .45; cursor: default; }
 .meter { height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; position: relative; }
-.meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, var(--green), var(--green) 75%, var(--orange) 90%, var(--red)); transition: width .06s linear; border-radius: 6px; }
+.meter i { position: absolute; inset: 0; transform: scaleX(0); transform-origin: left; will-change: transform; background: linear-gradient(90deg, var(--green), var(--green) 75%, var(--orange) 90%, var(--red)); }
 .meter b { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--faint); }
 .stepper { display: inline-flex; align-items: center; background: var(--track); border-radius: 9px; }
 .stepper button { border: 0; background: transparent; color: var(--text); font-size: 17px; width: 30px; height: 30px; cursor: pointer; }
@@ -110,7 +110,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px;
 .heard { margin-top: 18px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 500; }
 .heard strong { color: var(--text); font-size: 18px; min-width: 40px; text-align: left; }
 .conf { width: 160px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
-.conf i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .1s; }
+.conf i { display: block; height: 100%; transform: scaleX(0); transform-origin: left; will-change: transform; background: var(--blue); }
 .next { margin-top: 10px; color: var(--muted); height: 20px; }
 .next b { color: var(--text); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -302,6 +302,11 @@ const AUDIO_CHECK_MS = 3000;   // a device plugged in shows up within this time;
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
 function recall(k) { try { const v = localStorage.getItem("kordia." + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
 function val(el) { return el.type === "checkbox" ? el.checked : el.value; }
+// The screen refreshes 20 times a second and almost nothing changes: rewriting the same text would redo the layout each time.
+const shown = new Map();
+function write(id, prop, v) { const k = id + "." + prop; if (shown.get(k) !== v) { shown.set(k, v); $(id)[prop] = v; } }
+const text = (id, v) => write(id, "textContent", v), html = (id, v) => write(id, "innerHTML", v);
+const level = (el, x) => { el.style.transform = `scaleX(${Math.max(0, Math.min(1, x))})`; };   // no layout: only the compositor moves
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 4200); }
 async function api(path, body) {
   const r = await fetch(body === undefined ? path : path + "?q=" + encodeURIComponent(JSON.stringify(body)));
@@ -320,11 +325,11 @@ let liveTimer;
 function pushLive() { clearTimeout(liveTimer); liveTimer = setTimeout(() => api("/api/live", liveSettings()).catch(e => toast(e.message)), 60); }
 
 function labels() {
-  $("gainVal").textContent = ($("gain").value > 0 ? "+" : "") + $("gain").value + " dB";
-  $("volumeVal").textContent = $("volume").value + "%";
+  text("gainVal", ($("gain").value > 0 ? "+" : "") + $("gain").value + " dB");
+  text("volumeVal", $("volume").value + "%");
   $("prog").disabled = !$("progOn").checked || running;
   const chips = $("prog").value.trim().split(/\s+/).filter(Boolean);
-  $("progChips").innerHTML = $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "";
+  html("progChips", $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "");
   LAYERS.forEach(([id]) => $("vol_" + id).disabled = !$("on_" + id).checked);
 }
 function lockSettings() {
@@ -361,7 +366,7 @@ async function init() {
   document.querySelectorAll("#tempoSeg button").forEach(b => b.onclick = () => { tempoMode = b.dataset.mode; store("tempoMode", tempoMode); tempoControls(); });
   document.querySelectorAll(".bpmstep").forEach(b => b.onclick = () => {
     bpmValue = Math.max(30, Math.min(250, Math.round(bpmValue) + +b.dataset.step)); store("bpmValue", bpmValue);
-    $("bpmNow").textContent = bpmValue;
+    text("bpmNow", String(bpmValue));
     if (running) api("/api/live", { bpm: bpmValue }).catch(e => toast(e.message));   // live: same phase, new tempo
   });
   $("clickBtn").onclick = () => {
@@ -378,10 +383,11 @@ async function init() {
   $("startBtn").onclick = startStop;
   $("audioAlertOpen").onclick = () => api("/api/windows_settings", { page: windowsPage }).catch(e => toast(e.message));
   $("audioAlertSkip").onclick = () => { skippedAlert = $("audioAlertText").textContent; $("audioAlert").hidden = true; };
+  $("sessionInfo").onclick = e => { if (e.target.id === "openBtn") api("/api/open", {}); };
   labels(); lockSettings();
   await listen();
   checkAudio();
-  const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
+  const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, document.hidden ? 500 : running ? 50 : 100); };   // minimized: nobody is looking
   poll();
 }
 
@@ -409,15 +415,15 @@ function tempoControls() {
   const adjustable = tempoMode === "fixo" || (running && state.frozen) || (!running && clickOn);
   document.querySelectorAll(".bpmstep").forEach(b => b.hidden = !adjustable);
   $("freezeBtn").hidden = tempoMode === "fixo";
-  if (!running) $("bpmNow").textContent = tempoMode === "fixo" || clickOn ? bpmValue : "—";
-  $("tempoHint").textContent = tempoMode === "fixo"
+  if (!running) text("bpmNow", String(tempoMode === "fixo" || clickOn ? bpmValue : "—"));
+  text("tempoHint", tempoMode === "fixo"
     ? (clickOn ? "No Iniciar ele conta 4 tempos: entre no compasso seguinte. As trocas caem na cabeça do tempo." : "No Iniciar ele conta 4 tempos e o clique para; as trocas seguem na cabeça do tempo.")
     : (clickOn ? "No Iniciar ele conta 4 tempos neste BPM: entre no compasso seguinte. Depois ele segue o seu tempo. “Fixar” congela."
-               : "Ele detecta o seu andamento e acompanha se você acelerar. Ligue o Clique para ouvir o metrônomo desde o início.");
+               : "Ele detecta o seu andamento e acompanha se você acelerar. Ligue o Clique para ouvir o metrônomo desde o início."));
 }
 
 function db(x) { return x > 0 ? 20 * Math.log10(x) : -120; }
-function bar(el, d) { el.style.width = live ? Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + "%" : "0"; }
+function bar(el, d) { level(el, live ? (d + 60) / 60 : 0); }
 
 function deviceSettings() { return { type: $("driver").value || null, buffer: +$("buffer").value, input: $("input").value, output: $("output").value }; }
 async function listen() {   // from the moment the app opens: shows what it hears, plays nothing
@@ -470,8 +476,10 @@ async function startStop() {
 
 function fmt(t) { const m = Math.floor(t / 60), s = (t % 60).toFixed(1).padStart(4, "0"); return `${m}:${s}`; }
 
+let renders = 0;
 function render(s) {
   state = s;
+  const reading = ++renders % 4 === 1;   // numbers people read: 5 times a second is plenty, and each change is a layout
   if (s.running !== running) { running = s.running; lockSettings(); }
   if (s.error && s.error !== lastError) toast("O áudio parou: " + s.error);
   lastError = s.error;
@@ -479,46 +487,47 @@ function render(s) {
   const counting = running && s.count > 0;
   const st = running ? s.state : null;
   $("stateDot").style.background = st ? STATE_COLOR[st] : s.listening ? "var(--blue)" : "var(--gray)";
-  $("stateText").textContent = counting ? "Contando" : st ? s.state_text : s.listening ? "Só ouvindo — ainda não toca" : "Parado";
+  text("stateText", counting ? "Contando" : st ? s.state_text : s.listening ? "Só ouvindo — ainda não toca" : "Parado");
   const heardNow = s.listening && s.db > -50 ? (s.conf >= .45 && s.heard ? s.heard : s.note) : null;   // a single note has no chord: show the note
   const chord = counting ? String(s.count) : running && s.playing ? s.playing : heardNow;
   const el = $("chord");
   if (chord !== lastChord) { el.textContent = chord || "—"; el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 160); lastChord = chord; }
   el.classList.toggle("idle", !chord || !!s.listening);
-  $("chordSub").textContent = counting ? "entre no próximo compasso" : s.listening ? "aperte Iniciar para ele tocar junto" : running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : "");
-  $("key").options[0].text = s.key_detected && !$("key").value ? `Automático (${s.key_detected})` : "Automático";
-  $("heard").textContent = live && s.heard ? s.heard : "—";
+  text("chordSub", counting ? "entre no próximo compasso" : s.listening ? "aperte Iniciar para ele tocar junto" : running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : ""));
+  const keyName = s.key_detected && !$("key").value ? `Automático (${s.key_detected})` : "Automático";
+  if ($("key").options[0].text !== keyName) $("key").options[0].text = keyName;
+  text("heard", live && s.heard ? s.heard : "—");
   const c = live ? s.conf || 0 : 0;
-  $("conf").style.width = (c * 100) + "%"; $("conf").style.background = c >= .7 ? "var(--green)" : c >= .45 ? "var(--orange)" : "var(--gray)";
-  $("confVal").textContent = live ? Math.round(c * 100) + "%" : "";
-  $("next").innerHTML = running && s.next ? `Próximo: <b>${s.next}</b>` : "";
-  $("meter").style.width = live ? Math.max(0, Math.min(100, (s.db + 60) / 60 * 100)) + "%" : "0";
-  if (running) $("bpmNow").textContent = s.bpm ? Math.round(s.bpm) : "—";
+  level($("conf"), c); $("conf").style.background = c >= .7 ? "var(--green)" : c >= .45 ? "var(--orange)" : "var(--gray)";
+  if (reading) text("confVal", live ? Math.round(c * 100) + "%" : "");
+  html("next", running && s.next ? `Próximo: <b>${s.next}</b>` : "");
+  bar($("meter"), s.db);
+  if (running) text("bpmNow", String(s.bpm ? Math.round(s.bpm) : "—"));
   tempoControls();
-  bar($("mIn"), s.db); $("vIn").textContent = live && s.db != null ? Math.round(s.db) + " dB" : "—";
+  bar($("mIn"), s.db);
+  if (reading) text("vIn", live && s.db != null ? Math.round(s.db) + " dB" : "—");
   const o = (running && s.out) || {};
   bar($("mBass"), db(o.bass_rms || 0) + 12); bar($("mPad"), db(o.pad_rms || 0) + 12);
-  $("nBass").textContent = o.bass || "—"; $("nPad").textContent = (o.pad || []).join(" ") || "—";
+  text("nBass", o.bass || "—"); text("nPad", (o.pad || []).join(" ") || "—");
   $("mBassBox").classList.toggle("on", !!o.bass); $("mPadBox").classList.toggle("on", !!(o.pad && o.pad.length));
   [...$("beats").children].forEach((d, i) => d.classList.toggle("on", running && s.beat === i + 1));
   $("freezeBtn").disabled = !running || s.fixed_grid || !s.bpm;
   $("freezeBtn").classList.toggle("on", !!s.frozen);
-  $("freezeBtn").textContent = s.frozen ? "Voltar a seguir" : "Fixar este BPM";
+  text("freezeBtn", s.frozen ? "Voltar a seguir" : "Fixar este BPM");
   if (running && s.pattern) {
     const nxt = (s.pattern_pos + 1) % s.pattern.length;
-    $("pattern").innerHTML = s.pattern.map((p, i) => `<span class="chip${i === s.pattern_pos ? " now" : i === nxt ? " upcoming" : ""}">${p}</span>`).join("");
+    html("pattern", s.pattern.map((p, i) => `<span class="chip${i === s.pattern_pos ? " now" : i === nxt ? " upcoming" : ""}">${p}</span>`).join(""));
   }
-  else $("pattern").innerHTML = `<span class="empty">${running ? "Ainda aprendendo — toque a progressão" : "Aparece quando ele reconhecer a progressão"}</span>`;
+  else html("pattern", `<span class="empty">${running ? "Ainda aprendendo — toque a progressão" : "Aparece quando ele reconhecer a progressão"}</span>`);
   const items = (s.diary || []).map(d => `<li><time>${fmt(d.t)}</time><span class="c" style="color:${STATE_COLOR[d.estado] || "inherit"}">${d.acorde ? d.acorde : (d.modo === undefined ? "•" : "—")}</span><span class="m">${d.motivo || ""}</span></li>`).join("");
-  $("diary").innerHTML = items || `<li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li>`;
-  $("lat").textContent = s.latency_ms ? s.latency_ms + " ms" : "—";
-  $("cost").textContent = s.cost_ms != null ? `${s.cost_ms} ms / ${s.budget_ms} ms` : "—";
-  $("warn").textContent = s.warning || "Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.";
+  html("diary", items || `<li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li>`);
+  text("lat", s.latency_ms ? s.latency_ms + " ms" : "—");
+  if (reading) text("cost", s.cost_ms != null ? `${s.cost_ms} ms / ${s.budget_ms} ms` : "—");
+  text("warn", s.warning || "Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.");
   $("warn").style.fontWeight = s.warning ? "700" : "400";
-  $("engineInfo").innerHTML = s.engine ? `Motor <b>${s.engine}</b>` : "";
-  $("xruns").textContent = s.xruns; $("xruns").parentElement.classList.toggle("warn", s.xruns > 0);
-  $("sessionInfo").innerHTML = s.session ? `Sessão <b>${s.session.split(/[\\/]/).pop()}</b>${s.report ? " · relatório " + s.report : ""} · <a class="link" id="openBtn">Abrir pasta</a>` : "";
-  if ($("openBtn")) $("openBtn").onclick = () => api("/api/open", {});
+  html("engineInfo", s.engine ? `Motor <b>${s.engine}</b>` : "");
+  text("xruns", String(s.xruns)); $("xruns").parentElement.classList.toggle("warn", s.xruns > 0);
+  html("sessionInfo", s.session ? `Sessão <b>${s.session.split(/[\\/]/).pop()}</b>${s.report ? " · relatório " + s.report : ""} · <a class="link" id="openBtn">Abrir pasta</a>` : "");
 }
 
 const SPLASH_MIN_MS = 1400;   // long enough for the neon to light up; the audio devices usually answer sooner
