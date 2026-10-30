@@ -21,6 +21,23 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `tom_errado` | B–F#–G#m–E com o tom configurado em Dó (caso real de 2026-10-29) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 
+## Prova (`acompanhante/exam.py`)
+
+`python -m acompanhante.cli prova [--progressao ...] [--tom ...] [--variante ...] [--versao v]` → tabela e `resultados/<versao>/prova.csv`. Responde: **tocando uma música nova, em qualquer tom, o app acaba tocando o que foi tocado?** Usa a configuração da interface (aprender na tônica, manter o padrão, tom automático) e o violão meio tom abaixo. Batida (3) e BPM (72–120) giram com o tom.
+
+| Variante | Entrada | Configuração |
+|---|---|---|
+| `clique` | sintético | metrônomo com clique; entra 2 compassos depois do Iniciar |
+| `tom_da_forma` | sintético | idem, com o tom configurado no nome da forma (meio tom acima do que soa) |
+| `livre` | sintético | sem clique |
+| `real_clique`, `real_livre` | compassos reais de `sessoes/`, remontados e transpostos | como `clique` e `livre` (só com as pastas locais e só com I, V, vi, IV) |
+
+Progressões: 2, 3, 4, 6 e 8 acordes, duas por compasso, dois compassos por acorde, volta na tônica, menor, ii–V–I, empréstimo, dominante secundária, formas de worship (`Cadd9`, `D/F#`, `Em7`, `Dsus4`) com capotraste e a armadilha `falsa_volta`.
+
+Nota de cada música: `lock_compassos` (compassos até travar), `acc` (acorde exato depois de travar), `wrong_s` (segundos de harmonia errada, fora do primeiro tempo de cada troca; a tônica só conta se não pertencer ao tom), `played` (últimos acordes tocados). **Certa:** travou, `acc` ≥ 0,90 e `wrong_s` ≤ 2.
+
+Fora da prova: compasso ternário, seções diferentes (verso/refrão), mudança de tom e cantor por cima.
+
 ## Verdade-base (JSON)
 
 `tempo` (curva de BPM), `beats`, `downbeats`, `chords` (segmentos `[início, fim, rótulo]`, com `N` = silêncio e `P` = pausa), `changes` (com flag `surpresa` para trocas inesperadas), `ends` (instante em que o músico terminou), `run` (modo, bpm, tom, progressão para a execução).

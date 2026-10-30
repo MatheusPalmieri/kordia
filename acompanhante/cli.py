@@ -9,7 +9,7 @@ import numpy as np
 import soundfile as sf
 
 from . import params as P
-from . import scenarios
+from . import scenarios, theory
 from .metrics import evaluate
 from .pipeline import RunConfig, load_wav, run
 from .report import plot
@@ -120,6 +120,14 @@ def cmd_avaliar(a):
     print(f"\nresultados em {(Path('resultados') / a.versao).resolve()}")
 
 
+def cmd_prova(a):
+    from . import exam
+    keys = [theory.note_pc(k) for k in a.tom] if a.tom else None
+    rows = exam.run_exam(exam.cases(a.progressao, keys, a.variante), a.backend)
+    exam.print_exam(rows)
+    print(f"\nresultados em {exam.save_exam(rows, a.versao).resolve()}")
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="acompanhante")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -141,6 +149,12 @@ def main(argv=None):
     v.add_argument("--cenario", choices=list(scenarios.SCENARIOS))
     v.add_argument("--versao", default="dev")
     v.add_argument("--backend", choices=["py", "cpp"], default="py", help="cpp: o núcleo C++ (python tasks.py build)")
+    o = sub.add_parser("prova", help="músicas novas nos 12 tons, com a configuração do app ao vivo e as imperfeições das sessões reais")
+    o.add_argument("--progressao", nargs="+", help="padrão: todas (acompanhante/exam.py)")
+    o.add_argument("--tom", nargs="+", help="tons que soam; padrão: os 12")
+    o.add_argument("--variante", nargs="+", help="clique, tom_da_forma, livre, real_clique, real_livre; padrão: todas")
+    o.add_argument("--versao", default="dev")
+    o.add_argument("--backend", choices=["py", "cpp"], default="cpp")
     sub.add_parser("interface", help="abre o app ao vivo (entrada de áudio -> baixo + pad)")
     a = p.parse_args(argv)
     if a.cmd == "interface":
@@ -150,7 +164,7 @@ def main(argv=None):
         p.error("rodar: use --entrada ARQUIVO.wav ou --sessao PASTA")
     if a.cmd == "gerar" and not (a.todos or a.cenario):
         p.error("gerar: use --cenario NOME ou --todos")
-    {"gerar": cmd_gerar, "rodar": cmd_rodar, "avaliar": cmd_avaliar}[a.cmd](a)
+    {"gerar": cmd_gerar, "rodar": cmd_rodar, "avaliar": cmd_avaliar, "prova": cmd_prova}[a.cmd](a)
 
 
 if __name__ == "__main__":

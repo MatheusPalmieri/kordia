@@ -5,6 +5,50 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v7 — 2026-10-30 (prova: músicas novas nos 12 tons)
+
+Como reproduzir: `python -m acompanhante.cli prova --versao v7` → `resultados/v7/prova.csv` (cerca de 10 min; 852 músicas). Configuração do app ao vivo: aprender na tônica + manter o padrão, tom automático. Definição em [`04-plano-de-testes.md`](04-plano-de-testes.md).
+
+| variante | o que é | músicas certas | acerto depois de travar | harmonia errada por música |
+|---|---|---|---|---|
+| `clique` | sintético, metrônomo | 123/204 | 0,83 | 3,8 s |
+| `tom_da_forma` | sintético, tom configurado meio tom acima do que soa (sessão de 30/10) | 121/204 | 0,83 | 3,9 s |
+| `livre` | sintético, sem clique | 97/204 | 0,81 | 6,0 s |
+| `real_clique` | compassos do violão real, remontados e transpostos | 24/120 | 0,61 | 10,4 s |
+| `real_livre` | idem, sem clique | 19/120 | 0,63 | 10,3 s |
+| **sintético** | | **341/612 (56 %)** | **0,82** | |
+| **violão real** | | **43/240 (18 %)** | **0,62** | |
+
+"Certa" = travou, acerto ≥ 90 % depois de travar e no máximo 2 s de harmonia errada.
+
+**Controle com as sessões reais (mesma nota):**
+
+| sessão | soou em | original, sem cortar | mesmos compassos e ordem, com cortes |
+|---|---|---|---|
+| formas de Dó (22:50) | Si | 0,38 | 0,21 |
+| formas de Ré (22:51) | Dó# | 0,56 | 0,28 |
+| formas de Sol (22:52) | Fá# | 0,97 | 0,97 |
+| formas de Sol (30/10, até 100 s) | Fá# | 0,97 | 0,97 |
+
+Leitura honesta:
+
+- **O acerto é bimodal:** 0,98 quando o padrão trava certo, 0,3–0,7 quando trava errado. Duas das quatro sessões reais já estavam erradas e isso não aparecia: a v6 registrava só "travou em 25,5 s", não *no quê*.
+- **O aprendizado depende de sorte na janela de 1,5 volta:** sorteados, os compassos da sessão de 30/10 caem de 0,97 para 0,57. Por sessão de origem, em `real_clique`: 22:52 dá 0,82; 22:50 dá 0,59; 22:51 dá 0,47.
+- **`real_*` é pessimista; compare entre versões, não leia 18 % como taxa no palco.** A verdade vem da posição no ciclo, e alguns compassos podem ser variação do músico (em 30/10, dois compassos de B foram ouvidos como F#). Ao sortear, eles entram em qualquer lugar. Os cortes só se mostraram neutros nas duas sessões boas; nas fracas, remontar na mesma ordem baixou a nota.
+- **`falsa_volta` (C G C G Am F): 0/60.** O ciclo de 2 acordes trava antes de chegar o Am. Limite do desenho do aprendizado, ainda não atacado.
+- **O sintético não julga tipo de forma:** nele as formas abertas foram piores que as pestanas, o contrário do medido no violão (decisão 78). E ele continua mais fácil que o real em confiança (0,73 × 0,56–0,69).
+
+**Corrigido nesta versão:** as durações do ciclo vinham da volta mais antiga (decisão 91). `emprestado` com clique e tom da forma: 0/24 → 20/24. Nos 14 cenários, a média segue em 0,90.
+
+**Hipóteses medidas e não adotadas** (96 músicas `real_clique`; base: 23 certas, acerto 0,63, 9,7 s errados, trava em 5,4 compassos):
+
+| mudança | certas | acerto | errado | trava em |
+|---|---|---|---|---|
+| desligar *manter o padrão* | 10 | 0,52 | 6,4 s | 5,4 compassos |
+| exigir 2 voltas inteiras para travar | 18 | 0,59 | 7,7 s | 7,1 compassos (4 músicas sem travar) |
+
+---
+
 ## v6 — 2026-10-29 (aprender na tônica, tom automático, camadas)
 
 **Sessões reais** (violão meio tom abaixo; reproduzidas sem tom configurado, com aprender na tônica + manter o padrão):

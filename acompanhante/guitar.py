@@ -41,9 +41,11 @@ def muted_strum(dur=0.08, amp=1.0, rng=None):
 class Guitar:
     """Renders strums into a buffer. Each string is cut when re-plucked or muted, like a real guitar."""
 
-    def __init__(self, duration, seed=0):
+    def __init__(self, duration, seed=0, cents=0.0):
+        """cents: std of each string's tuning error (own generator, so cents=0 keeps every scenario identical)."""
         self.out = np.zeros(int(duration * SR) + SR)
         self.rng = np.random.default_rng(seed)
+        self.tuning = np.random.default_rng(seed + 1).normal(0, cents / 100, 6)
         self.ringing = {}  # string index -> (start sample, rendered array)
 
     def _cut(self, string, at):
@@ -77,7 +79,7 @@ class Guitar:
         for i, (s, m) in enumerate(pairs):
             a = amp * (0.8 if direction == "U" else 1.0) * self.rng.uniform(0.85, 1.0)
             self._add(s, t + i * spread * self.rng.uniform(0.7, 1.3),
-                      pluck(m, 4.0, 0.3 * a, bright, self.rng))
+                      pluck(m + self.tuning[s], 4.0, 0.3 * a, bright, self.rng))
 
     def single(self, t, midi, amp=1.0):
         string = 0 if midi < 45 else 1

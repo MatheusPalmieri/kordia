@@ -63,6 +63,9 @@ python -m acompanhante.cli rodar --entrada gravacao.wav --modo decorado --progre
 
 # avaliar todos os cenários (tabela de métricas + relatórios PNG)
 python -m acompanhante.cli avaliar --todos --versao baseline
+
+# prova: músicas novas nos 12 tons, com a configuração do app e o violão real das sessões
+python -m acompanhante.cli prova --versao dev
 ```
 
 `rodar` gera, ao lado da saída escolhida (`--saida`, padrão `saida/`):

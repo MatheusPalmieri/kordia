@@ -32,6 +32,7 @@ python tasks.py test                  # pytest (unitários + regressão + equiva
 python -m acompanhante.cli avaliar --todos --backend cpp   # métricas rodando o núcleo C++
 cpp/build/app/KordiaLiveTest_artefacts/Release/KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]   # fumaça ao vivo (volume 0)
 python tasks.py avaliar [versao]      # roda os 12 cenários, salva métricas e relatórios
+python -m acompanhante.cli prova [--versao v] [--progressao ...] [--tom ...] [--variante ...]   # músicas novas nos 12 tons (~10 min; usa sessoes/)
 python -m acompanhante.cli gerar --cenario acelerando --saida dados/
 python -m acompanhante.cli rodar --entrada arquivo.wav --modo livre|metronomo|decorado [--bpm 120] [--tom C] [--progressao "C G Am F"]
 python -m acompanhante.cli avaliar --todos [--versao v1]
@@ -41,6 +42,7 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 
 - Rode `python tasks.py avaliar <nova_versao>` e **atualize `docs/resultados.md`** com a tabela e uma análise honesta (inclusive o que piorou).
 - Registre decisões novas ou revistas em **`docs/decisoes.md`** (data, decisão, motivo, alternativas).
+- Mudou o aprendizado, os acordes ou o tempo? Rode também a **prova** e compare com a última versão em `docs/resultados.md`. As variantes `real_*` pesam mais que as sintéticas; a nota delas é pessimista, então compare entre versões.
 - Se a arquitetura ou um requisito mudar, atualize `docs/02-arquitetura.md` / `docs/01-requisitos.md`.
 - Ao apertar ou afrouxar um limiar em `tests/test_cenarios.py`, diga o porquê no commit.
 

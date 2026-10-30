@@ -22,6 +22,7 @@ class Bar:
     surprise: bool = False
     wrong: str | None = None     # musician's mistake: this shape on the first half (truth stays `chord`)
     late_entry: bool = False     # musician's mistake: an 'm' here is a late entry, not a pause (truth stays `chord`)
+    half: str | None = None      # harmony changes on beat 3 to this shape (truth changes too, unlike shape2)
 
     @property
     def label(self):
@@ -58,7 +59,7 @@ def _voice(beats, beat_dur, rng):
     return np.concatenate(out)
 
 
-def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_db=None):
+def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_db=None, cents=0.0):
     rng = np.random.default_rng(seed)
     # tempo map: one entry per beat
     beats, beat_dur, downbeats = [], [], []
@@ -75,7 +76,7 @@ def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_
     duration = end_t + tail
     eff = [downbeats[i] + bar.shift * beat_dur[4 * i] for i, bar in enumerate(bars)]
 
-    g = Guitar(duration, seed)
+    g = Guitar(duration, seed, cents)
     cur_shape = None
     segments = [[0.0, lead, theory.N]]
     for i, bar in enumerate(bars):
@@ -97,6 +98,11 @@ def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_
             shape = src.shape2 if (src.shape2 and src is bar and k >= 4) else src.chord
             if src is bar and bar.wrong and k < 4:
                 shape = bar.wrong
+            if src is bar and bar.half and k >= 4:
+                shape = bar.half
+            if bar.half and k == 4:
+                segments.append([seg_start, ts_grid, label])
+                label, seg_start = theory.transpose(theory.canonical(bar.half), bar.capo), ts_grid
             if c in "DU":
                 if shape != cur_shape:
                     g.mute(ts)
