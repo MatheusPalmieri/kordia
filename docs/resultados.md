@@ -5,6 +5,47 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v8 — 2026-10-30 (aprender na grade, ouvir antes de tocar, contagem) — medição parcial
+
+**Pendente:** a prova completa e `tasks.py avaliar v8` não terminaram; o sistema interrompeu o processo por falta de memória. Falta medir, portanto, as variantes sintéticas (`clique`, `tom_da_forma`), a tabela dos cenários e a prova inteira em C++. `livre` e `real_livre` não mudaram de caminho. Os números abaixo são os que existem. Para completar: `python -m acompanhante.cli prova --versao v8` e `python tasks.py avaliar v8`.
+
+**Controle: as 6 sessões reais com clique, inteiras** (padrões da interface, tom automático; verdade = posição no ciclo; motor Python antes do port):
+
+| sessão | soou em | antes | agora | errado antes | errado agora | trava agora |
+|---|---|---|---|---|---|---|
+| 22:50 (29/10) | Si | 0,37 | **0,74** | 24,8 s | 7,4 s | 9,0 compassos |
+| 22:51 (29/10) | Dó# | 0,56 | **0,96** | 5,0 s | 0 | 8,5 |
+| 22:52 (29/10) | Fá# | 0,97 | 0,97 | 0,6 s | 0 | 7,0 |
+| 10:57 (30/10) | Fá# | 0,97 | 0,95 | 0 | 1,4 s | 7,5 |
+| 15:52 (30/10) | Fá# | 0,65 | **0,83** | 4,0 s | 3,4 s | 9,0 |
+| 15:53 (30/10) | Fá# | 0,47 | **0,97** | 10,8 s | 0 | 9,5 |
+| **média** | | **0,66** | **0,90** | **7,5 s** | **2,0 s** | |
+
+A coluna "antes" reproduz cada sessão com a configuração gravada nela. Nas três de 29/10 isso difere da interface atual, mas a nota bate com a da v7 (0,38, 0,56 e 0,97), feita com os padrões da interface.
+
+**Amostra `real_clique`** (60 músicas: os 6 tons pares; mesmos casos nas duas colunas; motor Python, sem a contagem na configuração da prova):
+
+| | v7 | agora |
+|---|---|---|
+| músicas certas | 18/60 | **30/60** |
+| acerto depois de travar | 0,65 | **0,85** |
+| harmonia errada por música | 9,0 s | **4,2 s** |
+
+Equivalência: depois do port, os 81 testes passam, inclusive Python × C++ com clique, contagem e manter o padrão ligados, e o controle rodando no núcleo C++ (média ≥ 0,85).
+
+Leitura honesta:
+
+- **Causa do relato:** a confiança por quadro quase nunca passa de 0,70 no primeiro tempo de um acorde real. Na 15:53, o B ficou de fora do ciclo e o início do C# foi datado 2 tempos depois da barra; com *manter o padrão*, os dois erros nunca se corrigiam. O clique estava certo; a grade da memória é que estava errada.
+- **Custo: trava mais tarde.** Eram ~5–7 compassos, agora ~7–9,5 num ciclo de 4 compassos. Até lá, só a tônica. Um ciclo de 8 compassos leva ~16. Escolha deliberada: 1,5 volta dava menos acerto (controle 0,79 × 0,90; amostra 24 × 30 músicas).
+- **Sessão 10:57 piorou um pouco** (0,97 → 0,95): a 2ª metade de um compasso lida como outro acorde entra no padrão até as voltas seguintes corrigirem.
+- **A 22:50 ainda erra:** a harmonia oscila entre Ab e Abm. A soma das voltas decide a terça por posição, e as duas metades de um compasso podem discordar.
+- **Menor lida como o maior relativo continua:** Bbm de pestana vira C#. É o que derruba os tons em Ré e Dó da amostra. Pesar a nota grave por meio compasso **não foi adotado**: a 22:51 sobe de 0,75 para 1,00, mas a 15:52 cai de 0,82 para 0,55; no total, 0,86 → 0,81 (peso 0,1, abaixo de 200 Hz).
+- **`falsa_volta` segue em 0/6 na amostra:** agora o padrão aprende a volta longa depois de 2 voltas, mas o período até lá toca o ciclo curto.
+- **Só vale com clique.** Sem clique, nada mudou, nem a qualidade do reconhecimento.
+- **Não testado com o violão ao vivo.** Ouvir antes do Iniciar e a contagem foram verificados no driver real pelo `KordiaLiveTest`, com o microfone em silêncio. A troca de acordes foi medida reproduzindo sessões gravadas.
+
+---
+
 ## v7 — 2026-10-30 (prova: músicas novas nos 12 tons)
 
 Como reproduzir: `python -m acompanhante.cli prova --versao v7` → `resultados/v7/prova.csv` (cerca de 10 min; 852 músicas). Configuração do app ao vivo: aprender na tônica + manter o padrão, tom automático. Definição em [`04-plano-de-testes.md`](04-plano-de-testes.md).

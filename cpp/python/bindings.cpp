@@ -25,6 +25,7 @@ static RunConfig cfg_from(const py::dict& d) {
     if (d.contains("manter_padrao") && !d["manter_padrao"].is_none()) c.manter_padrao = d["manter_padrao"].cast<bool>();
     if (d.contains("aprender_na_tonica") && !d["aprender_na_tonica"].is_none())
         c.aprender_na_tonica = d["aprender_na_tonica"].cast<bool>();
+    if (d.contains("contagem") && !d["contagem"].is_none()) c.contagem = d["contagem"].cast<bool>();
     return c;
 }
 
@@ -130,6 +131,8 @@ static py::dict params() {
     K(DYN_VEL_HIGH); K(DYN_SMOOTH); K(DYN_SILENCE_DECAY); K(BASS_LOW); K(PAD_ROOT_LOW); K(PAD_SHIMMER); K(PAD_ATTACK);
     K(PAD_RELEASE); K(PAD_CUTOFF); K(PAD_LEVEL); K(PAD_DRY); K(PAD_WET); K(REVERB_ROOM); K(REVERB_DAMP); K(BASS_LEVEL);
     K(BASS_RELEASE); K(CLICK_LEVEL); K(STOP_FADE);
+    K(SLOT_BEATS); K(SLOT_LAG); K(SLOT_SKIP); K(GRID_MAX_SLOTS); K(GRID_HISTORY); K(GRID_MATCH); K(GRID_LOCK_LAPS);
+    K(GRID_TAIL); K(GRID_LAPS); K(GRID_MISS); K(COUNT_EARLY_BEATS);
 #undef K
     return d;
 }

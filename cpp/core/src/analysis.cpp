@@ -92,6 +92,7 @@ ChordTracker::Result ChordTracker::process(const std::vector<double>& mag, bool 
         semis_[semi_[i]] = std::max(semis_[semi_[i]], std::log1p(P::CHROMA_GAMMA * mag[band_[i]]));
     std::array<double, 12> c{};
     for (size_t s = 0; s < semis_.size(); ++s) c[semi_pc_[s]] += semis_[s];
+    last_chroma = c;
     double norm = 0;
     for (double v : c) norm += v * v;
     norm = std::sqrt(norm);

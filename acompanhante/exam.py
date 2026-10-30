@@ -64,6 +64,10 @@ DEGREES = ("C", "G", "Am", "F")
 SESSION_BPM = 90.0
 FADE = 0.005          # s: splice between two recorded bars
 REAL_VARIANTS = ("real_clique", "real_livre")
+# control: real sessions played straight, whole, with the interface's settings. (folder, cycle, first and end bar)
+CONTROLS = [("2026-10-29_22-50-35", "B F# Abm E", 1, 25), ("2026-10-29_22-51-45", "C# Ab Bbm F#", 1, 11),
+            ("2026-10-29_22-52-18", "F# C# Ebm B", 3, 23), ("2026-10-30_10-57-27", "F# C# Ebm B", 1, 37),
+            ("2026-10-30_15-52-02", "F# C# Ebm B", 1, 20), ("2026-10-30_15-53-00", "F# C# Ebm B", 1, 21)]
 REAL_PROGRESSIONS = [p for p, txt in PROGRESSIONS.items() if set(txt.replace("|", " ").split()) <= set(DEGREES)]
 
 
@@ -156,7 +160,7 @@ def build_real(case):
         t, last = end, label
     segments.append([t, len(audio) / SR, theory.N])
     truth = {"duration": len(audio) / SR, "tempo": [[0.0, bpm], [len(audio) / SR, bpm]], "chords": segments, "changes": changes}
-    cfg = RunConfig(modo="metronomo" if click else "livre", bpm=bpm if click else None, clique=click,
+    cfg = RunConfig(modo="metronomo" if click else "livre", bpm=bpm if click else None, clique=click, contagem=click,
                     manter_padrao=True, aprender_na_tonica=True)
     return audio.astype(np.float32), truth, cfg
 
@@ -171,7 +175,7 @@ def build(case):
     lead = 0.5 + LOOKAHEAD + 8 * 60.0 / bpm + LATE if click else 1.0
     audio, truth = render(bars, seed=seed, lead=lead, jitter=JITTER, noise_db=NOISE_DB, cents=CENTS)
     audio = LEVEL * _room(audio, np.random.default_rng(seed))
-    cfg = RunConfig(modo="metronomo" if click else "livre", bpm=bpm if click else None, clique=click,
+    cfg = RunConfig(modo="metronomo" if click else "livre", bpm=bpm if click else None, clique=click, contagem=click,
                     tom=theory.NOTE_NAMES[(case.key - TUNED_DOWN) % 12] if case.variant == "tom_da_forma" else None,
                     manter_padrao=True, aprender_na_tonica=True)
     return audio.astype(np.float32), truth, cfg
@@ -226,6 +230,23 @@ def play(case, backend="cpp"):
             "veredito": verdict(s), **s}
 
 
+def play_control(control, backend="cpp"):
+    """A real click session as it was played, truth = position in the cycle, automatic key as in the interface."""
+    from .session import load
+    folder, cycle, first, end = control
+    audio, c, lookahead, sr = load(SESSIONS_DIR / folder)
+    cfg = RunConfig.from_dict(c)
+    cfg.tom, cfg.manter_padrao, cfg.aprender_na_tonica = None, True, True
+    cycle, bar, t0 = cycle.split(), 4 * 60.0 / cfg.bpm, 0.5 + lookahead + LATE
+    bars = [(t0 + b * bar, t0 + (b + 1) * bar, cycle[(b - first) % len(cycle)]) for b in range(first, end)]
+    duration = bars[-1][1]
+    truth = {"duration": duration, "tempo": [[0.0, cfg.bpm], [duration, cfg.bpm]],
+             "chords": [[0.0, bars[0][0], theory.N]] + [list(b) for b in bars], "changes": [{"t": a, "to": l} for a, _, l in bars]}
+    res = run(audio[: int(duration * sr)], cfg, lookahead=lookahead, backend=backend, sr=sr)
+    s = score(res, truth, theory.note_pc(cycle[0]))
+    return {"sessao": folder, "veredito": verdict(s), **s}
+
+
 def cases(progs=None, keys=None, variants=None):
     has_real = all((SESSIONS_DIR / s[0]).is_dir() for s in SESSIONS)
     variants = variants or VARIANTS + (REAL_VARIANTS if has_real else ())
@@ -236,6 +257,19 @@ def cases(progs=None, keys=None, variants=None):
 def run_exam(selection, backend="cpp"):
     with ProcessPoolExecutor() as pool:
         return list(pool.map(play, selection, [backend] * len(selection)))
+
+
+def run_controls(backend="cpp"):
+    present = [c for c in CONTROLS if (SESSIONS_DIR / c[0]).is_dir()]
+    with ProcessPoolExecutor() as pool:
+        return list(pool.map(play_control, present, [backend] * len(present)))
+
+
+def print_controls(rows):
+    for r in rows:
+        print(f"  {r['sessao']}  {r['veredito']:10s} acc {r['acc']:.2f} errado {r['wrong_s']:5.1f} s trava {r['lock_compassos']}")
+    if rows:
+        print(f"  média: acc {np.mean([r['acc'] for r in rows]):.2f}, errado {np.mean([r['wrong_s'] for r in rows]):.1f} s")
 
 
 def print_exam(rows):

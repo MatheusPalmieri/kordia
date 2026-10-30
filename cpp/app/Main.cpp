@@ -49,6 +49,7 @@ private:
         if (path == "/api/devices") return json(engine_.devices());
         if (path == "/api/state") return json(engine_.snapshot());
         if (path == "/api/start") return json(ok(engine_.start(q)));
+        if (path == "/api/listen") return json(ok(engine_.start(q, true)));
         if (path == "/api/stop") return engine_.stop(), json(ok());
         if (path == "/api/live") return engine_.setLive(q), json(ok());
         if (path == "/api/open") {

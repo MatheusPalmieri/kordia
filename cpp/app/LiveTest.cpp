@@ -24,14 +24,24 @@ int main(int argc, char** argv) {
         q->setProperty("bpm", env("KORDIA_FIXED_BPM").getDoubleValue());
         q->setProperty("clique", true);
     }
-    auto err = engine.start(request);
+    q->setProperty("contagem", env("KORDIA_FIXED_BPM").isNotEmpty());
+    auto err = engine.start(request, true);   // as the app opens: only listens
+    if (err.isNotEmpty()) return std::cout << "listen: " << err << std::endl, 1;
+    juce::Thread::sleep(500);
+    auto heard = engine.snapshot();
+    std::cout << "ouvindo: running " << heard["running"].toString() << " listening " << heard["listening"].toString() << " db "
+              << heard["db"].toString() << " nota " << heard["note"].toString() << " sessao " << engine.sessionDir().getFullPathName() << std::endl;
+
+    err = engine.start(request);
     std::cout << "driver " << request["type"].toString() << " | start: " << (err.isEmpty() ? "ok" : err) << std::endl;
     if (err.isNotEmpty()) return 1;
 
     const int seconds = juce::jmax(1, env("KORDIA_SECONDS").getIntValue());
+    juce::Thread::sleep(800);
+    std::cout << "  contagem: " << engine.snapshot()["count"].toString() << std::endl;
     juce::Thread::sleep(500 * seconds);
     auto mid = engine.snapshot();
-    std::cout << "  meio: bpm " << mid["bpm"].toString() << " beat " << mid["beat"].toString() << std::endl;
+    std::cout << "  meio: bpm " << mid["bpm"].toString() << " beat " << mid["beat"].toString() << " contagem " << mid["count"].toString() << std::endl;
     if (env("KORDIA_BPM_LIVE").isNotEmpty()) {
         auto* live = new juce::DynamicObject();
         live->setProperty("bpm", env("KORDIA_BPM_LIVE").getDoubleValue());

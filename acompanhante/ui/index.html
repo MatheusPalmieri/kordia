@@ -282,7 +282,7 @@ const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume"
               ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 const LIVE = ["gain", "volume", "monitor", "dynFixed", "hold", "learn", "clickVol", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
-let running = false, clickOn = false, lastChord = null, lastError = null, state = {};
+let running = false, live = false, clickOn = false, lastChord = null, lastError = null, state = {};
 
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
 function recall(k) { try { const v = localStorage.getItem("kordia." + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
@@ -331,7 +331,8 @@ async function init() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") openSettings(false); });
   $("meterMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   await loadDevices(recall("driver"));
-  $("driver").addEventListener("change", () => loadDevices($("driver").value));
+  $("driver").addEventListener("change", () => loadDevices($("driver").value).then(listen));
+  for (const id of ["buffer", "input", "output"]) $(id).addEventListener("change", listen);
   for (const id of SAVE) {
     const v = recall(id), el = $(id);
     if (v === undefined) continue;
@@ -361,6 +362,7 @@ async function init() {
   $("mInMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   $("startBtn").onclick = startStop;
   labels(); lockSettings();
+  await listen();
   const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
   poll();
 }
@@ -391,21 +393,29 @@ function tempoControls() {
   $("freezeBtn").hidden = tempoMode === "fixo";
   if (!running) $("bpmNow").textContent = tempoMode === "fixo" || clickOn ? bpmValue : "—";
   $("tempoHint").textContent = tempoMode === "fixo"
-    ? (clickOn ? "O clique começa no Iniciar: conte e entre. As trocas caem na grade." : "As trocas caem na grade deste BPM (ligue o Clique para ouvi-lo).")
-    : (clickOn ? "O clique começa no Iniciar neste BPM; quando você tocar, ele passa a seguir o seu tempo. “Fixar” congela."
+    ? (clickOn ? "No Iniciar ele conta 4 tempos: entre no compasso seguinte. As trocas caem na cabeça do tempo." : "No Iniciar ele conta 4 tempos e o clique para; as trocas seguem na cabeça do tempo.")
+    : (clickOn ? "No Iniciar ele conta 4 tempos neste BPM: entre no compasso seguinte. Depois ele segue o seu tempo. “Fixar” congela."
                : "Ele detecta o seu andamento e acompanha se você acelerar. Ligue o Clique para ouvir o metrônomo desde o início.");
 }
 
 function db(x) { return x > 0 ? 20 * Math.log10(x) : -120; }
-function bar(el, d) { el.style.width = running ? Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + "%" : "0"; }
+function bar(el, d) { el.style.width = live ? Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + "%" : "0"; }
 
+function deviceSettings() { return { type: $("driver").value || null, buffer: +$("buffer").value, input: $("input").value, output: $("output").value }; }
+async function listen() {   // from the moment the app opens: shows what it hears, plays nothing
+  if (running || location.search.includes("snapshot")) return;
+  try { await api("/api/listen", { ...deviceSettings(), ...liveSettings() }); } catch (e) { toast(e.message); }
+}
 async function startStop() {
   $("startBtn").disabled = true;
+  const stopping = running;
+  let failed = false;
   try {
-    if (running) await api("/api/stop", {});
-    else await api("/api/start", { type: $("driver").value || null, buffer: +$("buffer").value, input: $("input").value, output: $("output").value, tom: $("key").value || null,
+    if (stopping) await api("/api/stop", {});
+    else await api("/api/start", { ...deviceSettings(), tom: $("key").value || null, contagem: tempoMode === "fixo" || clickOn,
       bpm: tempoMode === "fixo" ? bpmValue : null, bpm_inicial: tempoMode === "seguir" && clickOn ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message); failed = true; }
+  if (stopping || failed) { running = false; lockSettings(); await listen(); }
   $("startBtn").disabled = false;
 }
 
@@ -416,23 +426,27 @@ function render(s) {
   if (s.running !== running) { running = s.running; lockSettings(); }
   if (s.error && s.error !== lastError) toast("O áudio parou: " + s.error);
   lastError = s.error;
+  live = running || !!s.listening;
+  const counting = running && s.count > 0;
   const st = running ? s.state : null;
-  $("stateDot").style.background = st ? STATE_COLOR[st] : "var(--gray)";
-  $("stateText").textContent = st ? s.state_text : "Parado";
-  const chord = running && s.playing ? s.playing : null;
+  $("stateDot").style.background = st ? STATE_COLOR[st] : s.listening ? "var(--blue)" : "var(--gray)";
+  $("stateText").textContent = counting ? "Contando" : st ? s.state_text : s.listening ? "Só ouvindo — ainda não toca" : "Parado";
+  const heardNow = s.listening && s.db > -50 ? (s.conf >= .45 && s.heard ? s.heard : s.note) : null;   // a single note has no chord: show the note
+  const chord = counting ? String(s.count) : running && s.playing ? s.playing : heardNow;
   const el = $("chord");
-  if (chord !== lastChord) { el.textContent = chord || "—"; el.classList.toggle("idle", !chord); el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 160); lastChord = chord; }
-  $("chordSub").textContent = running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : "");
+  if (chord !== lastChord) { el.textContent = chord || "—"; el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 160); lastChord = chord; }
+  el.classList.toggle("idle", !chord || !!s.listening);
+  $("chordSub").textContent = counting ? "entre no próximo compasso" : s.listening ? "aperte Iniciar para ele tocar junto" : running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : "");
   $("key").options[0].text = s.key_detected && !$("key").value ? `Automático (${s.key_detected})` : "Automático";
-  $("heard").textContent = running && s.heard ? s.heard : "—";
-  const c = running ? s.conf || 0 : 0;
+  $("heard").textContent = live && s.heard ? s.heard : "—";
+  const c = live ? s.conf || 0 : 0;
   $("conf").style.width = (c * 100) + "%"; $("conf").style.background = c >= .7 ? "var(--green)" : c >= .45 ? "var(--orange)" : "var(--gray)";
-  $("confVal").textContent = running ? Math.round(c * 100) + "%" : "";
+  $("confVal").textContent = live ? Math.round(c * 100) + "%" : "";
   $("next").innerHTML = running && s.next ? `Próximo: <b>${s.next}</b>` : "";
-  $("meter").style.width = running ? Math.max(0, Math.min(100, (s.db + 60) / 60 * 100)) + "%" : "0";
+  $("meter").style.width = live ? Math.max(0, Math.min(100, (s.db + 60) / 60 * 100)) + "%" : "0";
   if (running) $("bpmNow").textContent = s.bpm ? Math.round(s.bpm) : "—";
   tempoControls();
-  bar($("mIn"), s.db); $("vIn").textContent = running && s.db != null ? Math.round(s.db) + " dB" : "—";
+  bar($("mIn"), s.db); $("vIn").textContent = live && s.db != null ? Math.round(s.db) + " dB" : "—";
   const o = (running && s.out) || {};
   bar($("mBass"), db(o.bass_rms || 0) + 12); bar($("mPad"), db(o.pad_rms || 0) + 12);
   $("nBass").textContent = o.bass || "—"; $("nPad").textContent = (o.pad || []).join(" ") || "—";

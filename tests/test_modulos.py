@@ -133,6 +133,61 @@ def test_cycle_durations_come_from_the_newest_lap():
     assert m.predict() == (f, 32)
 
 
+def _slots(mem, chords, start=0, skip=()):
+    """Half bars closing with a clean reading of each chord; chords in `skip` read as nothing was played."""
+    for i, c in enumerate(chords):
+        chroma = np.zeros(12)
+        if c:
+            chroma[list(theory.chord_pcs(theory.chord_index(c)))] = 1.0
+        mem.push_slot(start + i, chroma, 3)
+    return start + len(chords)
+
+
+def _lap(*chords):
+    return [c for c in chords for _ in range(2)]   # one chord per bar = two half bars
+
+
+def test_grid_keeps_a_chord_that_was_misread_while_learning():
+    """Session 15:53: B was heard late and left out, F# C# Ebm stayed forever. On the grid it stays in the cycle."""
+    m = ProgressionMemory()
+    lap = _lap("F#", "C#", "Ebm", "B")
+    first = lap[:6] + ["B", "F#"]            # second half of the B bar read as F#
+    n = _slots(m, first + lap + lap[:4])     # (the newest slots must agree before it locks)
+    assert m.locked and len(m.cycle) == 8
+    n = _slots(m, lap[4:] + lap * 2, n)
+    assert m.known == [theory.chord_index(c) for c in lap[::2]]
+
+
+def test_grid_changes_land_on_the_downbeat():
+    """Session 15:53: the change was dated when confidence came, 2 beats late. The grid dates it by the bar."""
+    m = ProgressionMemory()
+    lap = _lap("C", "G", "Am", "F")
+    n = _slots(m, lap * 2)
+    assert m.locked and m.predict() == (theory.chord_index("G"), (n + 2) * P.SLOT_BEATS)
+
+
+def test_grid_does_not_take_a_long_chord_for_a_cycle():
+    m = ProgressionMemory()
+    n = _slots(m, _lap("F#", "Abm", "Abm", "Abm"))   # Abm held for 3 bars: was a "1 bar cycle" (session 22:50)
+    assert not m.locked
+
+
+def test_grid_learns_the_long_cycle_after_a_false_lap():
+    """C G C G Am F: the two first bars repeat, then the lap goes on."""
+    m = ProgressionMemory()
+    lap = _lap("C", "G", "C", "G", "Am", "F")
+    n = _slots(m, lap[:8])
+    assert m.locked and len(m.cycle) == 4    # false lap: nothing better to go on yet
+    n = _slots(m, lap[8:] + lap, n)
+    assert m.locked and len(m.cycle) == 12
+
+
+def test_grid_silence_before_the_song_does_not_count():
+    m = ProgressionMemory()
+    _slots(m, [None, None, None] + _lap("C", "F") * 2)
+    assert m.locked
+
+
 def test_silence_and_noise_play_nothing():
     rng = np.random.default_rng(0)
     res = run(rng.standard_normal(P.SR * 4) * 1e-3, RunConfig(tom="C"))
@@ -235,6 +290,23 @@ def test_click_before_playing_in_follow_mode():
         proc.process(np.zeros(P.HOP))                     # nobody playing yet: the click already runs
     clicks = [e["t"] for e in proc.acc.events if e["inst"] == "click"]
     assert abs(clicks[0] - 0.5) < 1e-6 and np.allclose(np.diff(clicks), 0.6)
+
+
+def test_count_in():
+    """Iniciar: 4 clicks, one bar; the first click is accented; nothing is played or learned before the first downbeat."""
+    from acompanhante.pipeline import Processor
+    from acompanhante.engine import OCIOSO
+    rng = np.random.default_rng(0)
+    proc = Processor(RunConfig(modo="metronomo", bpm=120, contagem=True, aprender_na_tonica=True), keep_log=False)
+    left = []
+    for k in range(int(2.55 * P.SR) // P.HOP):
+        x = rng.standard_normal(P.HOP) * 0.05     # playing over the count-in
+        proc.process(x)
+        left.append(proc.count_left())
+    clicks = [e for e in proc.acc.events if e["inst"] == "click"]
+    assert [round(e["t"], 3) for e in clicks] == [0.5, 1.0, 1.5, 2.0]             # no click after: the Clique button is off
+    assert sorted(set(left), reverse=True) == [4, 3, 2, 1, 0]
+    assert proc.engine.state == OCIOSO and not proc.acc.changes and proc.memory.last_slot is None
 
 
 def test_detect_key_from_chords():

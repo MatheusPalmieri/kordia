@@ -75,6 +75,20 @@ LEARN_TONIC_SCALE = 0.6       # pad level while learning / in fallback (quiet, o
 HOLD_CONTRA_BARS = 1.5         # (2.0 tested: key change without a pause 0.88 vs 0.90; mistakes scenario equal)        # confident disagreement this long = the musician really changed: relearn
 METRO_LATE_BEATS = 0.5        # metronome mode: change heard up to this after a strong beat applies now
 
+# --- click grid: with a click the harmony is read per half bar ("when" comes from the click, "which" from the whole
+# half bar). Single frames lost chords and dated them late on the real guitar (sessions of 2026-10-30).
+SLOT_BEATS = 2                # one slot = half a bar: chords change on beats 1 and 3
+SLOT_LAG = 0.08               # s: strums reach the input this late against the click (median 54-116 ms in the sessions)
+SLOT_SKIP = 0.10              # s: right after the change the FFT window still holds the previous chord
+GRID_MAX_SLOTS = 16           # longest cycle: 8 bars
+GRID_HISTORY = 64             # slots kept: 3 laps of the longest cycle, and room for a cycle to show itself
+GRID_MATCH = 0.75             # share of one lap's slots that must repeat in the next one (same root)
+GRID_LOCK_LAPS = 2.0          # laps heard before locking
+GRID_TAIL = 3                 # the newest slots must repeat too: a section that just changed is not a cycle
+GRID_LAPS = 3                 # each slot's chord = sum of its last laps: a misheard bar is outvoted
+GRID_MISS = 2                 # consecutive slots against the pattern before it is dropped (hold: 2 * HOLD_CONTRA_BARS)
+COUNT_EARLY_BEATS = 0.25      # a strum this early still belongs to the first bar after the count-in
+
 # --- dynamics ---
 DYN_DB_LOW, DYN_DB_HIGH = -45.0, -12.0   # strum loudness mapped to velocity range
 DYN_VEL_LOW, DYN_VEL_HIGH = 60, 120    # floor raised: soft playing must still be clearly audible

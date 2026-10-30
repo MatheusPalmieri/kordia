@@ -18,7 +18,8 @@ public:
     ~LiveEngine() override;
 
     juce::var devices();
-    juce::String start(const juce::var& request);   // empty = ok, else an error message for the UI
+    // empty = ok, else an error message for the UI. preview: only listens (shows what it hears, plays and records nothing)
+    juce::String start(const juce::var& request, bool preview = false);
     void stop();
     void setLive(const juce::var& request);
     juce::var snapshot();
@@ -34,7 +35,8 @@ public:
     struct Diary { double t; int state; int chord; int mode; char reason[160]; };
     struct Snap {
         int state = 0, level = 2, chord = -1, mode = 0, heard = 24, beat = 0, next = -1, pos = -1, nPattern = 0;
-        int pattern[8] = {};
+        int pattern[kordia::P::GRID_MAX_SLOTS] = {};
+        int count = 0, note = -1;   // count-in clicks left; strongest pitch class of the frame
         double conf = 0, db = -120, bpm = 0;
         bool frozen = false, fixedGrid = false, click = false;
         double bassRms = 0, padRms = 0;
@@ -73,6 +75,7 @@ private:
     // set by the UI thread, read by the audio thread
     std::atomic<float> gain_{1.0f}, volume_{1.0f}, clickVolume_{0.7f};
     std::atomic<bool> monitor_{false}, click_{false}, dynFixed_{false}, freeze_{false}, running_{false}, hold_{true};
+    std::atomic<bool> preview_{false};
 
     std::string lastReason_;
     int lastXruns_ = 0;

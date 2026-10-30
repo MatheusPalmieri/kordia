@@ -23,15 +23,19 @@ Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib e py
 
 Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `python tasks.py atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre `cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe` (compile com `python tasks.py build --app`). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
 
+**Ele já ouve desde que abre:** antes do Iniciar, a tela mostra o acorde que está reconhecendo (ou a nota, se você tocar uma só) e o nível do violão, sem tocar nada e sem gravar sessão. Ao apertar **Iniciar** com BPM fixo ou Clique ligado, ele **conta 4 tempos** no clique (4, 3, 2, 1 na tela) e só começa a memorizar no compasso seguinte. Sem clique e sem BPM não há o que contar: ele começa a seguir na hora.
+
 Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
 Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes** (botão ao lado do estado):
 
 - **Áudio:** driver (padrão *Windows Audio*), latência do driver, entrada, saída, ganho (com medidor), ouvir o violão na saída.
 - **Som:** volume (até 200 %), dinâmica fixa e **Instrumentos**: pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo, cada um com liga/desliga e volume, mudando com ele tocando.
-- **Música:** *Aprender segurando a tônica* (até reconhecer o padrão, só um pad suave na tônica, sem baixo e sem ficar trocando de acorde), *Manter o padrão aprendido* (erros e atrasos não destravam; só uma mudança de 1½ compasso) e progressão conhecida.
+- **Música:** *Aprender segurando a tônica* (até reconhecer o padrão, só um pad suave na tônica, sem baixo e sem ficar trocando de acorde), *Manter o padrão aprendido* (erros e atrasos não destravam; só uma mudança de 1½ compasso) e progressão conhecida. Com progressão conhecida, a grade de aprendizado não é usada.
 
-**Andamento:** *Seguir meu tempo* ou *BPM fixo*. O botão **Clique** já inicia tudo se estiver parado: o metrônomo começa na hora, antes de você tocar (no modo seguir ele começa no BPM escolhido e depois acompanha o seu tempo). − / + mudam o BPM com ele tocando; *Fixar este BPM* congela o detectado.
+**Andamento:** *Seguir meu tempo* ou *BPM fixo*. O botão **Clique** já inicia tudo se estiver parado: a contagem começa na hora, antes de você tocar (no modo seguir ela usa o BPM escolhido e depois ele acompanha o seu tempo). − / + mudam o BPM com ele tocando; *Fixar este BPM* congela o detectado.
+
+**Com clique, o padrão é aprendido na grade:** ele lê a harmonia de cada meio compasso inteiro, acha o ciclo depois de ouvir 2 voltas e soma as voltas, então um compasso mal ouvido é corrigido sozinho, mesmo com o padrão já travado. As trocas caem na cabeça do tempo. Sem clique, continua o caminho antigo, que reage ao acorde ouvido.
 
 > **Importante:** microfone + caixa de som no mesmo ambiente fazem o sistema ouvir o próprio baixo/pad (pior cenário medido). Prefira **fone** ou o violão **ligado direto**.
 

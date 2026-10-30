@@ -16,6 +16,7 @@ class ChordTracker:
         self.prior = theory.key_prior(key)
         self.post = self.prior.copy()
         self.evidence = np.full(25, 1 / 25)
+        self.last_chroma = np.zeros(12)
 
     def chroma(self, mag):
         """12-bin chroma: max compressed magnitude per semitone, folded to pitch classes."""
@@ -25,7 +26,7 @@ class ChordTracker:
 
     def scores(self, mag, silent=False):
         """Cosine score per state (24 chords + N)."""
-        c = self.chroma(mag)
+        c = self.last_chroma = self.chroma(mag)
         norm = np.linalg.norm(c)
         s = np.zeros(25)
         if not silent and norm > 1e-6:

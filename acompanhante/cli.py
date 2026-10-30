@@ -125,6 +125,8 @@ def cmd_prova(a):
     keys = [theory.note_pc(k) for k in a.tom] if a.tom else None
     rows = exam.run_exam(exam.cases(a.progressao, keys, a.variante), a.backend)
     exam.print_exam(rows)
+    print("\nsessões reais, inteiras (controle):")
+    exam.print_controls(exam.run_controls(a.backend))
     print(f"\nresultados em {exam.save_exam(rows, a.versao).resolve()}")
 
 

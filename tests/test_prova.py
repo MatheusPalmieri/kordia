@@ -67,6 +67,16 @@ def test_recorded_takes_rebuild_the_real_session():
     assert rows[0]["acc"] >= 0.9
 
 
+def test_click_sessions_learn_the_cycle_on_the_downbeat():
+    """The sessions of 2026-10-30: the pattern lost B and changed 2 beats late (acc 0.65 and 0.47)."""
+    pytest.importorskip("acompanhante.kordia_core")
+    if not (exam.SESSIONS_DIR / exam.CONTROLS[5][0]).is_dir():
+        pytest.skip("sessoes/ não é versionado")
+    rows = exam.run_controls()
+    assert np.mean([r["acc"] for r in rows]) >= 0.85
+    assert rows[5]["veredito"] == "ok"
+
+
 def test_exam_settings_match_in_python_and_cpp():
     pytest.importorskip("acompanhante.kordia_core")
     audio, _, cfg = exam.build(exam.Case("duas_por_compasso", theory.note_pc("F#"), "tom_da_forma"))

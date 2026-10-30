@@ -1,12 +1,23 @@
 """Progression memory: confirmed chord sequence, cycle detection and next-chord prediction."""
+import numpy as np
+
 from . import params as P
 from . import theory
+
+N_IDX = 24
+SLOTS_PER_BAR = P.BEATS_PER_BAR // P.SLOT_BEATS
+
+
+def _same(a, b):
+    """Same chord as far as the cycle goes: the third is what one reading gets wrong; the sum of the laps decides it."""
+    return a != N_IDX and b != N_IDX and a % 12 == b % 12
 
 
 class ProgressionMemory:
     def __init__(self, progression=None):
         """progression: decorated mode, e.g. 'C G Am F' (each chord = 1 bar)."""
         self.fixed = [theory.chord_index(c) for c in progression.split()] if progression else None
+        self.T = theory.templates()
         self.reset()
 
     def reset(self):
@@ -15,6 +26,11 @@ class ProgressionMemory:
         self.lengths = [P.BEATS_PER_BAR] * len(self.known) if self.known else None
         self.locked = False
         self.pos = None        # index in `known` of the chord currently playing
+        # click grid: one entry per half bar, oldest first
+        self.slots, self.labels = [], []   # unit chroma (zeros: nothing played), and its chord
+        self.last_slot = None  # index of the newest slot
+        self.cycle = None      # chord of each slot of the lap, by slot index % len(cycle)
+        self.misses = 0        # consecutive slots against the cycle
 
     def push(self, idx, beat, blip=False):
         """A chord was confirmed starting at beat index `beat`. blip: the previous one lasted < 1 beat."""
@@ -33,6 +49,79 @@ class ProgressionMemory:
             self.seq[-1][0] = idx
             if len(self.seq) > 1 and self.seq[-2][0] == idx:
                 self.seq.pop()   # it was the same chord all along
+
+    # --- click grid ---
+    def _read(self, chroma):
+        return int(np.argmax(self.T @ chroma)) if chroma.any() else N_IDX
+
+    def _append(self, chroma):
+        if not self.slots and not chroma.any():
+            return   # the song has not started: an empty lap would count against every cycle
+        self.slots.append(chroma)
+        self.labels.append(self._read(chroma))
+        del self.slots[:-P.GRID_HISTORY], self.labels[:-P.GRID_HISTORY]
+
+    def push_slot(self, slot, chroma, max_misses):
+        """Half bar `slot` closed: returns the chord read in it; locks, corrects or drops the cycle."""
+        if self.last_slot is not None:
+            for _ in range(slot - self.last_slot - 1):
+                self._append(np.zeros(12))
+        norm = np.linalg.norm(chroma)
+        self._append(chroma / norm if norm > 0 else chroma)
+        self.last_slot = slot
+        heard = self.labels[-1] if self.labels else N_IDX
+        if self.locked:
+            self.misses = self.misses + 1 if heard != N_IDX and not _same(heard, self.cycle[slot % len(self.cycle)]) else 0
+            if self.misses >= max_misses:
+                self.unlock()
+            else:
+                self._adopt(len(self.cycle))
+        else:
+            size = self._find_cycle()
+            if size and self._adopt(size):
+                self.locked, self.misses = True, 0
+        return heard
+
+    def _find_cycle(self):
+        """Smallest lap of whole bars whose slots repeat in the lap after it, or None."""
+        labels = self.labels
+        for size in range(SLOTS_PER_BAR, P.GRID_MAX_SLOTS + 1, SLOTS_PER_BAR):
+            tail = min(size, len(labels) - size)
+            if tail < round((P.GRID_LOCK_LAPS - 1) * size):
+                continue
+            same = [_same(a, b) for a, b in zip(labels[-tail:], labels[-tail - size:-size])]
+            roots = {c % 12 for c in labels[-size:] if c != N_IDX}
+            if sum(same) >= P.GRID_MATCH * tail and all(same[-P.GRID_TAIL:]) and len(roots) > 1:
+                return size
+        return None
+
+    def _adopt(self, size):
+        """Chord of each slot = sum of its last laps. Fills known, lengths, pos and seq for the slot about to start.
+        False if the lap has a single chord (nothing to follow)."""
+        votes = np.zeros((size, 12))
+        for back in range(min(P.GRID_LAPS * size, len(self.slots))):
+            votes[(self.last_slot - back) % size] += self.slots[-1 - back]
+        cycle = [self._read(v) for v in votes]
+        for i in range(size):
+            if cycle[i] == N_IDX:   # never played in these laps: the previous chord goes on
+                cycle[i] = cycle[i - 1]
+        if len(set(cycle)) < 2 or N_IDX in cycle:
+            return False
+        first = next(i for i in range(size) if cycle[i] != cycle[i - 1])
+        now = self.last_slot + 1
+        offset, start = (now - first) % size, 0
+        self.known, self.lengths = [], []
+        for k in range(size):
+            c = cycle[(first + k) % size]
+            if not self.known or self.known[-1] != c:
+                self.known.append(c)
+                self.lengths.append(0)
+                if k <= offset:
+                    self.pos, start = len(self.known) - 1, k
+            self.lengths[-1] += P.SLOT_BEATS
+        self.cycle = cycle
+        self.seq = [[self.known[self.pos], (now - offset + start) * P.SLOT_BEATS]]
+        return True
 
     def _lens(self, items):
         """Durations in beats of closed entries, rounded to half bars (min 2 beats)."""

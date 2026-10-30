@@ -30,9 +30,9 @@ python -m acompanhante.cli rodar --sessao sessoes/<pasta>   # reproduz uma sess�
 python tasks.py build [--app]         # núcleo C++ + kordia_core (+ app JUCE); precisa do VS 2022 Build Tools
 python tasks.py test                  # pytest (unitários + regressão + equivalência C++)
 python -m acompanhante.cli avaliar --todos --backend cpp   # métricas rodando o núcleo C++
-cpp/build/app/KordiaLiveTest_artefacts/Release/KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]   # fumaça ao vivo (volume 0)
+cpp/build/app/KordiaLiveTest_artefacts/Release/KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]   # fumaça ao vivo (volume 0): ouvir → Iniciar → parar; KORDIA_FIXED_BPM=90 testa a contagem; cria uma pasta em sessoes/
 python tasks.py avaliar [versao]      # roda os 12 cenários, salva métricas e relatórios
-python -m acompanhante.cli prova [--versao v] [--progressao ...] [--tom ...] [--variante ...]   # músicas novas nos 12 tons (~10 min; usa sessoes/)
+python -m acompanhante.cli prova [--versao v] [--progressao ...] [--tom ...] [--variante ...]   # músicas novas nos 12 tons + controle com as 6 sessões reais (~10 min; usa sessoes/)
 python -m acompanhante.cli gerar --cenario acelerando --saida dados/
 python -m acompanhante.cli rodar --entrada arquivo.wav --modo livre|metronomo|decorado [--bpm 120] [--tom C] [--progressao "C G Am F"]
 python -m acompanhante.cli avaliar --todos [--versao v1]
@@ -82,4 +82,6 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 - **WASAPI:** o JUCE 8.0.15 tem um bug no modo compartilhado (lê float como int32 quando o Windows devolve `WAVE_FORMAT_IEEE_FLOAT` simples); `cpp/app/CMakeLists.txt` aplica uma correção de uma linha na configuração e falha com mensagem clara se o JUCE mudar. Padrão: modo compartilhado (compensa a diferença de relógio entre microfone e saída em aparelhos diferentes). O modo exclusivo com dois aparelhos derrapa e a captura morre em ~15–20 s.
 - **O violão do Matheus está meio tom abaixo**: "C G Am F" soa B F# G#m E. Ao analisar sessões, compare com a progressão um semitom abaixo.
 - **Padrões da interface ≠ padrões do laboratório:** na interface, *aprender na tônica* e *manter o padrão* vêm ligados e o tom em *Automático*; no `RunConfig` (cenários) vêm desligados, para os cenários antigos continuarem comparáveis. Cada modo novo ganha cenário/teste próprio.
+- **Com clique, a harmonia é lida por meio compasso e o padrão é aprendido na grade** (`Processor._close_slot`, `ProgressionMemory.push_slot`, `Engine._grid_out`). Sem clique, ou com progressão conhecida, segue o caminho quadro a quadro. Mudança nesse caminho se mede com o controle das sessões reais (`exam.CONTROLS`, impresso pela prova).
+- **O app ouve desde que abre** (`LiveEngine::start(q, preview=true)`, `/api/listen`): sem som, sem sessão, sem apagar o diário. **Iniciar conta 4 tempos** (`RunConfig.contagem`) quando há BPM; antes disso o motor não recebe nada.
 - **Sessões reais mandam:** ao investigar um relato ao vivo, comece por `sessoes/<pasta>` (config, `decisoes.jsonl`, `quadros.csv`, `entrada.wav`); reproduza com `rodar --sessao`; meça antes de mexer. Os parâmetros calibrados só no sintético já falharam no violão real (piso de onset).

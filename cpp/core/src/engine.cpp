@@ -27,6 +27,7 @@ void Engine::forget() {
     last_heard_ = -1;
     disagree_since_.reset();
     root5_tc_.reset();
+    slot_why_.clear();
     reason.clear();
     stop_at_ = 0.0;
     memory_.reset();
@@ -54,7 +55,7 @@ double Engine::change_time(double t) const {
 }
 
 std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, int idx, double conf,
-                                   const std::array<double, 25>& evidence) {
+                                   const std::array<double, 25>& evidence, const std::optional<Slot>& slot) {
     if (idx == N_IDX || conf < P::CONF_LOW)
         level = conf < P::CONF_LOW ? Level::Perdido : Level::Duvida;
     else
@@ -66,8 +67,14 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
         }
         last_onset = onset->t;
     }
+    if (slot) learn_slot(t, *slot);   // also while stopped: the lap keeps its place on the grid
 
     if (state == State::Ocioso) {
+        if (grid) {
+            if (heard_.empty()) return std::nullopt;
+            state = State::Ouvindo;
+            return grid_out(t, slot.has_value());
+        }
         if (level == Level::Confiante && last_onset && t - *last_onset < 1.0) {
             state = State::Ouvindo;
             return reactive_change(t, idx);
@@ -96,6 +103,8 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
         state = memory_.locked ? State::Travado : State::Ouvindo;   // resumed: it was a pause
         confirm_at_ = tracker_.has_period() ? t + P::LOCK_CONFIRM_BEATS * tracker_.period : t;
     }
+
+    if (grid) return grid_out(t, slot.has_value());   // nothing is decided on single frames
 
     // confidence ladder
     if (level == Level::Confiante)
@@ -131,6 +140,40 @@ std::optional<Output> Engine::tonic_out(double t, const std::string& why) {
         return set(-1, Mode::Silence, t, why + "; ainda sem tom: silêncio");
     }
     return set(*k, Mode::Tonic, t, why + ": pad na tônica (" + label(*k) + ")");
+}
+
+void Engine::learn_slot(double t, const Slot& slot) {
+    bool was_locked = memory_.locked;
+    bool played = last_onset && t - *last_onset <= bar();
+    int heard = memory_.push_slot(slot.first, played ? slot.second : Chroma{},
+                                  hold ? (int)pyround(2 * P::HOLD_CONTRA_BARS) : P::GRID_MISS);
+    if (heard != N_IDX && heard != last_heard_) {
+        heard_.push_back(heard);
+        if (heard_.size() > 12) heard_.pop_front();
+        last_heard_ = heard;
+    }
+    if (memory_.locked && !was_locked) slot_why_ = "padrão reconhecido, travei";
+    else if (memory_.locked && memory_.corrected) slot_why_ = "corrigi o padrão pelo que ouvi";
+    else if (was_locked && !memory_.locked) slot_why_ = "ouvi " + label(heard) + " fora do padrão: reaprendendo";
+    else slot_why_.clear();
+}
+
+// Click grid: the pattern plays on the grid; until it locks, the tonic (or the last half bar read).
+std::optional<Output> Engine::grid_out(double t, bool closed) {
+    if (memory_.locked) {
+        state = State::Travado;
+        std::optional<Output> out;
+        if (closed) out = set(memory_.known[memory_.pos], Mode::Full, t, slot_why_.empty() ? nullptr : slot_why_.c_str());
+        return out ? out : locked(t, N_IDX);
+    }
+    if (state == State::Travado) {
+        state = State::Ouvindo;
+        reason = slot_why_;
+    }
+    if (!closed) return std::nullopt;
+    if (learn) return tonic_out(t, "aprendendo o padrão");
+    if (last_heard_ < 0) return std::nullopt;
+    return set(last_heard_, Mode::Full, t, "ouvi " + label(last_heard_));
 }
 
 // Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement sustained
@@ -230,7 +273,7 @@ std::optional<Output> Engine::locked(double t, int idx) {
         auto [nxt, beat] = *pred;
         double tc = tracker_.time_of_beat(beat);
         // the musician changed early: follow (except in metronome mode, where the grid rules)
-        bool early = !metronome && level == Level::Confiante && idx == nxt && cur.first != nxt && t >= confirm_at_ &&
+        bool early = !(metronome || grid) && level == Level::Confiante && idx == nxt && cur.first != nxt && t >= confirm_at_ &&
                      t >= tc - period;
         if (t + lookahead_ + frame_ >= tc || early) {
             double when = early ? t : std::max(t, tc);
@@ -245,7 +288,7 @@ std::optional<Output> Engine::locked(double t, int idx) {
             return set(nxt, Mode::Full, when, early ? "previsto pelo padrão (você antecipou)" : "previsto pelo padrão");
         }
     }
-    if (t < confirm_at_) return std::nullopt;
+    if (t < confirm_at_ || grid) return std::nullopt;
     // still hearing the previous chord shortly after a predicted change = musician is late, not a contradiction
     bool late = prev_chord_ && idx == *prev_chord_ && t < changed_at_ + P::LOCK_LATE_BEATS * period;
     if (hold) return held_check(t, idx, late);

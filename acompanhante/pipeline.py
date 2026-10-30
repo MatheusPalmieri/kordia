@@ -25,6 +25,7 @@ class RunConfig:
     manter_padrao: bool = False   # hold: once learned, the pattern keeps playing through mistakes (UI default: on)
     aprender_na_tonica: bool = False  # until the pattern locks: only a quiet tonic pad (UI default: on)
     bpm_inicial: float | None = None  # follow mode + click: the click starts at Iniciar at this tempo, then follows
+    contagem: bool = False        # count-in: one bar of clicks after Iniciar; nothing is played or learned before it
 
     @classmethod
     def from_dict(cls, d):
@@ -59,10 +60,14 @@ class Processor:
             raise ValueError("modo decorado exige progressao")
         # with an audible click the musician follows the click, so the grid starts right away (count-in of 1 bar
         # at most), not at the first strum
-        start = 0.5 + lookahead if cfg.clique else None
+        anchored = cfg.clique or cfg.contagem
+        start = 0.5 + lookahead if anchored else None
         self.tracker = FixedGrid(cfg.bpm, start) if cfg.modo == "metronomo" else TempoTracker()
-        if cfg.modo != "metronomo" and cfg.clique and cfg.bpm_inicial:
+        if cfg.modo != "metronomo" and anchored and cfg.bpm_inicial:
             self.tracker.seed(cfg.bpm_inicial, 0.5 + lookahead)
+        self.count_end = -np.inf        # the musician's first downbeat
+        if cfg.contagem and self.tracker.period:
+            self.count_end = 0.5 + lookahead + P.BEATS_PER_BAR * self.tracker.period
         self.click = cfg.clique
         self.click_vel = 100
         self.last_click_t = -np.inf
@@ -74,6 +79,8 @@ class Processor:
         self.engine = Engine(self.tracker, self.memory, cfg.tom, metronome=cfg.modo == "metronomo", lookahead=lookahead)
         self.engine.hold = cfg.manter_padrao
         self.engine.learn = cfg.aprender_na_tonica
+        self.engine.grid = anchored and bool(self.tracker.period) and not cfg.progressao
+        self.slot, self.slot_sum = None, np.zeros(12)
         self.onsets, self.chords = OnsetDetector(), ChordTracker(cfg.tom)
         self.acc, self.dyn, self.synth = Accompanist(cfg.tom), Dynamics(), Synth()
         self.wo, self.wc = np.hanning(P.ONSET_WIN), np.hanning(P.CHROMA_WIN)
@@ -117,7 +124,9 @@ class Processor:
             p_change = P.HMM_P_CHANGE
         idx, conf, _ = self.chords.process(_norm_mag(self.buf, self.wc), db < P.SILENCE_DB, p_change)
 
-        decision = engine.step(t, onset, idx, conf, self.chords.evidence)
+        closed = self._close_slot(t, db) if engine.grid else None
+        counting = bool(tracker.period) and t < self.count_end - P.COUNT_EARLY_BEATS * tracker.period
+        decision = None if counting else engine.step(t, onset, idx, conf, self.chords.evidence, closed)
         vel = dyn.velocity()
         evs = []
         if decision is not None:
@@ -131,7 +140,7 @@ class Processor:
             tb = tracker.time_of_beat(bi)
             if tb < t + self.lookahead + P.HOP / P.SR:
                 evs += acc.beat(tb, tracker.bar_pos(bi) % 2 == 0, tracker.period, vel)
-        if self.click and tracker.period:
+        if (self.click or t + self.lookahead + P.HOP / P.SR < self.count_end) and tracker.period:
             guide = isinstance(tracker, FixedGrid) or tracker.frozen or bool(tracker.seed_bpm)   # click = guide: always on
             if guide or (engine.state in (OUVINDO, TRAVADO, FALLBACK) and tracker.confidence >= 0.5):
                 bi = int(np.ceil(tracker.beat_phase(t + self.lookahead)))
@@ -154,6 +163,26 @@ class Processor:
                 self.log[key].append(val)
         else:
             del acc.events[:-64], acc.changes[:-64], self.onset_list[:-64], self.decisions[:-64]   # live: bounded
+
+    def _close_slot(self, t, db):
+        """Click grid: sums the chroma of the half bar; on the block that closes it, returns (index, sum)."""
+        now = t - P.SLOT_LAG
+        index = int(np.floor(self.tracker.beat_phase(now) / P.SLOT_BEATS))
+        closed = None
+        if index != self.slot:
+            if self.slot is not None:
+                closed = (self.slot, self.slot_sum.copy())
+            self.slot = index
+            self.slot_sum[:] = 0
+        if now - self.tracker.time_of_beat(index * P.SLOT_BEATS) >= P.SLOT_SKIP and db >= P.SILENCE_DB:
+            self.slot_sum += self.chords.last_chroma
+        return closed
+
+    def count_left(self):
+        """Count-in: clicks still to come (4..1), or 0."""
+        if not self.tracker.period or self.count_end < 0:
+            return 0
+        return int(np.clip(np.ceil((self.count_end - self.s / P.SR) / self.tracker.period), 0, P.BEATS_PER_BAR))
 
     def process(self, x):
         out = self.render()

@@ -15,7 +15,7 @@
 
 ### RF2 — Modos de operação
 - **RF2.1 Livre (sem clique):** estima o andamento a partir das palhetadas, segue acelerações e desacelerações graduais; as trocas previstas aceleram junto. Se perder o tempo, entra em modo de segurança (reativo, sem previsão, notas sustentadas).
-- **RF2.2 Metrônomo:** BPM fixo dado pelo usuário. A grade é fixa; o áudio só diz **qual** acorde. Uma troca antecipada pelo músico é aplicada só no tempo certo da grade.
+- **RF2.2 Metrônomo:** BPM fixo dado pelo usuário. A grade é fixa; o áudio só diz **qual** acorde. Uma troca antecipada pelo músico é aplicada só no tempo certo da grade. Com clique, a harmonia é lida por meio compasso e o padrão é aprendido na grade (RF16).
 - **RF2.3 Decorado:** o usuário informa a progressão (ex.: `C G Am F` em loop). O sistema prevê o próximo acorde e agenda a troca; se o áudio contradiz com clareza, corrige.
 
 ### RF3 — Tom principal como âncora
@@ -96,6 +96,11 @@
 
 ### RF15 — Camadas de instrumento
 - Pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo; cada um liga/desliga e tem volume próprio, ao vivo.
+
+### RF16 — Ouvir antes de tocar, contagem e aprender na grade
+- **Ouvir ao abrir:** com o app aberto e parado, a tela mostra o acorde (ou a nota) que está reconhecendo e o nível do violão. Não toca nada e não grava sessão.
+- **Contagem:** no Iniciar com BPM conhecido, 4 cliques, 4-3-2-1 na tela. Nada é tocado nem aprendido antes do primeiro tempo do compasso seguinte. O clique da contagem soa mesmo com o botão Clique desligado.
+- **Aprender na grade (com clique, sem progressão conhecida):** um acorde por meio compasso, lido pela soma do meio compasso. O ciclo é a menor volta de compassos inteiros que se repete, depois de 2 voltas. Cada posição do ciclo soma as últimas 3 voltas, então o padrão se corrige sozinho. Três meios compassos seguidos contra o padrão (com *manter o padrão*) destravam e ele reaprende.
 
 ### RF9 (revisão) — Interface
 - Tela principal enxuta; Áudio, Som/Instrumentos e Música avançada num painel de Ajustes. Tom no topo.

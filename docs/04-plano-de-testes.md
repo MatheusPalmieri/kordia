@@ -36,6 +36,8 @@ Progressões: 2, 3, 4, 6 e 8 acordes, duas por compasso, dois compassos por acor
 
 Nota de cada música: `lock_compassos` (compassos até travar), `acc` (acorde exato depois de travar), `wrong_s` (segundos de harmonia errada, fora do primeiro tempo de cada troca; a tônica só conta se não pertencer ao tom), `played` (últimos acordes tocados). **Certa:** travou, `acc` ≥ 0,90 e `wrong_s` ≤ 2.
 
+Ao fim, a prova imprime o **controle**: as 6 sessões reais com clique, inteiras e sem cortes (`exam.CONTROLS`), com a mesma nota. É o número mais próximo do palco. A verdade continua sendo a posição no ciclo, e a sessão 15:52 tem compassos que soam como variação do músico.
+
 Fora da prova: compasso ternário, seções diferentes (verso/refrão), mudança de tom e cantor por cima.
 
 ## Verdade-base (JSON)

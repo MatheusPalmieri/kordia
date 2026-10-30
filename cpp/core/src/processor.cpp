@@ -14,7 +14,7 @@ static std::unique_ptr<Grid> make_tracker(const RunConfig& c, double lookahead, 
     if (c.modo == "metronomo") {
         if (!c.bpm) throw std::invalid_argument("modo metronomo exige bpm");
         // with an audible click the musician follows the click: the grid starts right away, not at the first strum
-        return std::make_unique<FixedGrid>(*c.bpm, c.clique ? std::optional<double>(0.5 + lookahead) : std::nullopt);
+        return std::make_unique<FixedGrid>(*c.bpm, c.clique || c.contagem ? std::optional<double>(0.5 + lookahead) : std::nullopt);
     }
     return std::make_unique<TempoTracker>(frame);
 }
@@ -39,10 +39,13 @@ Processor::Processor(const RunConfig& cfg, double lookahead, double sr, double o
       acc_(key_of(cfg)),
       synth_(out_sr > 0 ? out_sr : sr) {
     engine_.set_frame(P::HOP / sr);
-    if (cfg.modo != "metronomo" && cfg.clique && cfg.bpm_inicial)
+    const bool anchored = cfg.clique || cfg.contagem;
+    if (cfg.modo != "metronomo" && anchored && cfg.bpm_inicial)
         if (auto* tt = dynamic_cast<TempoTracker*>(tracker_.get())) tt->seed(*cfg.bpm_inicial, 0.5 + lookahead);
+    if (cfg.contagem && tracker_->has_period()) count_end_ = 0.5 + lookahead + P::BEATS_PER_BAR * tracker_->period;
     engine_.hold = cfg.manter_padrao;
     engine_.learn = cfg.aprender_na_tonica;
+    engine_.grid = anchored && tracker_->has_period() && !cfg.progressao;
     evs_.reserve(64);
 }
 
@@ -72,7 +75,10 @@ void Processor::analyze(const double* x) {
                           : P::HMM_P_CHANGE;
     auto [idx, conf] = chords_.process(spec_chroma_(buf_.data()), db < P::SILENCE_DB, p_change);
 
-    auto decision = engine_.step(t, onset, idx, conf, chords_.evidence);
+    auto closed = engine_.grid ? close_slot(t, db) : std::nullopt;
+    bool counting = tracker.has_period() && t < count_end_ - P::COUNT_EARLY_BEATS * tracker.period;
+    std::optional<Output> decision;
+    if (!counting) decision = engine_.step(t, onset, idx, conf, chords_.evidence, closed);
     int vel = dyn_.velocity();
     evs_.clear();
     if (decision) {
@@ -88,7 +94,7 @@ void Processor::analyze(const double* x) {
         double tb = tracker.time_of_beat(bi);
         if (tb < t + lookahead_ + frame_dur) acc_.beat(tb, tracker.bar_pos(bi) % 2 == 0, tracker.period, vel, evs_);
     }
-    if (click && tracker.has_period()) {
+    if ((click || t + lookahead_ + P::HOP / sr_ < count_end_) && tracker.has_period()) {
         auto* tt = dynamic_cast<TempoTracker*>(tracker_.get());
         bool guide = !tt || tracker.frozen() || tt->seeded();   // the click is the guide: always on
         bool active = engine_.state == State::Ouvindo || engine_.state == State::Travado || engine_.state == State::Fallback;
@@ -109,6 +115,25 @@ void Processor::analyze(const double* x) {
     auto bpm = tracker.bpm();
     frame = {t, db, onsets_.flux, onset.has_value(), bpm ? *bpm : std::nan(""), tracker.confidence(), idx, conf,
              engine_.state, engine_.level, expr, vel};
+}
+
+std::optional<Engine::Slot> Processor::close_slot(double t, double db) {
+    double now = t - P::SLOT_LAG;
+    long long index = (long long)std::floor(tracker_->beat_phase(now) / P::SLOT_BEATS);
+    std::optional<Engine::Slot> closed;
+    if (!slot_ || index != *slot_) {
+        if (slot_) closed = Engine::Slot{*slot_, slot_sum_};
+        slot_ = index;
+        slot_sum_.fill(0.0);
+    }
+    if (now - tracker_->time_of_beat(index * P::SLOT_BEATS) >= P::SLOT_SKIP && db >= P::SILENCE_DB)
+        for (int k = 0; k < 12; ++k) slot_sum_[k] += chords_.last_chroma[k];
+    return closed;
+}
+
+int Processor::count_left() const {
+    if (!tracker_->has_period()) return 0;
+    return (int)std::clamp(std::ceil((count_end_ - s_ / sr_) / tracker_->period), 0.0, (double)P::BEATS_PER_BAR);
 }
 
 void Processor::freeze_tempo(bool on) {

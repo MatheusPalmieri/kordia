@@ -49,6 +49,10 @@ constexpr double HOLD_STOP_BARS = 1.25, HOLD_CONTRA_BARS = 1.5;
 constexpr double KEY_ROLE_WEIGHTS[6] = {1.6, 1.2, 1.2, 1.0, 0.7, 0.7};   // I, IV, V, vi, ii, iii
 constexpr double LEARN_TONIC_SCALE = 0.6;
 constexpr double METRO_LATE_BEATS = 0.5;
+constexpr int SLOT_BEATS = 2;
+constexpr double SLOT_LAG = 0.08, SLOT_SKIP = 0.10;
+constexpr int GRID_MAX_SLOTS = 16, GRID_HISTORY = 64, GRID_TAIL = 3, GRID_LAPS = 3, GRID_MISS = 2;
+constexpr double GRID_MATCH = 0.75, GRID_LOCK_LAPS = 2.0, COUNT_EARLY_BEATS = 0.25;
 constexpr double DYN_DB_LOW = -45.0, DYN_DB_HIGH = -12.0;
 constexpr int DYN_VEL_LOW = 60, DYN_VEL_HIGH = 120;
 constexpr double DYN_SMOOTH = 0.25, DYN_SILENCE_DECAY = 1.5;
@@ -93,7 +97,10 @@ struct RunConfig {
     bool clique = false;
     bool manter_padrao = false;   // hold: once learned, the pattern keeps playing through mistakes
     bool aprender_na_tonica = false;   // until the pattern locks: only a quiet tonic pad
+    bool contagem = false;        // count-in: one bar of clicks after Iniciar; nothing is played or learned before it
 };
+
+using Chroma = std::array<double, 12>;
 
 // ------------------------------------------------------------------ analysis
 class Spectrum {  // windowed real FFT, magnitudes normalized so a sinusoid of amplitude A reads A
@@ -128,6 +135,7 @@ public:
     struct Result { int idx; double conf; };
     Result process(const std::vector<double>& mag, bool silent, double p_change);
     std::array<double, 25> post{}, evidence{};
+    Chroma last_chroma{};
 private:
     std::vector<int> band_, semi_;    // FFT bin -> semitone slot
     std::vector<int> semi_pc_;        // semitone slot -> pitch class
@@ -212,12 +220,24 @@ public:
     std::optional<std::pair<int, long long>> predict() const;
     void advance(long long beat);
     void unlock() { locked = false; pos = -1; }
+    int push_slot(long long slot, const Chroma& chroma, int max_misses);   // click grid: half bar closed, chord read in it
 
     bool locked = false;
     int pos = -1;
     std::vector<int> known, lengths;   // empty = none
+    std::vector<int> cycle;            // click grid: chord of each slot of the lap (empty = none)
+    bool corrected = false;            // the last push_slot changed the cycle
 private:
     void try_lock();
+    int read(const Chroma& c) const;
+    void append(const Chroma& c);
+    int find_cycle() const;            // 0 = none
+    bool adopt(int size);
+    std::array<std::array<double, 12>, 24> T_;
+    std::vector<Chroma> slots_;        // click grid: one entry per half bar, oldest first (bounded, no reallocation)
+    std::vector<int> labels_, next_;
+    std::optional<long long> last_slot_;
+    int misses_ = 0;
     std::vector<int> fixed_;
     std::vector<std::pair<int, long long>> seq_;   // (chord, start beat)
 };
@@ -235,8 +255,9 @@ struct Output { int chord; Mode mode; double t; };   // chord -1 = none
 class Engine {
 public:
     Engine(Grid& tracker, ProgressionMemory& memory, std::optional<int> key_pc, bool metronome, double lookahead);
+    using Slot = std::pair<long long, Chroma>;   // half-bar index, chroma sum
     std::optional<Output> step(double t, const std::optional<Onset>& onset, int idx, double conf,
-                               const std::array<double, 25>& evidence);
+                               const std::array<double, 25>& evidence, const std::optional<Slot>& slot = std::nullopt);
     State state = State::Ocioso;
     Level level = Level::Perdido;
     std::optional<double> last_onset;
@@ -254,6 +275,9 @@ private:
     std::optional<Output> reactive(double t, int idx, const std::array<double, 25>& evidence);
     std::optional<Output> reactive_change(double t, int idx);
     std::optional<Output> locked(double t, int idx);
+    void learn_slot(double t, const Slot& slot);
+    std::optional<Output> grid_out(double t, bool closed);
+    std::string slot_why_;     // what the last closed half bar changed in the pattern
 
     Grid& tracker_;
     ProgressionMemory& memory_;
@@ -274,6 +298,7 @@ private:
 public:
     bool hold = false;          // "manter o padrão": once locked, trust the pattern over the audio (live setting)
     bool learn = false;         // "aprender na tônica": until the pattern locks, only a quiet tonic pad
+    bool grid = false;          // the click is heard: harmony read per half bar, pattern learned on the grid
     std::optional<int> current_key() const;   // configured key while it fits, else detected
 private:
 public:
@@ -373,6 +398,8 @@ public:
     Synth& synth() { return synth_; }
     std::optional<int> next_chord() const;
     std::optional<int> beat_in_bar() const;
+    int count_left() const;   // count-in: clicks still to come (4..1), or 0
+    const Chroma& chroma() const { return chords_.last_chroma; }
 
     Frame frame{};
     std::vector<Decision> decisions;
@@ -400,6 +427,10 @@ private:
     Dynamics dyn_;
     Synth synth_;
     double last_onset_t_ = -INF, last_click_t_ = -INF;
+    double count_end_ = -INF;               // the musician's first downbeat
+    std::optional<long long> slot_;         // click grid: half bar being summed
+    Chroma slot_sum_{};
+    std::optional<Engine::Slot> close_slot(double t, double db);
     double agc_level_ = P::AGC_TARGET_DB;   // automatic input gain before analysis
 public:
     double agc_gain_db = 0.0;

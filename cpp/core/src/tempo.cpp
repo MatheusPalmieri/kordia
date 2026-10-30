@@ -235,6 +235,13 @@ ProgressionMemory::ProgressionMemory(const std::optional<std::string>& progressi
             i = j;
         }
     }
+    T_ = templates();
+    slots_.reserve(P::GRID_HISTORY + 1);
+    labels_.reserve(P::GRID_HISTORY + 1);
+    next_.reserve(P::GRID_MAX_SLOTS);
+    cycle.reserve(P::GRID_MAX_SLOTS);
+    known.reserve(P::GRID_MAX_SLOTS);
+    lengths.reserve(P::GRID_MAX_SLOTS);
     reset();
 }
 
@@ -244,6 +251,12 @@ void ProgressionMemory::reset() {
     lengths.assign(known.size(), P::BEATS_PER_BAR);
     locked = false;
     pos = -1;
+    slots_.clear();
+    labels_.clear();
+    last_slot_.reset();
+    cycle.clear();
+    misses_ = 0;
+    corrected = false;
 }
 
 void ProgressionMemory::push(int idx, long long beat, bool blip) {
@@ -302,6 +315,127 @@ void ProgressionMemory::try_lock() {
         locked = true, pos = k - 1;   // the current chord is cyc[k-1]
         return;
     }
+}
+
+// ------------------------------------------------------------------ click grid
+static bool same_chord(int a, int b) {   // the third is what one reading gets wrong; the sum of the laps decides it
+    return a != N_IDX && b != N_IDX && a % 12 == b % 12;
+}
+
+int ProgressionMemory::read(const Chroma& c) const {
+    bool any = false;
+    for (double v : c) any = any || v != 0.0;
+    if (!any) return N_IDX;
+    int best = 0;
+    double top = -INF;
+    for (int i = 0; i < 24; ++i) {
+        double d = 0;
+        for (int k = 0; k < 12; ++k) d += T_[i][k] * c[k];
+        if (d > top) top = d, best = i;
+    }
+    return best;
+}
+
+void ProgressionMemory::append(const Chroma& c) {
+    int label = read(c);
+    if (slots_.empty() && label == N_IDX) return;   // the song has not started: an empty lap counts against every cycle
+    slots_.push_back(c);
+    labels_.push_back(label);
+    if ((int)slots_.size() > P::GRID_HISTORY) {
+        slots_.erase(slots_.begin());
+        labels_.erase(labels_.begin());
+    }
+}
+
+int ProgressionMemory::push_slot(long long slot, const Chroma& chroma, int max_misses) {
+    if (last_slot_)
+        for (long long k = 0; k < slot - *last_slot_ - 1; ++k) append(Chroma{});
+    double norm = 0;
+    for (double v : chroma) norm += v * v;
+    norm = std::sqrt(norm);
+    Chroma unit = chroma;
+    if (norm > 0)
+        for (double& v : unit) v /= norm;
+    append(unit);
+    last_slot_ = slot;
+    corrected = false;
+    int heard = labels_.empty() ? N_IDX : labels_.back();
+    if (locked) {
+        bool miss = heard != N_IDX && !same_chord(heard, cycle[(size_t)pymod(slot, (long long)cycle.size())]);
+        misses_ = miss ? misses_ + 1 : 0;
+        if (misses_ >= max_misses) unlock();
+        else adopt((int)cycle.size());
+    } else {
+        int size = find_cycle();
+        if (size && adopt(size)) {
+            locked = true;
+            misses_ = 0;
+        }
+    }
+    return heard;
+}
+
+int ProgressionMemory::find_cycle() const {
+    int n = (int)labels_.size();
+    for (int size = P::BEATS_PER_BAR / P::SLOT_BEATS; size <= P::GRID_MAX_SLOTS; size += P::BEATS_PER_BAR / P::SLOT_BEATS) {
+        int tail = std::min(size, n - size);
+        if (tail < pyround((P::GRID_LOCK_LAPS - 1) * size)) continue;
+        int hits = 0;
+        bool recent = true;
+        for (int i = 0; i < tail; ++i) {
+            bool same = same_chord(labels_[n - tail + i], labels_[n - tail - size + i]);
+            hits += same;
+            if (i >= tail - P::GRID_TAIL) recent = recent && same;
+        }
+        bool two_roots = false;
+        int root = -1;
+        for (int i = n - size; i < n; ++i) {
+            if (labels_[i] == N_IDX) continue;
+            if (root >= 0 && labels_[i] % 12 != root) two_roots = true;
+            root = labels_[i] % 12;
+        }
+        if (hits >= P::GRID_MATCH * tail && recent && two_roots) return size;
+    }
+    return 0;
+}
+
+bool ProgressionMemory::adopt(int size) {
+    std::array<Chroma, P::GRID_MAX_SLOTS> votes{};
+    int n = (int)slots_.size();
+    for (int back = 0; back < std::min(P::GRID_LAPS * size, n); ++back) {
+        auto& v = votes[(size_t)pymod(*last_slot_ - back, size)];
+        const Chroma& c = slots_[(size_t)(n - 1 - back)];
+        for (int k = 0; k < 12; ++k) v[k] += c[k];
+    }
+    next_.clear();
+    for (int i = 0; i < size; ++i) next_.push_back(read(votes[(size_t)i]));
+    for (int i = 0; i < size; ++i)
+        if (next_[i] == N_IDX) next_[i] = next_[(i + size - 1) % size];   // never played in these laps: the previous goes on
+    int first = -1;
+    bool has_n = false;
+    for (int i = 0; i < size; ++i) {
+        has_n = has_n || next_[i] == N_IDX;
+        if (first < 0 && next_[i] != next_[(i + size - 1) % size]) first = i;
+    }
+    if (first < 0 || has_n) return false;
+    corrected = !cycle.empty() && cycle != next_;
+    long long now = *last_slot_ + 1;
+    int offset = (int)pymod(now - first, size), start = 0;
+    known.clear();
+    lengths.clear();
+    for (int k = 0; k < size; ++k) {
+        int c = next_[(first + k) % size];
+        if (known.empty() || known.back() != c) {
+            known.push_back(c);
+            lengths.push_back(0);
+            if (k <= offset) pos = (int)known.size() - 1, start = k;
+        }
+        lengths.back() += P::SLOT_BEATS;
+    }
+    cycle = next_;
+    seq_.clear();
+    seq_.push_back({known[pos], (now - offset + start) * P::SLOT_BEATS});
+    return true;
 }
 
 std::optional<std::pair<int, long long>> ProgressionMemory::predict() const {

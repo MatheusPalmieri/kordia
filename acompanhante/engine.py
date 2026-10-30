@@ -27,6 +27,7 @@ class Engine:
         self.lookahead = lookahead   # live: audio output latency; scheduled events are emitted this much earlier
         self.hold = False            # "manter o padrão": once locked, trust the pattern over the audio (live setting)
         self.learn = False           # "aprender na tônica": until the pattern locks, only a quiet tonic pad
+        self.grid = False            # the click is heard: harmony read per half bar, pattern learned on the grid
         self.cur = (None, None)
         self._forget()
 
@@ -48,6 +49,7 @@ class Engine:
         self.last_change_t = -np.inf
         self.heard = deque(maxlen=12)   # last chords heard with confidence: key fit / key detection
         self.last_heard = None
+        self.slot_why = None         # what the last closed half bar changed in the pattern
         self.reason = ""
         self.stop_at = None
         self.memory.reset()
@@ -98,8 +100,9 @@ class Engine:
         return self._tonic_out(t, "perdido")
 
     # --- main step ---
-    def step(self, t, onset, idx, conf, evidence):
-        """Called once per block. Returns an Output when the accompaniment must change, else None."""
+    def step(self, t, onset, idx, conf, evidence, slot=None):
+        """Called once per block. Returns an Output when the accompaniment must change, else None.
+        slot: (half-bar index, chroma sum) on the block that closes a half bar (click grid only)."""
         if idx == N_IDX or conf < P.CONF_LOW:
             self.level = PERDIDO if conf < P.CONF_LOW else DUVIDA
         else:
@@ -108,8 +111,15 @@ class Engine:
             if self.last_onset is not None:
                 self.iois.append(onset.t - self.last_onset)
             self.last_onset = onset.t
+        if slot is not None:   # also while stopped: the lap keeps its place on the grid
+            self._learn_slot(t, *slot)
 
         if self.state == OCIOSO:
+            if self.grid:
+                if not self.heard:
+                    return None
+                self.state = OUVINDO
+                return self._grid_out(t, slot is not None)
             if self.level == CONFIANTE and self.last_onset is not None and t - self.last_onset < 1.0:
                 self.state = OUVINDO
                 return self._reactive_change(t, idx)
@@ -134,6 +144,9 @@ class Engine:
             self.state = TRAVADO if self.memory.locked else OUVINDO   # resumed: it was a pause
             self.confirm_at = t + P.LOCK_CONFIRM_BEATS * self.tracker.period if self.tracker.period else t
 
+        if self.grid:   # nothing is decided on single frames
+            return self._grid_out(t, slot is not None)
+
         # confidence ladder
         if self.level == CONFIANTE:
             self.doubt_since = None
@@ -154,6 +167,35 @@ class Engine:
         if self.state == TRAVADO:
             return self._locked(t, idx)
         return self._reactive(t, idx, evidence)
+
+    def _learn_slot(self, t, index, chroma):
+        m = self.memory
+        was_locked, before = m.locked, m.cycle
+        played = self.last_onset is not None and t - self.last_onset <= self._bar()
+        heard = m.push_slot(index, chroma if played else np.zeros(12), round(2 * P.HOLD_CONTRA_BARS) if self.hold else P.GRID_MISS)
+        if heard != N_IDX and heard != self.last_heard:
+            self.heard.append(heard)
+            self.last_heard = heard
+        self.slot_why = ("padrão reconhecido, travei" if m.locked and not was_locked
+                         else "corrigi o padrão pelo que ouvi" if m.locked and m.cycle != before
+                         else f"ouvi {theory.LABELS[heard]} fora do padrão: reaprendendo" if was_locked and not m.locked
+                         else None)
+
+    def _grid_out(self, t, closed):
+        """Click grid: the pattern plays on the grid; until it locks, the tonic (or the last half bar read)."""
+        m = self.memory
+        if m.locked:
+            self.state = TRAVADO
+            out = self._set(m.known[m.pos], "full", t, self.slot_why) if closed else None
+            return out if out is not None else self._locked(t, None)
+        if self.state == TRAVADO:
+            self.state = OUVINDO
+            self.reason = self.slot_why
+        if not closed:
+            return None
+        if self.learn:
+            return self._tonic_out(t, "aprendendo o padrão")
+        return self._set(self.last_heard, "full", t, f"ouvi {theory.LABELS[self.last_heard]}") if self.last_heard is not None else None
 
     def _held_check(self, t, idx, late):
         """Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement
@@ -240,7 +282,7 @@ class Engine:
             nxt, beat = pred
             tc = self.tracker.time_of_beat(beat)
             # the musician changed early: follow (except in metronome mode, where the grid rules)
-            early = (not self.metronome and self.level == CONFIANTE and idx == nxt and self.cur[0] != nxt
+            early = (not (self.metronome or self.grid) and self.level == CONFIANTE and idx == nxt and self.cur[0] != nxt
                      and t >= self.confirm_at and t >= tc - period)
             if t + self.lookahead + FRAME >= tc or early:
                 when = t if early else max(t, tc)
@@ -251,7 +293,7 @@ class Engine:
                 self.expected, self.prev_chord, self.changed_at = nxt, self.cur[0], when
                 self.contra = None
                 return self._set(nxt, "full", when, "previsto pelo padrão" + (" (você antecipou)" if early else ""))
-        if t < self.confirm_at:
+        if t < self.confirm_at or self.grid:
             return None
         # still hearing the previous chord shortly after a predicted change = musician is late, not a contradiction
         late = idx == self.prev_chord and t < self.changed_at + P.LOCK_LATE_BEATS * period

@@ -172,8 +172,11 @@ juce::var LiveEngine::devices() {
 
 static juce::String str(const juce::var& v) { return v.isVoid() || v.isUndefined() ? juce::String() : v.toString(); }
 
-juce::String LiveEngine::start(const juce::var& q) {
-    if (running_) return {};
+juce::String LiveEngine::start(const juce::var& q, bool preview) {
+    if (running_) {
+        if (!preview_) return {};
+        stop();   // the listening preview gives way (or reopens on another device)
+    }
     RunConfig cfg;
     try {
         if (auto k = str(q["tom"]); k.isNotEmpty()) note_pc(k.toStdString()), cfg.tom = k.toStdString();
@@ -193,7 +196,8 @@ juce::String LiveEngine::start(const juce::var& q) {
     } catch (const std::exception& e) {
         return juce::String::fromUTF8("Configuração inválida: ") + e.what();
     }
-    cfg.clique = (bool)q["clique"];
+    cfg.clique = !preview && (bool)q["clique"];
+    cfg.contagem = !preview && (bool)q["contagem"];
     cfg.manter_padrao = q.hasProperty("manter_padrao") ? (bool)q["manter_padrao"] : true;
     cfg.aprender_na_tonica = q.hasProperty("aprender_na_tonica") ? (bool)q["aprender_na_tonica"] : true;
     if (q["bpm_inicial"].isDouble() || q["bpm_inicial"].isInt())
@@ -245,14 +249,16 @@ juce::String LiveEngine::start(const juce::var& q) {
     R_.assign(8192, 0.0);
     outPos_ = 0;
     seenDecisions_ = 0;
-    diaryHead_ = diaryCount_ = 0;
+    if (!preview) {   // the diary and the report of the last song stay on screen while it only listens
+        diaryHead_ = diaryCount_ = 0;
+        report_.clear();
+    }
     costSum_ = costMax_ = 0;
     costN_ = 0;
     lastReason_.clear();
     lastReason_.reserve(512);   // no allocation in the audio thread when the reason changes
     lastXruns_ = 0;
     error_.clear();
-    report_.clear();
     xrunBase_ = 0;
     inputCorrupt_ = false;
     inputDead_ = false;
@@ -280,6 +286,7 @@ juce::String LiveEngine::start(const juce::var& q) {
     run->setProperty("manter_padrao", cfg.manter_padrao);
     run->setProperty("aprender_na_tonica", cfg.aprender_na_tonica);
     run->setProperty("bpm_inicial", cfg.bpm_inicial ? juce::var(*cfg.bpm_inicial) : juce::var());
+    run->setProperty("contagem", cfg.contagem);
     auto info = new juce::DynamicObject();
     info->setProperty("run", juce::var(run));
     info->setProperty("lookahead", lookahead_);
@@ -290,10 +297,13 @@ juce::String LiveEngine::start(const juce::var& q) {
     info->setProperty("saida", setup.outputDeviceName);
     info->setProperty("taxa_dispositivo", sr_);
     info->setProperty("buffer", dev->getCurrentBufferSizeSamples());
-    session_ = juce::File(KORDIA_REPO_DIR).getChildFile("sessoes").getChildFile(
-        juce::Time::getCurrentTime().formatted("%Y-%m-%d_%H-%M-%S"));
-    rec_ = std::make_unique<SessionWriter>(session_, juce::var(info), asr_);
+    if (!preview) {
+        session_ = juce::File(KORDIA_REPO_DIR).getChildFile("sessoes").getChildFile(
+            juce::Time::getCurrentTime().formatted("%Y-%m-%d_%H-%M-%S"));
+        rec_ = std::make_unique<SessionWriter>(session_, juce::var(info), asr_);
+    }
     started_ = juce::Time::getCurrentTime();
+    preview_ = preview;
     running_ = true;
     dm_.addAudioCallback(this);
     return {};
@@ -303,6 +313,11 @@ void LiveEngine::stop() {
     if (!running_) return;
     dm_.removeAudioCallback(this);
     running_ = false;
+    if (preview_) {
+        preview_ = false;
+        dm_.closeAudioDevice();
+        return;
+    }
     auto* dev = dm_.getCurrentAudioDevice();
     auto* s = new juce::DynamicObject();
     s->setProperty("duracao_s", (juce::Time::getCurrentTime() - started_).inSeconds());
@@ -350,7 +365,7 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
         for (int c = 0; c < numOut; ++c) juce::FloatVectorOperations::clear(out[c], n);
         return;
     }
-    proc_->click = click_;
+    proc_->click = click_ && !preview_;
     proc_->click_vel = (int)(clickVolume_ * 127);
     proc_->dyn().fixed = dynFixed_;
     proc_->set_hold(hold_);
@@ -397,7 +412,7 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     if (outPos_ < (long long)(0.5 * sr_) && outPos_ + n >= (long long)(0.5 * sr_))
         if (auto* d = dm_.getCurrentAudioDevice()) xrunBase_ = juce::jmax(0, d->getXRunCount());
     outPos_ += n;
-    const float vol = volume_;
+    const float vol = preview_ ? 0.0f : volume_.load();
     const bool mon = monitor_;
     for (int c = 0; c < numOut; ++c) {
         const double* src = (c % 2) ? R_.data() : L_.data();
@@ -426,7 +441,7 @@ void LiveEngine::analyzeHop() {
     proc_->analyze(hop_.data());
     const auto& eng = proc_->engine();
     // new decisions -> diary + session
-    long long fresh = proc_->n_decisions - seenDecisions_;
+    long long fresh = preview_ ? 0 : proc_->n_decisions - seenDecisions_;
     auto& dec = proc_->decisions;
     for (long long k = juce::jmin<long long>(fresh, (long long)dec.size()); k > 0; --k) {
         const auto& d = dec[dec.size() - (size_t)k];
@@ -438,7 +453,7 @@ void LiveEngine::analyzeHop() {
         if (rec_) rec_->pushDecision(e);
         lastReason = eng.reason;
     }
-    if (fresh == 0 && eng.reason != lastReason) {   // a reason without a sound change (lock, unlock, scheduled)
+    if (!preview_ && fresh == 0 && eng.reason != lastReason) {   // a reason without a sound change (lock, unlock, scheduled)
         lastReason = eng.reason;
         Diary e{proc_->time(), (int)eng.state, -2, 0, {}};
         copyText(e.reason, sizeof(e.reason), eng.reason);
@@ -484,10 +499,13 @@ void LiveEngine::publish() {
     s.bpm = std::isnan(proc_->frame.bpm) ? 0 : proc_->frame.bpm;
     bool active = eng.state == State::Ouvindo || eng.state == State::Travado || eng.state == State::Fallback;
     auto b = proc_->beat_in_bar();
-    s.beat = b && (active || proc_->click) ? *b : 0;
+    s.count = proc_->count_left();
+    s.beat = b && (active || proc_->click || s.count > 0) ? *b : 0;
+    const auto& chroma = proc_->chroma();
+    s.note = (int)(std::max_element(chroma.begin(), chroma.end()) - chroma.begin());
     auto nx = proc_->next_chord();
     s.next = nx ? *nx : -1;
-    s.nPattern = mem.locked ? juce::jmin(8, (int)mem.known.size()) : 0;
+    s.nPattern = mem.locked ? juce::jmin(P::GRID_MAX_SLOTS, (int)mem.known.size()) : 0;
     for (int i = 0; i < s.nPattern; ++i) s.pattern[i] = mem.known[(size_t)i];
     s.pos = mem.locked ? mem.pos : -1;
     s.frozen = proc_->tracker().frozen();
@@ -513,8 +531,15 @@ juce::var LiveEngine::snapshot() {
     }
     auto* dev = dm_.getCurrentAudioDevice();
     auto* o = new juce::DynamicObject();
-    bool running = running_ && proc_;
+    bool running = running_ && proc_ && !preview_;
     o->setProperty("running", running);
+    if (running_ && proc_ && preview_) {   // before Iniciar: only what it hears
+        o->setProperty("listening", true);
+        o->setProperty("heard", s.heard == N_IDX ? juce::var() : juce::var(juce::String(label(s.heard))));
+        o->setProperty("note", s.note >= 0 ? juce::var(juce::String(label(s.note))) : juce::var());
+        o->setProperty("conf", s.conf);
+        o->setProperty("db", s.db);
+    }
     juce::String err = error_;
     if (inputCorrupt_ && err.isEmpty())
         err = juce::String::fromUTF8("A entrada chega corrompida neste driver (formato de amostra). "
@@ -578,6 +603,7 @@ juce::var LiveEngine::snapshot() {
     o->setProperty("db", s.db);
     o->setProperty("bpm", s.bpm > 0 ? juce::var(s.bpm) : juce::var());
     o->setProperty("beat", s.beat ? juce::var(s.beat) : juce::var());
+    o->setProperty("count", s.count);
     o->setProperty("frozen", s.frozen);
     o->setProperty("fixed_grid", s.fixedGrid);
     o->setProperty("clique", s.click);
