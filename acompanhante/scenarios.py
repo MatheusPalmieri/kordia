@@ -20,6 +20,8 @@ class Bar:
     shape2: str | None = None    # different shape for the second half (same harmony, e.g. 'Am/G')
     bass_notes: tuple = ()       # MIDI notes consumed by 'b' slots
     surprise: bool = False
+    wrong: str | None = None     # musician's mistake: this shape on the first half (truth stays `chord`)
+    late_entry: bool = False     # musician's mistake: an 'm' here is a late entry, not a pause (truth stays `chord`)
 
     @property
     def label(self):
@@ -93,6 +95,8 @@ def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_
             j = max(jj for jj in range(len(bars)) if eff[jj] <= ts_grid + 1e-9 or jj == 0)
             src = bars[j] if bars[j].chord is not None else bar
             shape = src.shape2 if (src.shape2 and src is bar and k >= 4) else src.chord
+            if src is bar and bar.wrong and k < 4:
+                shape = bar.wrong
             if c in "DU":
                 if shape != cur_shape:
                     g.mute(ts)
@@ -106,8 +110,9 @@ def render(bars, seed=0, lead=1.0, tail=3.0, jitter=0.010, noise_db=None, voice_
             elif c == "m":
                 g.mute(ts)
                 cur_shape = None
-                segments.append([seg_start, ts_grid, label])
-                label, seg_start = "P", ts_grid
+                if not bar.late_entry:
+                    segments.append([seg_start, ts_grid, label])
+                    label, seg_start = "P", ts_grid
         segments.append([seg_start, bar_end, label])
     g.mute(end_t)
     segments.append([end_t, duration, theory.N])
@@ -206,6 +211,17 @@ def _dinamica():
     return bars + final(bpm=100, gain=0.25)
 
 
+def _erros_com_padrao():
+    """Third live session (2026-10-29): with the pattern learned, the musician's slips must not break it.
+    Truth is the intended progression, not the slips."""
+    bars = loop(PROG, 6, bpm=100)
+    bars[9].wrong = "Dm"                                  # half a bar of a wrong chord (F expected... here G bar)
+    bars[13].shift = 1.25                                 # changes to G 1.25 beats late
+    bars[18].pattern, bars[18].late_entry = "m---DUDU", True   # comes in 2 beats late on Am
+    bars[21].wrong = "Em"                                 # wrong chord again on G
+    return bars + final(bpm=100)
+
+
 LIVRE_C = {"modo": "livre", "tom": "C"}
 
 # name -> (description, bars builder(rng), render kwargs, run config)
@@ -229,6 +245,8 @@ SCENARIOS = {
     "realimentacao": ("a saída do sistema volta na entrada (30 ms, ~6 dB abaixo do violão)",
                       lambda r: loop(PROG, 4, bpm=110) + final(bpm=110), {},
                       {"modo": "livre", "tom": "C", "feedback": {"gain": 0.1, "delay": 0.03}}),
+    "erros_com_padrao": ("padrão travado; depois o músico erra um acorde, atrasa uma troca e entra atrasado",
+                         lambda r: _erros_com_padrao(), {}, {"modo": "livre", "tom": "C", "manter_padrao": True}),
     # first live session (2026-10-29): I-V-vi-IV in B (guitar a half step down) with the key set to C
     "tom_errado": ("B-F#-G#m-E tocado com o tom configurado em Dó", lambda r: loop(["B", "F#", "G#m", "E"], 4, bpm=100)
                    + final("B", bpm=100), {}, LIVRE_C),

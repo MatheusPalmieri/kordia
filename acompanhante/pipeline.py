@@ -22,6 +22,7 @@ class RunConfig:
     progressao: str | None = None # decorated mode, e.g. 'C G Am F'
     feedback: dict | None = None  # test only: {'gain': 0.5, 'delay': 0.03} closed loop output -> input
     clique: bool = False          # audible metronome click (in metronome mode the grid then starts at Iniciar)
+    manter_padrao: bool = False   # hold: once learned, the pattern keeps playing through mistakes (UI default: on)
 
     @classmethod
     def from_dict(cls, d):
@@ -67,6 +68,7 @@ class Processor:
         self.memory = ProgressionMemory(cfg.progressao)
         self.lookahead = lookahead
         self.engine = Engine(self.tracker, self.memory, cfg.tom, metronome=cfg.modo == "metronomo", lookahead=lookahead)
+        self.engine.hold = cfg.manter_padrao
         self.onsets, self.chords = OnsetDetector(), ChordTracker(cfg.tom)
         self.acc, self.dyn, self.synth = Accompanist(cfg.tom), Dynamics(), Synth()
         self.wo, self.wc = np.hanning(P.ONSET_WIN), np.hanning(P.CHROMA_WIN)
@@ -127,6 +129,8 @@ class Processor:
                     self.last_click_t = tb
                     evs += acc.click(tb, tracker.bar_pos(bi) == 0, self.click_vel)
         expr = dyn.expression(t, engine.last_onset, tracker.period)
+        if engine.hold and engine.state == TRAVADO:
+            expr = 1.0   # a held pattern does not fade while waiting for the next strum
         evs += acc.expression(t, expr)
         for e in evs:
             self.synth.handle(e)

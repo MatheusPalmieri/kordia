@@ -79,6 +79,7 @@ stateDiagram-v2
 
 - **OCIOSO:** não toca nada. Memória vazia.
 - **OUVINDO:** reativo. Troca o acompanhamento quando o acorde ouvido tem confiança alta **e** houve palhetada nos últimos 0,35 s. No modo metrônomo a troca espera o próximo tempo forte (1 ou 3) da grade.
+- **TRAVADO com "manter o padrão"** (padrão da interface): a confirmação pelo áudio só serve para detectar mudança deliberada (discordância confiante por 1½ compasso); erros, dúvidas e atrasos são ignorados; a parada exige 5 tempos sem palhetada.
 - **TRAVADO:** previsão. A troca é agendada no próximo tempo previsto para o acorde seguinte do ciclo (duração de cada acorde aprendida em meios compassos). ~½ pulso depois, o áudio confirma; se outro acorde for ouvido com alta confiança, toca o ouvido e destrava (e tenta re-travar no ciclo conhecido assim que dois acordes seguidos baterem com ele); continuar ouvindo o acorde anterior por até 1 pulso é tratado como atraso do músico; discordância fraca conta como "falha", e duas seguidas destravam.
 - **FALLBACK:** pad na tônica + quinta do tom principal (ou silêncio sem tom).
 - **ENCERRANDO:** termina o compasso da última palhetada, faz fade, e mantém memória por até ~2 compassos de silêncio.

@@ -24,6 +24,8 @@ void Engine::forget() {
     contra_since_ = 0.0;
     last_change_t_ = -INF;
     recent_.clear();
+    disagree_since_.reset();
+    root5_tc_.reset();
     reason.clear();
     stop_at_ = 0.0;
     memory_.reset();
@@ -42,6 +44,7 @@ std::optional<Output> Engine::set(int chord, Mode mode, double t, const char* wh
 }
 
 double Engine::stop_gap() const {
+    if (held() && tracker_.has_period()) return P::HOLD_STOP_BARS * bar();   // a late entry is not the end
     double ioi = 0.0;
     for (double v : iois_) ioi = std::max(ioi, v);
     ioi = std::min(ioi, bar());
@@ -84,7 +87,7 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
     }
     if (state == State::Encerrando) {
         if (!onset) {
-            if (gap > P::FORGET_BARS * bar()) {
+            if (gap > P::FORGET_BARS * bar()) {   // (> HOLD_STOP_BARS: a held pattern stops before it forgets)
                 auto out = set(-1, Mode::Silence, t, "silêncio longo: fim");
                 forget();
                 reason = "silêncio longo: esqueci padrão e andamento";
@@ -105,7 +108,8 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
     if (state == State::Fallback) {
         if (level != Level::Confiante) return std::nullopt;
         state = State::Ouvindo;
-    } else if (doubt_since_ && t - *doubt_since_ > P::DOUBT_TO_FALLBACK_BARS * bar()) {
+    } else if (doubt_since_ && t - *doubt_since_ > P::DOUBT_TO_FALLBACK_BARS * bar() &&
+               !(held() && state == State::Travado)) {   // a held pattern beats the tonic
         state = State::Fallback;
         memory_.unlock();
         reason = "dúvida por mais de 1 compasso";
@@ -120,6 +124,27 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
 
     if (state == State::Travado) return locked(t, idx);
     return reactive(t, idx, evidence);
+}
+
+// Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement sustained
+// for HOLD_CONTRA_BARS (the musician really moved on) makes it relearn.
+std::optional<Output> Engine::held_check(double t, int idx, bool late) {
+    if (level != Level::Confiante || idx == N_IDX) return std::nullopt;
+    if ((cur.first == idx && cur.second == Mode::Full) || late) {
+        disagree_since_.reset();
+        return std::nullopt;
+    }
+    if (!disagree_since_) {
+        disagree_since_ = t;
+        return std::nullopt;
+    }
+    if (t - *disagree_since_ < P::HOLD_CONTRA_BARS * bar()) return std::nullopt;
+    disagree_since_.reset();
+    memory_.correct(idx);
+    memory_.unlock();
+    state = State::Ouvindo;
+    tracker_.observe_change(change_time(t));
+    return set(idx, Mode::Full, t, "você mudou de verdade (2 compassos diferentes do padrão): ouvi " + label(idx) + ", reaprendendo");
 }
 
 std::optional<Output> Engine::reactive(double t, int idx, const std::array<double, 25>& evidence) {
@@ -145,12 +170,17 @@ std::optional<Output> Engine::reactive(double t, int idx, const std::array<doubl
         if (i != b && evidence[i] > evidence[a]) a = i;
     if (level == Level::Duvida && a % 12 == b % 12 && evidence[a] + evidence[b] >= P::CONF_HIGH && cur.first != a &&
         cur.first != b)
+    {
+        root5_tc_ = change_time(t);
         return set(b, Mode::Root5, t, "dúvida " + label(a) + "/" + label(b) + ": sem terça");
+    }
     return std::nullopt;
 }
 
 std::optional<Output> Engine::reactive_change(double t, int idx) {
     double tc = change_time(t);
+    if (cur.second == Mode::Root5 && cur.first >= 0 && cur.first % 12 == idx % 12 && root5_tc_)
+        tc = *root5_tc_;   // same chord, now with its third: it started when the root did
     if (tracker_.has_period()) {
         tracker_.observe_change(tc);
         // changes land on (or just before) a beat; detection lag and off-beat strums only push them later
@@ -191,6 +221,8 @@ std::optional<Output> Engine::locked(double t, int idx) {
                      t >= tc - period;
         if (t + lookahead_ + frame_ >= tc || early) {
             double when = early ? t : std::max(t, tc);
+            if (early)   // the musician is ahead of the stored grid: learn the real start (fixes a systematic offset)
+                beat = (long long)std::floor(tracker_.beat_phase(change_time(t)) + 0.3);
             memory_.advance(beat);
             confirm_at_ = when + P::LOCK_CONFIRM_BEATS * period + 0.1;
             expected_ = nxt;
@@ -203,6 +235,7 @@ std::optional<Output> Engine::locked(double t, int idx) {
     if (t < confirm_at_) return std::nullopt;
     // still hearing the previous chord shortly after a predicted change = musician is late, not a contradiction
     bool late = prev_chord_ && idx == *prev_chord_ && t < changed_at_ + P::LOCK_LATE_BEATS * period;
+    if (hold) return held_check(t, idx, late);
     bool same = cur.first == idx && cur.second == Mode::Full;
     if (level == Level::Confiante && idx != N_IDX && !same && !late) {
         // a confident disagreement must persist before it overrides the pattern (one bad frame is noise)

@@ -71,7 +71,7 @@ private:
 
     // set by the UI thread, read by the audio thread
     std::atomic<float> gain_{1.0f}, volume_{1.0f}, clickVolume_{0.7f};
-    std::atomic<bool> monitor_{false}, click_{false}, dynFixed_{false}, freeze_{false}, running_{false};
+    std::atomic<bool> monitor_{false}, click_{false}, dynFixed_{false}, freeze_{false}, running_{false}, hold_{true};
 
     std::string lastReason_;
     int lastXruns_ = 0;

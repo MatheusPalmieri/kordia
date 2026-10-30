@@ -78,3 +78,10 @@
 - Pad de worship: serras desafinadas, voicing aberto (fundamental, quinta, oitava, décima, shimmer), passa-baixa, ataque ~0,9 s, liberação ~2,2 s (acordes se fundem), reverb estéreo grande. Ao parar, fade curto (0,6 s).
 - Baixo audível também em alto-falante pequeno (senoide saturada).
 - Volume alto o bastante sem distorcer (limitador suave na saída).
+
+### RF12 — Manter o padrão aprendido (configurável; padrão: ligado)
+- Depois que o ciclo trava, erros e atrasos do músico (acorde errado, troca atrasada, entrada atrasada) não destravam: o acompanhamento segue a progressão na grade, com volume constante.
+- Dúvida não leva à tônica: com o padrão travado, o padrão é a melhor aposta.
+- Mudança deliberada (outra parte, outro tom): aceita quando o áudio discorda com confiança por 1½ compasso seguido.
+- Parada: depois de 5 tempos sem palhetada (uma entrada atrasada não é o fim); esquece após 2 compassos.
+- Desligado: comportamento anterior (o áudio manda; contradição sustentada por ½ pulso destrava).

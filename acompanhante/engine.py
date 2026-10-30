@@ -25,6 +25,7 @@ class Engine:
     def __init__(self, tracker, memory, key=None, metronome=False, lookahead=0.0):
         self.tracker, self.memory, self.key, self.metronome = tracker, memory, key, metronome
         self.lookahead = lookahead   # live: audio output latency; scheduled events are emitted this much earlier
+        self.hold = False            # "manter o padrão": once locked, trust the pattern over the audio (live setting)
         self.cur = (None, None)
         self._forget()
 
@@ -41,6 +42,8 @@ class Engine:
         self.misses = 0
         self.contra = None
         self.contra_since = 0.0
+        self.disagree_since = None   # hold mode: since when the audio confidently disagrees with the pattern
+        self.root5_tc = None         # when a 'no third' chord started (its full version keeps that start)
         self.last_change_t = -np.inf
         self.recent = deque(maxlen=8)   # last chords played: does the configured key match the music?
         self.reason = ""
@@ -62,7 +65,12 @@ class Engine:
             self.reason = reason
         return Output(chord, mode, t)
 
+    def _held(self):
+        return self.hold and self.memory.locked
+
     def _stop_gap(self):
+        if self._held() and self.tracker.period:
+            return P.HOLD_STOP_BARS * self._bar()   # a late entry is not the end of the song
         ioi = min(max(self.iois, default=0.0), self._bar())
         base = P.STOP_BEATS * self.tracker.period if self.tracker.period else P.STOP_DEFAULT_SECONDS
         return max(base, P.STOP_IOI_FACTOR * ioi)
@@ -106,7 +114,7 @@ class Engine:
             self.stop_at = max(t, end)
         if self.state == ENCERRANDO:
             if onset is None:
-                if gap > P.FORGET_BARS * self._bar():
+                if gap > P.FORGET_BARS * self._bar():   # (> HOLD_STOP_BARS: a held pattern stops before it forgets)
                     out = self._set(None, None, t, "silêncio longo: fim")
                     self._forget()
                     self.reason = "silêncio longo: esqueci padrão e andamento"
@@ -126,7 +134,8 @@ class Engine:
             if self.level != CONFIANTE:
                 return None
             self.state = OUVINDO
-        elif self.doubt_since is not None and t - self.doubt_since > P.DOUBT_TO_FALLBACK_BARS * self._bar():
+        elif (self.doubt_since is not None and t - self.doubt_since > P.DOUBT_TO_FALLBACK_BARS * self._bar()
+              and not (self._held() and self.state == TRAVADO)):   # a held pattern beats the tonic
             self.state = FALLBACK
             self.memory.unlock()
             self.reason = "dúvida por mais de 1 compasso"
@@ -136,6 +145,26 @@ class Engine:
         if self.state == TRAVADO:
             return self._locked(t, idx)
         return self._reactive(t, idx, evidence)
+
+    def _held_check(self, t, idx, late):
+        """Hold mode: mistakes, late entries and doubts never break the pattern; only a confident disagreement
+        sustained for HOLD_CONTRA_BARS (the musician really moved on) makes it relearn."""
+        if self.level != CONFIANTE or idx == N_IDX:
+            return None
+        if (idx, "full") == self.cur or late:
+            self.disagree_since = None
+            return None
+        if self.disagree_since is None:
+            self.disagree_since = t
+            return None
+        if t - self.disagree_since < P.HOLD_CONTRA_BARS * self._bar():
+            return None
+        self.disagree_since = None
+        self.memory.correct(idx)
+        self.memory.unlock()
+        self.state = OUVINDO
+        self.tracker.observe_change(self._change_time(t))
+        return self._set(idx, "full", t, f"você mudou de verdade (2 compassos diferentes do padrão): ouvi {theory.LABELS[idx]}, reaprendendo")
 
     def _reactive(self, t, idx, evidence):
         if self.pending and t + self.lookahead + FRAME >= self.pending[1]:
@@ -153,11 +182,14 @@ class Engine:
         a, b = np.argsort(evidence[:24])[-2:]
         if (self.level == DUVIDA and a % 12 == b % 12 and evidence[a] + evidence[b] >= P.CONF_HIGH
                 and self.cur[0] not in (a, b)):
+            self.root5_tc = self._change_time(t)
             return self._set(int(b), "root5", t, f"dúvida {theory.LABELS[a]}/{theory.LABELS[b]}: sem terça")
         return None
 
     def _reactive_change(self, t, idx):
         tc = self._change_time(t)
+        if self.cur[1] == "root5" and self.cur[0] is not None and self.cur[0] % 12 == idx % 12 and self.root5_tc is not None:
+            tc = self.root5_tc   # same chord, now with its third: it started when the root did
         if self.tracker.period:
             self.tracker.observe_change(tc)
             # changes land on (or just before) a beat; detection lag and off-beat strums only push them later
@@ -194,6 +226,8 @@ class Engine:
                      and t >= self.confirm_at and t >= tc - period)
             if t + self.lookahead + FRAME >= tc or early:
                 when = t if early else max(t, tc)
+                if early:   # the musician is ahead of the stored grid: learn the real start (fixes a systematic offset)
+                    beat = int(np.floor(self.tracker.beat_phase(self._change_time(t)) + 0.3))
                 self.memory.advance(beat)
                 self.confirm_at = when + P.LOCK_CONFIRM_BEATS * period + 0.1
                 self.expected, self.prev_chord, self.changed_at = nxt, self.cur[0], when
@@ -203,6 +237,8 @@ class Engine:
             return None
         # still hearing the previous chord shortly after a predicted change = musician is late, not a contradiction
         late = idx == self.prev_chord and t < self.changed_at + P.LOCK_LATE_BEATS * period
+        if self.hold:
+            return self._held_check(t, idx, late)
         if self.level == CONFIANTE and idx != N_IDX and (idx, "full") != self.cur and not late:
             # a confident disagreement must persist before it overrides the pattern (one bad frame is noise)
             if self.contra != idx:

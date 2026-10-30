@@ -17,6 +17,7 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `batida_abafada` | palhetadas percussivas sem nota intercaladas | livre, tom C |
 | `ruido` | ruído de fundo + "voz" senoidal | livre, tom C |
 | `realimentacao` | a saída do próprio sistema volta na entrada (laço fechado, 30 ms, ~6 dB abaixo do violão) | livre, tom C |
+| `erros_com_padrao` | padrão travado; depois acorde errado, troca atrasada e entrada atrasada (verdade = progressão pretendida) | livre, tom C, **manter o padrão** |
 | `tom_errado` | B–F#–G#m–E com o tom configurado em Dó (caso real de 2026-10-29) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 

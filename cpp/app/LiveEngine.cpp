@@ -194,6 +194,7 @@ juce::String LiveEngine::start(const juce::var& q) {
         return juce::String::fromUTF8("Configuração inválida: ") + e.what();
     }
     cfg.clique = (bool)q["clique"];
+    cfg.manter_padrao = q.hasProperty("manter_padrao") ? (bool)q["manter_padrao"] : true;
     cfg.modo = cfg.bpm ? "metronomo" : (cfg.progressao ? "decorado" : "livre");
 
     dm_.getAvailableDeviceTypes();
@@ -273,6 +274,7 @@ juce::String LiveEngine::start(const juce::var& q) {
     run->setProperty("bpm", cfg.bpm ? juce::var(*cfg.bpm) : juce::var());
     run->setProperty("progressao", cfg.progressao ? juce::var(juce::String(*cfg.progressao)) : juce::var());
     run->setProperty("clique", cfg.clique);
+    run->setProperty("manter_padrao", cfg.manter_padrao);
     auto info = new juce::DynamicObject();
     info->setProperty("run", juce::var(run));
     info->setProperty("lookahead", lookahead_);
@@ -326,6 +328,7 @@ void LiveEngine::setLive(const juce::var& q) {
     if (q.hasProperty("click_volume")) clickVolume_ = (float)juce::jlimit(0.0, 1.0, (double)q["click_volume"]);
     if (q.hasProperty("dinamica_fixa")) dynFixed_ = (bool)q["dinamica_fixa"];
     if (q.hasProperty("fixar_bpm")) freeze_ = (bool)q["fixar_bpm"];
+    if (q.hasProperty("manter_padrao")) hold_ = (bool)q["manter_padrao"];
     if (q.hasProperty("bpm") && (q["bpm"].isDouble() || q["bpm"].isInt()))
         pendingBpm_ = juce::jlimit(30.0, 250.0, (double)q["bpm"]);
 }
@@ -340,6 +343,7 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     proc_->click = click_;
     proc_->click_vel = (int)(clickVolume_ * 127);
     proc_->dyn().fixed = dynFixed_;
+    proc_->set_hold(hold_);
     if (freeze_ != proc_->tracker().frozen()) proc_->freeze_tempo(freeze_);
     if (double b = pendingBpm_.exchange(0.0); b > 0) proc_->set_bpm(b);
 
@@ -561,6 +565,7 @@ juce::var LiveEngine::snapshot() {
     o->setProperty("frozen", s.frozen);
     o->setProperty("fixed_grid", s.fixedGrid);
     o->setProperty("clique", s.click);
+    o->setProperty("hold", hold_.load());
     o->setProperty("next", s.next >= 0 ? juce::var(juce::String(label(s.next))) : juce::var());
     auto noteName = [](int m) { return juce::String(label(m % 12)) + juce::String(m / 12 - 1); };
     auto* out = new juce::DynamicObject();

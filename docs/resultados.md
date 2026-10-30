@@ -5,6 +5,33 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v5 — 2026-10-29 (manter o padrão)
+
+Cenários (14; núcleo C++): média **0,90**, latência média 122 ms, travada 44 ms, falso disparo médio 0,02 s (só `erros_com_padrao`, que roda com o modo manter e encerra 0,6 s depois do fim).
+
+`erros_com_padrao` (erros do músico com o padrão travado):
+
+| | acerto | latência travada | errado confiante |
+|---|---|---|---|
+| áudio manda, antes das decisões 72–73 | 0,876 | 148 ms | 1 |
+| áudio manda, v5 | 0,921 | 72 ms | 0 |
+| **manter o padrão, v5** | **0,960** | **37 ms** | **0** |
+
+Modo manter nos outros cenários (custo medido):
+
+| cenário | áudio manda | manter |
+|---|---|---|
+| estavel_120 | 0,94 | 0,94 |
+| ruido | 0,91 | 0,91 |
+| modo_metronomo | 0,93 | 0,93 |
+| pausa_e_fim | 0,93 | 0,93 |
+| acorde_fora_do_tom | 0,92 | 0,89 |
+| troca_de_tom (sem pausa) | 0,93 | 0,90 |
+
+Em todos com o modo manter: parada ~0,6 s depois do fim do último compasso (5 tempos sem palhetada) e 0,2–0,6 s de "falso disparo" por isso.
+
+---
+
 ## v4 — 2026-10-29 (depois do segundo teste ao vivo)
 
 **Sessão real** (`sessoes/2026-10-29_21-39-39`, violão em Si, 37 s antes da pane do driver), reproduzida com o algoritmo novo:

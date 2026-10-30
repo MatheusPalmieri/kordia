@@ -44,6 +44,7 @@ constexpr double LOCK_CONFIRM_BEATS = 0.5;
 constexpr int LOCK_MAX_MISSES = 3;
 constexpr double LOCK_CONTRA_BEATS = 0.5, LOCK_LATE_BEATS = 1.0;
 constexpr int CYCLE_MIN = 2, CYCLE_MAX = 8;
+constexpr double HOLD_STOP_BARS = 1.25, HOLD_CONTRA_BARS = 1.5;
 constexpr double METRO_LATE_BEATS = 0.5;
 constexpr double DYN_DB_LOW = -45.0, DYN_DB_HIGH = -12.0;
 constexpr int DYN_VEL_LOW = 60, DYN_VEL_HIGH = 120;
@@ -78,6 +79,7 @@ struct RunConfig {
     std::optional<double> bpm;         // metronome mode
     std::optional<std::string> progressao;
     bool clique = false;
+    bool manter_padrao = false;   // hold: once learned, the pattern keeps playing through mistakes
 };
 
 // ------------------------------------------------------------------ analysis
@@ -246,6 +248,13 @@ private:
     std::optional<int> expected_, prev_chord_, contra_;
     int misses_ = 0;
     std::deque<int> recent_;   // last chords played: does the configured key match the music?
+    std::optional<double> disagree_since_;   // hold mode: since when the audio confidently disagrees
+    std::optional<double> root5_tc_;         // when a 'no third' chord started
+    std::optional<Output> held_check(double t, int idx, bool late);
+    bool held() const { return hold && memory_.locked; }
+public:
+    bool hold = false;          // "manter o padrão": once locked, trust the pattern over the audio (live setting)
+private:
 public:
     void set_frame(double f) { frame_ = f; }
 };
@@ -334,6 +343,7 @@ public:
     double time() const { return s_ / sr_; }   // analysis time (end of last block)
     void freeze_tempo(bool on);
     void set_bpm(double bpm);   // live: fixed BPM (metronome mode or frozen tempo), keeping the beat phase
+    void set_hold(bool on) { engine_.hold = on; }   // live: "manter o padrão"
     const Synth& synth() const { return synth_; }
     std::optional<int> next_chord() const;
     std::optional<int> beat_in_bar() const;

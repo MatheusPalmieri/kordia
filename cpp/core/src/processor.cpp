@@ -38,6 +38,7 @@ Processor::Processor(const RunConfig& cfg, double lookahead, double sr, double o
       acc_(key_of(cfg)),
       synth_(out_sr > 0 ? out_sr : sr) {
     engine_.set_frame(P::HOP / sr);
+    engine_.hold = cfg.manter_padrao;
     evs_.reserve(64);
 }
 
@@ -93,6 +94,7 @@ void Processor::analyze(const double* x) {
         }
     }
     double expr = dyn_.expression(t, engine_.last_onset, tracker.period);
+    if (engine_.hold && engine_.state == State::Travado) expr = 1.0;   // a held pattern does not fade between strums
     acc_.expression(t, expr, evs_);
     for (const auto& e : evs_) synth_.handle(e);
 

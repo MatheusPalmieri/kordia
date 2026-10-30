@@ -162,6 +162,7 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
       <section class="card">
         <h2>Música <span style="text-transform:none;letter-spacing:0;font-weight:500">— opcional</span></h2>
         <div class="row"><label>Tom principal</label><select id="key" style="width:120px"></select></div>
+        <div class="row"><div><label>Manter o padrão aprendido</label><div class="hint">Depois de reconhecer, segue o padrão mesmo se você errar ou atrasar; só muda se você tocar outra coisa por 1½ compasso</div></div><label class="switch"><input type="checkbox" id="hold" checked><span></span></label></div>
         <div class="row"><div class="stack">
           <div style="display:flex;justify-content:space-between;align-items:center"><label>Progressão conhecida</label><label class="switch"><input type="checkbox" id="progOn"><span></span></label></div>
           <input type="text" id="prog" value="C G Am F" placeholder="ex.: C G Am F" spellcheck="false">
@@ -229,7 +230,7 @@ const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B
 const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
 // inside the C++/JUCE app the page is served by the WebView resource provider: GET + polling instead of POST + SSE
 const NATIVE = location.hostname === "juce.backend";
-const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "key", "prog", "progOn", "clickVol"];
+const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "hold", "key", "prog", "progOn", "clickVol"];
 let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
 let running = false, clickOn = false, lastChord = null, lastError = null, state = {};
 
@@ -247,7 +248,7 @@ async function api(path, body) {
 }
 function liveSettings() {
   return { gain_db: +$("gain").value, volume: $("volume").value / 100, monitor: $("monitor").checked,
-           dinamica_fixa: $("dynFixed").checked, clique: clickOn, click_volume: $("clickVol").value / 100 };
+           dinamica_fixa: $("dynFixed").checked, manter_padrao: $("hold").checked, clique: clickOn, click_volume: $("clickVol").value / 100 };
 }
 let liveTimer;
 function pushLive() { clearTimeout(liveTimer); liveTimer = setTimeout(() => api("/api/live", liveSettings()).catch(e => toast(e.message)), 60); }
@@ -280,7 +281,7 @@ async function init() {
   }
   if (recall("key") === undefined) $("key").value = "C";
   clickOn = !!recall("click"); $("clickBtn").classList.toggle("on", clickOn);
-  for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (["gain", "volume", "monitor", "dynFixed", "clickVol"].includes(id)) pushLive(); });
+  for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (["gain", "volume", "monitor", "dynFixed", "hold", "clickVol"].includes(id)) pushLive(); });
   tempoMode = recall("tempoMode") || "seguir"; bpmValue = recall("bpmValue") || 110;
   document.querySelectorAll("#tempoSeg button").forEach(b => b.onclick = () => { tempoMode = b.dataset.mode; store("tempoMode", tempoMode); tempoControls(); });
   document.querySelectorAll(".bpmstep").forEach(b => b.onclick = () => {

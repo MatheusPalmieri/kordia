@@ -52,3 +52,18 @@ def test_accelerating(rows):
 def test_wrong_key_setting_still_follows_the_audio(rows):
     """Key set to C, music in B: the audio wins (prior only) and the fallback never plays C over it."""
     assert rows["tom_errado"]["acc_total"] >= 0.75 and rows["tom_errado"]["errado_confiante_n"] <= 3
+
+
+def test_held_pattern_survives_mistakes(rows):
+    """Hold mode: wrong chord, late change and late entry after the lock do not break the pattern."""
+    r = rows["erros_com_padrao"]
+    assert r["acc_total"] >= 0.85 and r["falso_disparo_s"] <= 1.0
+
+
+def test_hold_is_better_than_following_when_the_musician_slips():
+    from acompanhante.metrics import evaluate
+    from acompanhante.pipeline import RunConfig, run
+    audio, truth = scenarios.build("erros_com_padrao")
+    held = evaluate(run(audio, RunConfig(tom="C", manter_padrao=True)), truth)
+    follow = evaluate(run(audio, RunConfig(tom="C", manter_padrao=False)), truth)
+    assert held["acc_total"] > follow["acc_total"]

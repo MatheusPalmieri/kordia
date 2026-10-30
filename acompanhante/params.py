@@ -61,6 +61,9 @@ LOCK_MAX_MISSES = 3           # weak disagreements (another real chord, low conf
 LOCK_CONTRA_BEATS = 0.5       # a confident disagreement must last this long to override the learned pattern
 LOCK_LATE_BEATS = 1.0         # hearing the previous chord up to 1 beat after a predicted change = musician late
 CYCLE_MIN, CYCLE_MAX = 2, 8   # cycle length in chords
+# "manter o padrão" (hold): once the cycle is locked it is trusted over the audio
+HOLD_STOP_BARS = 1.25         # with a held pattern, stop only after 5 beats of silence (late entries keep playing)
+HOLD_CONTRA_BARS = 1.5         # (2.0 tested: key change without a pause 0.88 vs 0.90; mistakes scenario equal)        # confident disagreement this long = the musician really changed: relearn
 METRO_LATE_BEATS = 0.5        # metronome mode: change heard up to this after a strong beat applies now
 
 # --- dynamics ---

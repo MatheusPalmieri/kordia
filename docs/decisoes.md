@@ -90,3 +90,13 @@ Relato: aprendeu bem o padrão no começo, depois "entendeu que estava em silên
 68. **Cartão Sinal**: nível do violão, medidores de baixo e teclado (RMS dos barramentos no sintetizador) com as notas soando.
 69. **"Sem sinal na entrada" e "rajada de falhas" são avisos no rodapé, não erros**: microfones USB zeram o sinal em sala silenciosa, então zeros por 2 s podem ser normais.
 70. **Hipótese de afinação descartada com medida:** o violão estava a −3 cents de A=440; os acordes meio tom abaixo eram o que foi tocado (Si). Sem estimador de afinação por enquanto.
+
+## 2026-10-29 — Terceiro teste ao vivo: manter o padrão
+
+Relato: com o padrão reconhecido, um atraso ou erro do músico fazia o sistema largar o padrão e tentar aprender outro; o pedido é manter o padrão (ou a tônica) mesmo com erros, ainda mais com BPM fixo; configurável no futuro.
+
+71. **Modo "manter o padrão aprendido"** (`RunConfig.manter_padrao`, `Engine.hold`), configurável ao vivo, **ligado por padrão na interface** e desligado no laboratório (os cenários antigos continuam medindo o "áudio manda"). Com o padrão travado: erros, atrasos e dúvidas não destravam; só uma discordância confiante sustentada por **1,5 compasso** reaprende (2,0 testado: troca de tom sem pausa 0,88 contra 0,90; erros iguais); dúvida não vai para a tônica; volume não abaixa entre palhetadas; parada após **5 tempos** sem palhetada (1,5 tempo antes), esquecimento nos 2 compassos de sempre (um esquecimento de 4 compassos tinha piorado `pausa_e_fim` de 0,93 para 0,88).
+72. **Início do acorde quando ele aparece primeiro sem terça:** a troca conta de quando a fundamental apareceu, não de quando a terça ficou clara. Antes, o ciclo ficava registrado 1 tempo atrasado e toda previsão virava "você antecipou".
+73. **Autocorreção da grade do padrão:** quando o músico troca antes do previsto (até 1 pulso), o padrão passa a usar o início observado. Um deslocamento sistemático se corrige na volta seguinte.
+74. **Cenário `erros_com_padrao`**: padrão travado; depois meio compasso de acorde errado (2×), troca atrasada 1¼ tempo e entrada atrasada de 2 tempos. Verdade-base = a progressão pretendida. Manter: **0,96**; áudio manda: 0,92 (era 0,876 antes das decisões 72–73).
+75. **Custo conhecido do modo manter** (medido; detalhes em `resultados.md` v5): demora 1,5 compasso para aceitar uma mudança deliberada sem pausa (`troca_de_tom` 0,93 → 0,90, `acorde_fora_do_tom` 0,92 → 0,89) e encerra ~0,6 s depois do fim do último compasso.

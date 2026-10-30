@@ -21,6 +21,7 @@ static RunConfig cfg_from(const py::dict& d) {
     c.progressao = str("progressao");
     if (d.contains("bpm") && !d["bpm"].is_none()) c.bpm = d["bpm"].cast<double>();
     if (d.contains("clique") && !d["clique"].is_none()) c.clique = d["clique"].cast<bool>();
+    if (d.contains("manter_padrao") && !d["manter_padrao"].is_none()) c.manter_padrao = d["manter_padrao"].cast<bool>();
     return c;
 }
 
@@ -117,7 +118,7 @@ static py::dict params() {
     K(HMM_P_CHANGE_STRONG); K(HMM_ONSET_BOOST_TIME); K(KEY_PRIOR_OUT); K(CONF_BETA); K(CONF_SMOOTH); K(CONF_HIGH);
     K(CONF_LOW); K(CHANGE_AFTER_ONSET); K(DOUBT_TO_FALLBACK_BARS); K(STOP_BEATS); K(STOP_IOI_FACTOR);
     K(STOP_DEFAULT_SECONDS); K(FORGET_BARS); K(LOCK_CONFIRM_BEATS); K(LOCK_MAX_MISSES); K(LOCK_CONTRA_BEATS);
-    K(LOCK_LATE_BEATS); K(CYCLE_MIN); K(CYCLE_MAX); K(METRO_LATE_BEATS); K(DYN_DB_LOW); K(DYN_DB_HIGH); K(DYN_VEL_LOW);
+    K(LOCK_LATE_BEATS); K(CYCLE_MIN); K(CYCLE_MAX); K(HOLD_STOP_BARS); K(HOLD_CONTRA_BARS); K(METRO_LATE_BEATS); K(DYN_DB_LOW); K(DYN_DB_HIGH); K(DYN_VEL_LOW);
     K(DYN_VEL_HIGH); K(DYN_SMOOTH); K(DYN_SILENCE_DECAY); K(BASS_LOW); K(PAD_ROOT_LOW); K(PAD_SHIMMER); K(PAD_ATTACK);
     K(PAD_RELEASE); K(PAD_CUTOFF); K(PAD_LEVEL); K(PAD_DRY); K(PAD_WET); K(REVERB_ROOM); K(REVERB_DAMP); K(BASS_LEVEL);
     K(BASS_RELEASE); K(CLICK_LEVEL); K(STOP_FADE);
