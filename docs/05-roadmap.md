@@ -43,5 +43,5 @@ Pendente:
 - **Guitarra elétrica** (entrada limpa, antes dos efeitos).
 - **VST/AU** para usar dentro de uma DAW ou de um host ao vivo.
 - **ML leve** (ex.: classificador de acordes pequeno) só se medir ganho nos cenários e nas gravações.
-- **UI:** salvar configurações e setlist, modo palco (tela grande), atalhos de pedal.
-- Salvar progressões por música ("setlist").
+- **UI:** atalhos de pedal. Modo palco e configurações salvas já existem.
+- **Repertório:** salvar música com tom, andamento, afinação e partes; serve de palpite, o áudio continua mandando. Já desenhado no canvas da UI, não implementado.

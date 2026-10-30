@@ -180,3 +180,19 @@ Relato: as trocas erravam o tempo ("com metrônomo, troca na cabeça") e o padr�
 125. **A interface escreve só o que mudou** (`text`, `html`, `level`). Medidores usam `transform` em vez de `width`, que não passa pelo layout, e o `backdrop-filter` saiu: sobre um fundo liso, não mudava nada visível e custava a maior parte da GPU. Texto legível atualiza 5 vezes por segundo; parada, a tela atualiza a 10 Hz; minimizada, a 2 Hz.
 126. **Polling mantido.** O envio ativo pelo JUCE economizaria só a parte de rede (2 %) e parte do navegador (7 %), e traria um mecanismo novo. *Reabrir se a CPU do WebView2 voltar a incomodar.*
 127. **Sessão vai ao disco a cada 2 s.** `flush()` do JUCE é `FlushFileBuffers`, e rodava 40 vezes por segundo. Custo: até 2 s do CSV e do diário numa queda do Windows.
+
+## 2026-10-30 — Interface nova (v10)
+
+128. **Uma tela com três partes: entrada, entendimento, saída.** Segue o caminho do sinal e responde o que o Matheus pediu: o que entra, o que ele entendeu, o que sai. *Alternativa: manter os cartões soltos da v9, que não mostravam o que ele estava aprendendo.*
+129. **Cor diz quem falou, traço diz a certeza.** Âmbar ouvido, azul tocado, coral discordância; cheio confirmado, tracejado palpite. Assim uma hipótese nunca se parece com o que está soando.
+130. **Só tema escuro.** O app é usado no palco; manter dois temas dobraria a conferência de contraste. *Reabrir se alguém pedir para ensaiar de dia.*
+131. **Dados novos sem mudar decisão.** `check_cycle` separa o cálculo que `find_cycle` já fazia, e `progress()` reaproveita esse cálculo para mostrar a volta mais próxima de travar. Nada duplicado. A saída ficou idêntica em bits e as métricas dos 14 cenários também.
+132. **`Synth::layer_rms` mede antes do passa-baixa e do reverb.** É o único ponto em que as camadas ainda estão separadas. Serve de medidor, não de nível real de saída. *Alternativa: um filtro por camada, que custaria CPU só para um medidor.*
+133. **A afinação não entra no motor.** É só tradução na tela, gravada na sessão para o relatório. O motor continua ouvindo o som real, e os cenários seguem comparáveis.
+134. **Instrumento é escolha do usuário, não detecção.** O motor não sabe distinguir violão de guitarra limpa, e fingir que sabe seria errado. *Reabrir se a detecção virar necessidade: exigiria medir com gravações reais.*
+135. **Relatório em colunas de tempo, não em compassos.** Sem clique não há compasso confiável na sessão inteira. ~160 colunas, no mínimo 0,5 s cada. `report_columns` é pura e tem teste, como `diagnose()`.
+136. **Parar abre o relatório.** É quando a sessão interessa, e *Iniciar* continua a um clique, em qualquer tela.
+137. **Sessões fica desligada durante a música.** Ler disco roda fora da thread de áudio, mas a regra é não rodar nada extra enquanto toca.
+138. **O botão Clique deixou de iniciar tudo.** Agora liga e desliga: ele ficou ao lado do Iniciar, e ligar o clique não deve abrir uma sessão sem querer.
+139. **O teste de som é uma nota feita no callback.** No modo de ouvir a saída do `Processor` fica zerada de propósito; ligá-la só para o teste arriscaria tocar acompanhamento antes do Iniciar.
+140. **Repertório fica para depois.** Exige detectar ou marcar partes e decidir como a música salva vira palpite. Foi desenhado, não implementado.

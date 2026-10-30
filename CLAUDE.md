@@ -82,7 +82,10 @@ O áudio dos cenários e da prova é a régua de todas as versões em `docs/resu
 - `cpp/app`: `LiveEngine` (áudio e sessão) + WebView2 com `cpp/app/ui/index.html` (HTML/CSS/JS sem dependências), embutida no exe; mudou a interface, rode `tasks build --app`.
 - **Interface a 20 Hz:** escreva no DOM só por `text()`, `html()` e `level()`, que ignoram o que não mudou; nada de animar `width` nem `backdrop-filter`. O `poll()` engole exceções, então um erro em `render` não aparece: confira a tela de verdade.
 - A sessão é gravada numa thread, o callback só enfileira; `load_session` (`cpp/lab/files.cpp`) lê a pasta no laboratório. O relatório pós-sessão (`replay_<pasta>.svg`) vem do `kordia_lab rodar --sessao`, que o app chama ao parar.
-- `?snapshot` na URL pula a tela de entrada (para capturas headless do layout).
+- `?snapshot` na URL pula a tela de entrada e a configuração de primeiro uso (para capturas headless do layout).
+- **Telas:** primeiro uso (`#setup`), tocar (`#playView`, `#countView`), palco (`#palco`), sessões e relatório. Âmbar é o que ele ouve, azul o que toca, coral discordância; cheio é confirmado, tracejado é palpite. Só tema escuro. O canvas do design é https://claude.ai/artifact/1kc6s2Kn4LSyNF35cez9kC.
+- **Afinação e instrumento são só da interface:** o motor nunca os lê; vão para `config.json` para o relatório.
+- **Dado novo para a tela** sai por `publish()` para o `Snap` (tamanho fixo) e por `snapshot()`. Lógica pura de relatório vai em `SessionReport.h`, com teste.
 - **O app diagnostica o áudio:** `cpp/app/AudioCheck.cpp` lê o Windows (entradas conhecidas, mudo, permissão, drivers com problema), `diagnose()` em `AudioCheck.h` decide o aviso e `/api/audio_check` leva à interface. Regra nova vai em `diagnose()` com teste `audio_check_*`. `KordiaLiveTest` imprime essa verificação.
 - **Logo:** K de neon branco, com vão entre a haste e o "<", em quadrado preto de cantos arredondados. `assets/kordia.svg` é a fonte; a geometria é repetida no `<g id="logo">` e no favicon de `ui/index.html` (que precisa ser um arquivo só: o JUCE embute só ele). `kordia-1024.png`, `kordia-32.png` e `kordia.ico` são versionados e, se a logo mudar, têm que ser exportados à mão a partir do SVG.
 

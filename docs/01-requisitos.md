@@ -66,7 +66,7 @@
 - **Fixar BPM detectado** ao vivo (o músico passa a seguir o clique).
 - Botão **Iniciar/Parar**. Ao iniciar, o sistema ouve a entrada e toca baixo + pad em tempo real.
 - Mostrar ao vivo: acorde tocado, acorde ouvido e confiança, próximo acorde previsto, estado (em linguagem simples), BPM e pulso no compasso, padrão aprendido, diário de decisões com motivo, latência, custo de processamento e falhas de áudio.
-- Interface moderna e apresentável (referência: apps da Apple), tema claro/escuro.
+- Interface moderna e apresentável (referência: apps da Apple), tema escuro (ver RF9, revisão de 30/10).
 - Compensar a latência de saída do driver nas trocas previstas e no pulso do baixo.
 
 ### RF10 — Logs e reprodução de sessões
@@ -101,6 +101,14 @@
 - **Ouvir ao abrir:** com o app aberto e parado, a tela mostra o acorde (ou a nota) que está reconhecendo e o nível do violão. Não toca nada e não grava sessão.
 - **Contagem:** no Iniciar com BPM conhecido, 4 cliques, 4-3-2-1 na tela. Nada é tocado nem aprendido antes do primeiro tempo do compasso seguinte. O clique da contagem soa mesmo com o botão Clique desligado.
 - **Aprender na grade (com clique, sem progressão conhecida):** um acorde por meio compasso, lido pela soma do meio compasso. O ciclo é a menor volta de compassos inteiros que se repete, depois de 2 voltas. Cada posição do ciclo soma as últimas 3 voltas, então o padrão se corrige sozinho. Três meios compassos seguidos contra o padrão (com *manter o padrão*) destravam e ele reaprende.
+
+### RF9 (revisão de 30/10) — Interface completa
+- **Primeiro uso** em 3 passos: entrada com nível, instrumento e afinação, saída com teste de som.
+- **Tela ao vivo** em três partes: entrada, entendimento, saída. Mostra o instrumento, o nível, os 3 acordes mais prováveis, as notas da palhetada e, por instrumento, as notas e o nível de saída.
+- **Aprendendo:** o que ele ouviu em cada meio compasso e as condições que faltam para travar.
+- **Modo palco:** só acorde, próximo e batida. **Relatório** ao parar e lista de **Sessões** dentro do app.
+- A afinação só muda o que aparece; o motor nunca a lê.
+- Só tema escuro: o app é usado no palco.
 
 ### RF9 (revisão) — Interface
 - Tela principal enxuta; Áudio, Som/Instrumentos e Música avançada num painel de Ajustes. Tom no topo.

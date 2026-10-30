@@ -37,11 +37,13 @@ O app em si só precisa do WebView2, que já vem no Windows 11.
 
 Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `tasks atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre `cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe` (compile com `tasks build --app`). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
 
+**Na primeira vez, três passos:** entrada (com o nível na tela), instrumento e afinação, saída (com *Testar o som*). Dá para refazer em **Ajustes → Refazer a configuração**. A afinação só muda o que aparece: com o violão meio tom abaixo, a tela mostra o acorde que soa (E♭m) e a sua forma (Em). O motor continua ouvindo o som real.
+
 **Ele já ouve desde que abre:** antes do Iniciar, a tela mostra o acorde que está reconhecendo (ou a nota, se você tocar uma só) e o nível do violão, sem tocar nada e sem gravar sessão. Ao apertar **Iniciar** com BPM fixo ou Clique ligado, ele **conta 4 tempos** no clique (4, 3, 2, 1 na tela) e só começa a memorizar no compasso seguinte. Sem clique e sem BPM não há o que contar: ele começa a seguir na hora.
 
-Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
+Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no topo (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
-**Verificação de áudio:** com o app parado, ele consulta o Windows a cada 3 s e mostra um aviso no topo da janela, com o botão *Abrir ajustes do Windows* quando o problema se resolve lá. Em **Ajustes → Áudio**, *Entradas no Windows* lista todas as entradas conhecidas e o estado de cada uma.
+**Verificação de áudio:** com o app parado, ele consulta o Windows a cada 3 s e mostra um aviso no topo da janela, com o botão *Abrir ajustes do Windows* quando o problema se resolve lá. Em **Ajustes**, abaixo de *Entrada*, aparecem todas as entradas conhecidas e o estado de cada uma.
 
 | Aviso | O que fazer |
 |---|---|
@@ -53,13 +55,25 @@ Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latên
 
 O app não instala drivers. Interfaces que exigem driver próprio precisam dele instalado pelo fabricante. Fones de ouvido com microfone não contam como interface, então não geram aviso.
 
-Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes** (botão ao lado do estado):
+A tela principal lê da esquerda para a direita, como o som: **Entrada** (instrumento, nível, os três acordes mais prováveis e as notas da palhetada), o centro com o que ele entendeu e **Saída** (quais instrumentos estão soando, com as notas e o nível de cada um). Âmbar é o que ele ouve, azul é o que ele toca, coral é discordância; preenchimento cheio é confirmado, tracejado é palpite. O centro muda com o estado:
 
-- **Áudio:** driver (padrão *Windows Audio*), latência do driver, entrada, saída, ganho (com medidor), ouvir o violão na saída.
-- **Som:** volume (até 200 %), dinâmica fixa e **Instrumentos**: pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo, cada um com liga/desliga e volume, mudando com ele tocando.
-- **Música:** *Aprender segurando a tônica* (até reconhecer o padrão, só um pad suave na tônica, sem baixo e sem ficar trocando de acorde), *Manter o padrão aprendido* (erros e atrasos não destravam; só uma mudança de 1½ compasso) e progressão conhecida. Com progressão conhecida, a grade de aprendizado não é usada.
+- **Parado:** o acorde que ele ouve, e à direita **Como começar**: tom (*Automático* = ele descobre pelos acordes e mostra qual achou), andamento, *Aprender segurando a tônica*, *Manter o padrão aprendido* e progressão conhecida.
+- **Aprendendo:** com clique, o que ele ouviu em cada meio compasso, volta a volta, o padrão provável e as condições que faltam para travar. Sem clique, os acordes em ordem. Enquanto isso, só um pad suave na tônica.
+- **Travado ou seguindo:** o acorde, o próximo e a faixa **Ouvido × Tocado** dos últimos compassos.
+- **Modo palco:** só o acorde, o próximo e a batida, em tamanho de ler a dois metros. Esc volta.
 
-**Andamento:** *Seguir meu tempo* ou *BPM fixo*. O botão **Clique** já inicia tudo se estiver parado: a contagem começa na hora, antes de você tocar (no modo seguir ela usa o BPM escolhido e depois ele acompanha o seu tempo). − / + mudam o BPM com ele tocando; *Fixar este BPM* congela o detectado.
+Abaixo fica **Por que ele fez isso**, com o motivo de cada decisão, e a saúde do áudio (latência, processamento, falhas).
+
+**Ajustes** (botão ao lado do estado) abre um painel lateral que não interrompe a música:
+
+- **Som:** ganho da entrada, volume (até 200 %), volume do clique.
+- **Instrumentos:** pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo, cada um com liga/desliga e volume. Também dá para ligar e desligar no painel **Saída**.
+- **Música:** ouvir o violão na saída, dinâmica fixa.
+- **Só com a música parada:** instrumento, afinação, entrada, saída, driver (padrão *Windows Audio*), latência do driver, refazer a configuração.
+
+*Aprender segurando a tônica*: até reconhecer o padrão, só um pad suave na tônica, sem baixo e sem ficar trocando de acorde. *Manter o padrão aprendido*: erros e atrasos não destravam, só uma mudança de 1½ compasso. Com progressão conhecida, a grade de aprendizado não é usada.
+
+**Andamento:** *Seguir meu tempo* ou *BPM fixo*. O botão **Clique** liga e desliga o metrônomo; com ele ligado, o Iniciar conta 4 tempos antes de você tocar (no modo seguir ela usa o BPM escolhido e depois ele acompanha o seu tempo). − / + mudam o BPM com ele tocando; *Fixar este BPM* congela o detectado.
 
 **Com clique, o padrão é aprendido na grade:** ele lê a harmonia de cada meio compasso inteiro, acha o ciclo depois de ouvir 2 voltas e soma as voltas, então um compasso mal ouvido é corrigido sozinho, mesmo com o padrão já travado. As trocas caem na cabeça do tempo. Sem clique, continua o caminho antigo, que reage ao acorde ouvido.
 
@@ -67,9 +81,11 @@ Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automá
 
 ### Logs de cada sessão
 
-Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar (`replay_<data-hora>.svg`, abre em qualquer navegador). "Abrir pasta" no rodapé leva até ela.
+Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar (`replay_<data-hora>.svg`, abre em qualquer navegador).
 
-O relatório é gerado pelo `kordia_lab`, que o app chama ao parar. O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
+Ao parar, o app abre o **relatório da sessão**: ouvido × tocado na música inteira, os momentos em que ele aprendeu ou destravou, e os números de áudio. **Sessões** lista as gravações, e cada uma abre o mesmo relatório, com os botões *Abrir relatório completo* (o SVG) e *Abrir pasta*.
+
+O SVG é gerado pelo `kordia_lab`, que o app chama ao parar. O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
 
 ```bat
 cpp\build\Release\kordia_lab rodar --sessao sessoes\2026-10-29_20-40-00

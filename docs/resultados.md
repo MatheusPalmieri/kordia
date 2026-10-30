@@ -5,6 +5,43 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v10 — 2026-10-30 (interface nova: configuração, aprendizado, palco e relatório)
+
+Só interface e dados para ela: nenhum número musical mudou. Medido neste notebook, com o microfone interno e sem violão.
+
+**Som e decisões:**
+
+| o que foi comparado com a v9 | resultado |
+|---|---|
+| `metricas.csv` e `metricas.json`, 14 cenários | idênticos |
+| saída de áudio, só pad e 5 camadas, `carga --saida` | idêntica em bits (mesmo SHA-256) |
+| 3 testes novos e `audio_path_does_not_allocate` nos 6 modos | passam, com os dados novos lidos a cada bloco |
+| prova e controle das sessões reais | **não rodaram:** o `find_cycle` só foi reorganizado em `check_cycle`, sem mudar a regra. As sessões de controle não estão nesta máquina, então a equivalência no violão real é inferência, não medida |
+
+**App real, mesma sonda da v9** (janelas de 12 s, CPU em % de um núcleo, somando o Kordia e o WebView2):
+
+| | v9 | v10 |
+|---|---|---|
+| CPU parado ouvindo | 29 % | **9,4 %** |
+| CPU tocando | 34 % | **26 %** |
+| CPU tocando com os ajustes abertos | 38 % | **28 %** |
+| Memória privada tocando | 345 MB | **348 MB** |
+| Layouts da página por segundo, tocando | 9 | **11** |
+| Custo do callback ao vivo, média | 0,13–0,16 ms | **0,13–0,15 ms** |
+| Falhas de áudio | 0 | 0 |
+
+**O que piorou ou ficou de fora:**
+
+- Tocando, a tela faz 11 layouts por segundo, contra 9: há mais números na tela.
+- Na janela com os ajustes abertos, o callback mediu 0,50 ms de média, contra 0,15 ms nas outras. Abrir os ajustes não toca no áudio, e a janela teve 0 falhas; pode ser ruído da máquina, mas não investiguei.
+- A queda de CPU da v9 para a v10 pode vir em parte de a janela estar coberta durante a medição. Não medi a GPU. Trate o número como "não piorou", não como ganho.
+- **Medido sem violão:** o aprendizado na tela foi conferido com dados simulados da sessão de 30/10, 18:40, e com o microfone do notebook em silêncio. Ainda falta tocar de verdade olhando a tela.
+- O teste de som rodou sem erro, mas com volume 0: ninguém ouviu a nota.
+- O texto "Até aqui entendi" é um palpite da interface: `progress()` mostra a menor volta que está se repetindo, e isso pode mudar até travar.
+- **Repertório** ficou de fora; está no canvas como futuro.
+
+---
+
 ## v9 — 2026-10-30 (consumo: nada aloca no áudio, interface leve, abertura rápida)
 
 Só desempenho: nenhum número musical mudou. Medido neste notebook, com o microfone interno e sem violão.
