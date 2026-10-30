@@ -1,4 +1,4 @@
-"""Executor de tarefas (substitui o make no Windows): python tasks.py build [--app]|interface|test|avaliar [versao]|gerar"""
+"""Executor de tarefas (substitui o make no Windows): python tasks.py build [--app]|interface|atalho|test|avaliar [versao]|gerar"""
 import subprocess
 import sys
 
@@ -14,6 +14,13 @@ if cmd == "build":   # C++ core + Python module (+ JUCE app); needs Visual Studi
     sys.exit(0 if ok and subprocess.call([cmake, "--build", "cpp/build", "--config", "Release", "--parallel"]) == 0 else 1)
 if cmd == "interface":
     sys.exit(subprocess.call([py, "-m", "acompanhante.app"]))
+if cmd == "atalho":   # a .bat cannot carry an icon, a shortcut can; it holds absolute paths, so it is generated, not committed
+    from pathlib import Path
+    root = Path(__file__).resolve().parent
+    sys.exit(subprocess.call(["powershell", "-NoProfile", "-Command",
+                              f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{root / 'Kordia.lnk'}'); "
+                              f"$s.TargetPath = '{root / 'assets' / 'abrir.bat'}'; $s.IconLocation = '{root / 'assets' / 'kordia.ico'}'; "
+                              f"$s.WorkingDirectory = '{root}'; $s.WindowStyle = 7; $s.Description = 'Kordia'; $s.Save()"]))
 if cmd == "test":
     sys.exit(subprocess.call([py, "-m", "pytest", "-q"]))
 elif cmd == "avaliar":

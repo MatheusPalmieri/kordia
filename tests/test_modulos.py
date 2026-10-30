@@ -232,3 +232,15 @@ def test_detect_key_from_chords():
     assert theory.detect_key(ix(["B", "F#", "G#m", "E"])) == theory.note_pc("B")
     assert theory.detect_key(ix(["C", "G", "Am", "F"])) == 0
     assert theory.detect_key(ix(["C", "G"])) is None
+
+
+def test_logo_assets():
+    from pathlib import Path
+    from PIL import Image
+    assets = Path(__file__).parent.parent / "assets"
+    assert {16, 32, 48, 256} <= {w for w, _ in Image.open(assets / "kordia.ico").info["sizes"]}
+    big = Image.open(assets / "kordia-1024.png")
+    assert big.size == (1024, 1024)
+    assert big.getpixel((0, 0))[3] == 0                 # rounded corners
+    assert big.getpixel((512, 40))[:3] < (40, 40, 40)   # black tile
+    assert min(big.getpixel((358, 512))[:3]) > 240      # white tube (stem at the vertical centre)

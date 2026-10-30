@@ -1,4 +1,6 @@
-# Acompanhante automático para violão (baixo + pad)
+<img src="assets/kordia-1024.png" alt="Logo do Kordia" width="112">
+
+# Kordia
 
 Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os acordes **que estão soando**, não uma cifra pré-programada. Pensado para banda de igreja, onde não há clique, o tom muda na hora e o andamento oscila.
 
@@ -10,6 +12,7 @@ Um sistema que **ouve o violão** e toca junto um baixo e um pad que seguem os a
 python -m venv .venv
 .venv/Scripts/pip install -e .        # laboratório Python (Windows, Git Bash)
 python tasks.py build --app           # núcleo C++ + módulo Python + app JUCE (Kordia.exe)
+python tasks.py atalho                # cria Kordia.lnk na raiz, o atalho com a logo
 ```
 
 O build C++ precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft, pybind11 e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `python tasks.py build` (sem `--app`) compila só o núcleo e o módulo `kordia_core` usado pelo laboratório.
@@ -18,11 +21,11 @@ Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pyt
 
 ## Uso ao vivo (app)
 
-Dê dois cliques em **`Acompanhante.bat`**. Ele abre o app C++ (`cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe`) se estiver compilado; senão, o app Python (`python -m acompanhante.app`, mesma interface, latência maior).
+Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `python tasks.py atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre o app C++ (`cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe`) se estiver compilado; senão, o app Python (`python -m acompanhante.app`, mesma interface, latência maior). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
 
 No app C++ aparecem também **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
-Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes (⚙)**:
+Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes** (botão ao lado do estado):
 
 - **Áudio:** driver (padrão *Windows Audio*), latência do driver, entrada, saída, ganho (com medidor), ouvir o violão na saída.
 - **Som:** volume (até 200 %), dinâmica fixa e **Instrumentos**: pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo, cada um com liga/desliga e volume, mudando com ele tocando.
@@ -72,6 +75,7 @@ python -m acompanhante.cli avaliar --todos --versao baseline
 ## Estrutura
 
 ```
+assets/         logo (gerar_icones.py gera svg, png e ico) e abrir.bat
 cpp/core/       núcleo C++ (o motor do produto; espelha acompanhante/ linha a linha)
 cpp/python/     módulo kordia_core: o laboratório roda o núcleo C++
 cpp/app/        app JUCE (Kordia.exe) e teste de fumaça do caminho ao vivo (KordiaLiveTest.exe)

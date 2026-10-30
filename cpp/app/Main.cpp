@@ -10,9 +10,11 @@ public:
     MainComponent()
         : browser_(juce::WebBrowserComponent::Options{}
                        .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
-                       .withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2{}.withUserDataFolder(
-                           juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                               .getChildFile("kordia/webview2")))
+                       .withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2{}
+                           .withBackgroundColour(juce::Colours::black)   // no white flash before the entrance screen
+                           .withUserDataFolder(
+                               juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                                   .getChildFile("kordia/webview2")))
                        .withResourceProvider([this](const auto& url) { return provide(url); })) {
         addAndMakeVisible(browser_);
         browser_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());

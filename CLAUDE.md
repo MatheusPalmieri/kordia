@@ -1,6 +1,6 @@
 # CLAUDE.md — instruções permanentes
 
-Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad seguindo os acordes. Leia `docs/00-visao.md` e `docs/02-arquitetura.md` antes de mexer no código.
+Projeto: **Kordia** (o nome do produto), que **ouve o violão** e toca baixo + pad seguindo os acordes. `acompanhante` é só o nome interno do pacote Python. Leia `docs/00-visao.md` e `docs/02-arquitetura.md` antes de mexer no código.
 
 **Duas implementações do mesmo algoritmo:** `acompanhante/` (Python: referência e laboratório) e `cpp/core/` (C++: o motor do app ao vivo). Elas têm que dar **exatamente** as mesmas decisões (`tests/test_cpp.py`).
 
@@ -23,7 +23,9 @@ Projeto: acompanhante automático que **ouve o violão** e toca baixo + pad segu
 
 ```bash
 python -m venv .venv && .venv/Scripts/pip install -e .   # ou .venv/bin/pip no Linux/macOS
-python -m acompanhante.app            # app ao vivo (ou Acompanhante.bat / python tasks.py interface)
+python -m acompanhante.app            # app ao vivo (ou o atalho Kordia.lnk / python tasks.py interface)
+python tasks.py atalho                # cria Kordia.lnk (logo como ícone; chama assets/abrir.bat)
+python assets/gerar_icones.py         # regenera svg, png e ico da logo; depois: python tasks.py build --app
 python -m acompanhante.cli rodar --sessao sessoes/<pasta>   # reproduz uma sessão ao vivo exatamente
 python tasks.py build [--app]         # núcleo C++ + kordia_core (+ app JUCE); precisa do VS 2022 Build Tools
 python tasks.py test                  # pytest (unitários + regressão + equivalência C++)
@@ -66,7 +68,8 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 
 - `app.py`: servidor HTTP local (127.0.0.1) + fluxo de áudio duplex; `ui/index.html`: interface (HTML/CSS/JS sem dependências), aberta no Edge em modo app. A mesma interface poderá ser reaproveitada no port C++ (JUCE 8 tem WebView).
 - `session.py`: grava cada sessão; a escrita é numa thread, o callback só enfileira.
-- `?snapshot` na URL fecha o fluxo de eventos após a primeira atualização (para capturas headless).
+- `?snapshot` na URL fecha o fluxo de eventos após a primeira atualização e pula a tela de entrada (para capturas headless).
+- **Logo:** K de neon branco, com vão entre a haste e o "<", em quadrado preto de cantos arredondados. A geometria mora em `assets/gerar_icones.py` e é repetida no `<g id="logo">` e no favicon de `ui/index.html` (que precisa ser um arquivo só: o JUCE embute só ele).
 
 ## Regra do port (Python × C++)
 

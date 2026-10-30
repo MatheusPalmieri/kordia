@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Kordia</title>
+  <defs>
+    <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7" result="near"/>
+      <feGaussianBlur stdDeviation="24" result="far"/>
+      <feFlood flood-color="#d6e8ff"/>
+      <feComposite in2="far" operator="in" result="halo"/>
+      <feMerge><feMergeNode in="halo"/><feMergeNode in="halo"/><feMergeNode in="near"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="115.2" fill="#000"/>
+  <g transform="translate(51.2 51.2) scale(0.8)" filter="url(#neon)" fill="none" stroke="#fff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M160 112 160 400"/>
+    <path d="M356 112 232 256 356 400"/>
+  </g>
+</svg>

@@ -34,6 +34,8 @@ juce_add_gui_app(KordiaApp
   PRODUCT_NAME "Kordia"
   COMPANY_NAME "Kordia"
   VERSION ${PROJECT_VERSION}
+  ICON_BIG ${CMAKE_CURRENT_SOURCE_DIR}/../../assets/kordia-1024.png
+  ICON_SMALL ${CMAKE_CURRENT_SOURCE_DIR}/../../assets/kordia-32.png
   NEEDS_WEBVIEW2 TRUE)
 
 juce_add_binary_data(KordiaUI SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../../acompanhante/ui/index.html)

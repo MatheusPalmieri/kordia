@@ -9,3 +9,4 @@ resultados/*/audio/
 sessoes/
 cpp/build/
 *.pyd
+/Kordia.lnk

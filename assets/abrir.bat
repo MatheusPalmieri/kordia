@@ -1,6 +1,6 @@
 @echo off
-rem Abre o Kordia ao vivo (duplo clique). Usa o app C++/JUCE se estiver compilado; senao, o app Python.
-cd /d "%~dp0"
+rem Abre o Kordia ao vivo (chamado pelo atalho Kordia.lnk). Usa o app C++/JUCE se estiver compilado; senao, o app Python.
+cd /d "%~dp0.."
 if exist "cpp\build\app\KordiaApp_artefacts\Release\Kordia.exe" (
   start "" "cpp\build\app\KordiaApp_artefacts\Release\Kordia.exe"
   exit /b 0

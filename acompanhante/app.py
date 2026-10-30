@@ -1,6 +1,6 @@
 """Live app: real-time audio + a local web UI shown in a chromeless Edge window.
 
-Run: python -m acompanhante.app   (or double-click Acompanhante.bat)
+Run: python -m acompanhante.app   (or double-click the Kordia shortcut: python tasks.py atalho)
 
 The UI (acompanhante/ui/index.html) talks to this process over HTTP on 127.0.0.1:
   GET  /api/devices      input/output devices of the default host API
