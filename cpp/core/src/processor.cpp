@@ -105,6 +105,11 @@ void Processor::freeze_tempo(bool on) {
     if (auto* tt = dynamic_cast<TempoTracker*>(tracker_.get())) tt->set_frozen(on);
 }
 
+void Processor::set_bpm(double bpm) {
+    if (auto* fg = dynamic_cast<FixedGrid*>(tracker_.get())) fg->set_bpm(bpm);
+    else if (auto* tt = dynamic_cast<TempoTracker*>(tracker_.get())) tt->set_bpm(bpm);
+}
+
 std::optional<int> Processor::next_chord() const {
     auto p = memory_.locked ? memory_.predict() : std::nullopt;
     return p ? std::optional<int>(p->first) : std::nullopt;

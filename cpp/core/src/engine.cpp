@@ -23,6 +23,7 @@ void Engine::forget() {
     contra_.reset();
     contra_since_ = 0.0;
     last_change_t_ = -INF;
+    recent_.clear();
     reason.clear();
     stop_at_ = 0.0;
     memory_.reset();
@@ -32,6 +33,10 @@ void Engine::forget() {
 std::optional<Output> Engine::set(int chord, Mode mode, double t, const char* why) {
     if (cur.first == chord && cur.second == mode) return std::nullopt;
     cur = {chord, mode};
+    if (mode == Mode::Full) {
+        recent_.push_back(chord);
+        if (recent_.size() > 8) recent_.pop_front();
+    }
     if (why) reason = why;
     return Output{chord, mode, t};
 }
@@ -106,6 +111,10 @@ std::optional<Output> Engine::step(double t, const std::optional<Onset>& onset, 
         reason = "dúvida por mais de 1 compasso";
         pending_.reset();
         if (!key_pc) return set(-1, Mode::Silence, t, "perdido sem tom: silêncio");
+        int in_key = 0;
+        for (int c : recent_) in_key += is_diatonic(c, *key_pc);
+        if (in_key * 2 < (int)recent_.size())   // heard mostly outside the configured key: its tonic would be wrong
+            return set(-1, Mode::Silence, t, "perdido; o tom configurado não bate com o que ouvi: silêncio");
         return set(-1, Mode::Tonic, t, "perdido: pad na tônica");
     }
 

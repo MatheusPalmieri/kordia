@@ -20,10 +20,11 @@ Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pyt
 
 Dê dois cliques em **`Acompanhante.bat`**. Ele abre o app C++ (`cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe`) se estiver compilado; senão, o app Python (`python -m acompanhante.app`, mesma interface, latência maior).
 
-No app C++ aparecem também **Driver** (padrão: *Windows Audio (Exclusive Mode)*) e **Latência do driver** (padrão: ~10 ms). O modo exclusivo toma a placa só para o Kordia: outros programas ficam mudos enquanto ele toca. Se a entrada chegar corrompida (acontece no modo compartilhado nesta máquina), a janela avisa para trocar de driver.
+No app C++ aparecem também **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
 1. **Áudio:** escolha a entrada (microfone, interface, mesa) e a saída (já vem o alto-falante padrão). Toque e ajuste o **ganho** até a barra passar da marca cinza na batida.
-2. **Música (opcional):** tom principal, **BPM fixo** e **progressão conhecida** (ex.: `C G Am F`). Sem nada, ele só ouve e segue.
+2. **Música (opcional):** tom principal e **progressão conhecida** (ex.: `C G Am F`). Sem nada, ele só ouve e segue. Se o tom configurado não bater com o que você toca, ele segue o áudio mesmo assim e não usa a tônica errada como segurança.
+   **Andamento:** escolha *Seguir meu tempo* (ele detecta e acompanha se você acelerar) ou *BPM fixo* (grade fixa; com o **Clique** ligado, o metrônomo começa no Iniciar e você entra contando). O BPM é um só e dá para mudar com − / + com ele tocando. No modo seguir, **Fixar este BPM** congela o andamento detectado.
 3. **Iniciar** e toque.
 
 Ao vivo (mudam sem parar):
@@ -31,7 +32,7 @@ Ao vivo (mudam sem parar):
 - **Clique:** ouve o metrônomo. Com BPM fixo, o clique começa no Iniciar e você segue ele. No modo livre, o clique segue o andamento que ele detectou.
 - **Fixar BPM:** congela o andamento detectado agora; daí em diante você segue o clique.
 
-A janela mostra o acorde tocado (grande), o que está ouvindo e a confiança, o **próximo acorde** previsto, o estado, o BPM com o pulso do compasso, o **padrão aprendido** e um **diário** com cada decisão e o motivo.
+A janela mostra o acorde tocado (grande), o que está ouvindo e a confiança, o **próximo acorde** previsto, o estado, o cartão **Sinal** (nível do violão na entrada e medidores do **baixo** e do **teclado**, com as notas que estão soando), o BPM com o pulso do compasso, o **padrão aprendido** e um **diário** com cada decisão e o motivo.
 
 > **Importante:** microfone + caixa de som no mesmo ambiente fazem o sistema ouvir o próprio baixo/pad (pior cenário medido). Prefira **fone** ou o violão **ligado direto**.
 

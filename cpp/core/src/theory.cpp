@@ -50,18 +50,18 @@ std::array<std::array<double, 12>, 24> templates() {
     return T;
 }
 
+bool is_diatonic(int idx, int k) {
+    int d[6] = {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12, 12 + (k + 9) % 12};
+    for (int x : d)
+        if (x == idx) return true;
+    return false;
+}
+
 std::array<double, 25> key_prior(std::optional<int> key_pc) {
     std::array<double, 25> w;
     w.fill(1.0);
-    if (key_pc) {
-        int k = *key_pc;
-        int diatonic[6] = {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12, 12 + (k + 9) % 12};
-        for (int i = 0; i < 24; ++i) {
-            bool d = false;
-            for (int x : diatonic) d |= (x == i);
-            w[i] = d ? 1.0 : P::KEY_PRIOR_OUT;
-        }
-    }
+    if (key_pc)
+        for (int i = 0; i < 24; ++i) w[i] = is_diatonic(i, *key_pc) ? 1.0 : P::KEY_PRIOR_OUT;
     double s = 0;
     for (double v : w) s += v;
     for (double& v : w) v /= s;

@@ -229,6 +229,9 @@ SCENARIOS = {
     "realimentacao": ("a saída do sistema volta na entrada (30 ms, ~6 dB abaixo do violão)",
                       lambda r: loop(PROG, 4, bpm=110) + final(bpm=110), {},
                       {"modo": "livre", "tom": "C", "feedback": {"gain": 0.1, "delay": 0.03}}),
+    # first live session (2026-10-29): I-V-vi-IV in B (guitar a half step down) with the key set to C
+    "tom_errado": ("B-F#-G#m-E tocado com o tom configurado em Dó", lambda r: loop(["B", "F#", "G#m", "E"], 4, bpm=100)
+                   + final("B", bpm=100), {}, LIVRE_C),
     "modo_metronomo": ("trocas adiantadas/atrasadas contra um clique fixo de 110 BPM", _metro_bars, {"jitter": 0.02},
                        {"modo": "metronomo", "tom": "C", "bpm": 110}),
 }

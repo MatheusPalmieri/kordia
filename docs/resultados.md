@@ -5,6 +5,22 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v4 — 2026-10-29 (depois do segundo teste ao vivo)
+
+**Sessão real** (`sessoes/2026-10-29_21-39-39`, violão em Si, 37 s antes da pane do driver), reproduzida com o algoritmo novo:
+
+| | v3 | v4 |
+|---|---|---|
+| palhetadas detectadas (tocadas: ~57) | 30 | **55** |
+| paradas falsas | 3 | 1 (+ 1 pausa real de 1,8 s, onde ele parou e voltou) |
+| pad tocando Dó por cima de Si | sim | **não** |
+
+**Ao vivo** (microfone USB + headset): modo compartilhado corrigido, 22 ms de latência informada, 60 s sem a captura morrer (no exclusivo com dois aparelhos ela morria em ~15–20 s).
+
+**Cenários** (13, agora com `tom_errado`; núcleo C++): média de acerto **0,90** (v2: 0,89), latência média 125 ms, latência travada 45 ms, zero falso disparo. `tom_errado` = 0,96. O resto igual à v2 (o piso novo do detector não mudou os cenários).
+
+---
+
 ## v3 — 2026-10-29 (port para C++/JUCE)
 
 As métricas de algoritmo são **as mesmas da v2**: o núcleo C++ dá decisões idênticas (12/12 cenários, `tests/test_cpp.py`). O que mudou foi o motor ao vivo:

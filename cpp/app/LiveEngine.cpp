@@ -141,7 +141,7 @@ juce::var LiveEngine::devices() {
     for (auto* t : dm_.getAvailableDeviceTypes()) typeList.add(t->getTypeName());
     juce::AudioIODeviceType* type = nullptr;
     for (auto* t : dm_.getAvailableDeviceTypes())
-        if ((current.isEmpty() && t->getTypeName() == "Windows Audio (Exclusive Mode)") || t->getTypeName() == current) type = t;
+        if ((current.isEmpty() && t->getTypeName() == "Windows Audio") || t->getTypeName() == current) type = t;
     if (!type && !dm_.getAvailableDeviceTypes().isEmpty()) type = dm_.getAvailableDeviceTypes()[0];
     auto* o = new juce::DynamicObject();
     if (type) {
@@ -251,6 +251,9 @@ juce::String LiveEngine::start(const juce::var& q) {
     report_.clear();
     xrunBase_ = 0;
     inputCorrupt_ = false;
+    inputDead_ = false;
+    zeroRun_ = 0;
+    pendingBpm_ = 0;
     corruptCount_ = corruptTotal_ = 0;
     try {
         proc_ = std::make_unique<Processor>(cfg, lookahead_, asr_, sr_);
@@ -323,6 +326,8 @@ void LiveEngine::setLive(const juce::var& q) {
     if (q.hasProperty("click_volume")) clickVolume_ = (float)juce::jlimit(0.0, 1.0, (double)q["click_volume"]);
     if (q.hasProperty("dinamica_fixa")) dynFixed_ = (bool)q["dinamica_fixa"];
     if (q.hasProperty("fixar_bpm")) freeze_ = (bool)q["fixar_bpm"];
+    if (q.hasProperty("bpm") && (q["bpm"].isDouble() || q["bpm"].isInt()))
+        pendingBpm_ = juce::jlimit(30.0, 250.0, (double)q["bpm"]);
 }
 
 void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int numIn, float* const* out, int numOut,
@@ -336,6 +341,7 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     proc_->click_vel = (int)(clickVolume_ * 127);
     proc_->dyn().fixed = dynFixed_;
     if (freeze_ != proc_->tracker().frozen()) proc_->freeze_tempo(freeze_);
+    if (double b = pendingBpm_.exchange(0.0); b > 0) proc_->set_bpm(b);
 
     const float g = gain_;
     const float* x = numIn > 0 ? in[0] : nullptr;
@@ -346,6 +352,8 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     }
     rawChannels_ = numIn;
     for (int i = 0; x && i < n; ++i) {
+        zeroRun_ = x[i] == 0.0f ? zeroRun_ + 1 : 0;
+        inputDead_ = zeroRun_ > (long long)(2 * sr_);
         float a = std::abs(x[i]);
         corruptCount_ += a > 0.3f && a < 0.75f;
         if (++corruptTotal_ == 22050) {   // ~0.5 s
@@ -468,6 +476,11 @@ void LiveEngine::publish() {
     s.frozen = proc_->tracker().frozen();
     s.fixedGrid = eng.metronome;
     s.click = proc_->click;
+    s.bassRms = proc_->synth().bass_rms;
+    s.padRms = proc_->synth().pad_rms;
+    s.bassNote = proc_->acc().bass();
+    s.nPad = juce::jmin(8, (int)proc_->acc().pad().size());
+    for (int i = 0; i < s.nPad; ++i) s.padNotes[i] = proc_->acc().pad()[(size_t)i];
     s.nDiary = diaryCount_;
     for (int i = 0; i < diaryCount_; ++i) s.diary[i] = diary_[(diaryHead_ - 1 - i + 24) % 12];   // newest first
 }
@@ -487,6 +500,20 @@ juce::var LiveEngine::snapshot() {
         err = juce::String::fromUTF8("A entrada chega corrompida neste driver (formato de amostra). "
                                      "Pare e escolha \"Windows Audio (Exclusive Mode)\".");
     o->setProperty("error", err.isEmpty() ? juce::var() : juce::var(err));
+    // warnings: shown in the footer, no popup (they can be false alarms)
+    auto now = juce::Time::getMillisecondCounter();
+    if (now - xrunWindowT_ > 5000) {
+        xrunStorm_ = xruns() - xrunWindowStart_ > 10;
+        xrunWindowStart_ = xruns();
+        xrunWindowT_ = now;
+    }
+    juce::String warn;
+    if (running_ && inputDead_)
+        warn = juce::String::fromUTF8("Sem sinal na entrada há mais de 2 s. Se você está tocando, o driver pode ter "
+                                      "travado: pare e inicie de novo.");
+    else if (running_ && xrunStorm_)
+        warn = juce::String::fromUTF8("Muitas falhas de áudio: pare e escolha uma latência do driver maior.");
+    o->setProperty("warning", warn.isEmpty() ? juce::var() : juce::var(warn));
     o->setProperty("session", session_ == juce::File() ? juce::var() : juce::var(session_.getFullPathName()));
     if (report_ == "gerando" && session_.getChildFile("replay_" + session_.getFileName() + ".png").existsAsFile())
         report_ = "pronto";
@@ -535,6 +562,15 @@ juce::var LiveEngine::snapshot() {
     o->setProperty("fixed_grid", s.fixedGrid);
     o->setProperty("clique", s.click);
     o->setProperty("next", s.next >= 0 ? juce::var(juce::String(label(s.next))) : juce::var());
+    auto noteName = [](int m) { return juce::String(label(m % 12)) + juce::String(m / 12 - 1); };
+    auto* out = new juce::DynamicObject();
+    out->setProperty("bass_rms", s.bassRms);
+    out->setProperty("pad_rms", s.padRms);
+    out->setProperty("bass", s.bassNote >= 0 ? juce::var(noteName(s.bassNote)) : juce::var());
+    juce::Array<juce::var> pad;
+    for (int i = 0; i < s.nPad; ++i) pad.add(noteName(s.padNotes[i]));
+    out->setProperty("pad", pad);
+    o->setProperty("out", juce::var(out));
     if (s.nPattern > 0) {
         juce::Array<juce::var> p;
         for (int i = 0; i < s.nPattern; ++i) p.add(juce::String(label(s.pattern[i])));

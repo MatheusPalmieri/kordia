@@ -17,6 +17,7 @@ Gerados por `acompanhante/scenarios.py` com violão Karplus-Strong (6 cordas, vo
 | `batida_abafada` | palhetadas percussivas sem nota intercaladas | livre, tom C |
 | `ruido` | ruído de fundo + "voz" senoidal | livre, tom C |
 | `realimentacao` | a saída do próprio sistema volta na entrada (laço fechado, 30 ms, ~6 dB abaixo do violão) | livre, tom C |
+| `tom_errado` | B–F#–G#m–E com o tom configurado em Dó (caso real de 2026-10-29) | livre, tom C |
 | `modo_metronomo` | violão adianta/atrasa trocas em relação ao clique | **metrônomo** 110 BPM, tom C |
 
 ## Verdade-base (JSON)
@@ -73,4 +74,4 @@ Cada sessão ao vivo (`sessoes/<data-hora>/`) é reproduzível offline com resul
 
 ## Fumaça do caminho ao vivo (C++)
 
-`KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]` abre os dispositivos reais com volume 0 por 2 s e imprime o nível na entrada do processador, o nível bruto do driver, a latência, as falhas de áudio e o erro mostrado à interface. Também grava uma sessão. Foi assim que a entrada corrompida do WASAPI compartilhado foi achada.
+`KordiaLiveTest.exe [driver] [taxa] [entrada] [saída]` (variáveis: `KORDIA_SECONDS`, `KORDIA_BUFFER`, `KORDIA_FIXED_BPM`, `KORDIA_BPM_LIVE`) abre os dispositivos reais com volume 0 e imprime o nível na entrada do processador, o nível bruto do driver, a latência, as falhas de áudio e o erro mostrado à interface. Também grava uma sessão. Foi assim que a entrada corrompida do WASAPI compartilhado foi achada.

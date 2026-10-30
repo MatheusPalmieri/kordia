@@ -125,12 +125,15 @@ void Synth::render(double t0, int n, double* left, double* right) {
             (v.inst == Inst::Bass ? bass_ : pad_)[s] += (v.inst == Inst::Bass ? P::BASS_LEVEL : P::PAD_LEVEL) * amp * env * osc;
         }
     }
+    double eb = 0, ep = 0;
     for (int s = 0; s < n; ++s) {
         double x = pad_[s];   // low-pass (direct form II transposed, as scipy lfilter)
         double y = b0_ * x + z1_;
         z1_ = b1_ * x - a1_ * y + z2_;
         z2_ = b2_ * x - a2_ * y;
         pad_[s] = y;
+        eb += bass_[s] * bass_[s];
+        ep += y * y;
         double wet[2];
         for (int c = 0; c < 2; ++c) {
             double acc = 0;
@@ -147,6 +150,7 @@ void Synth::render(double t0, int n, double* left, double* right) {
         right[s] = std::tanh((dry + P::PAD_WET * wet[1]) * gain) + click_[s];
     }
     if (n > 0 && (t0 + (n - 1) / sr_ - expr_t_) / 0.05 >= 1) expr_from_ = expr_to_;
+    if (n > 0) bass_rms = std::sqrt(eb / n), pad_rms = std::sqrt(ep / n);
 }
 
 }  // namespace kordia

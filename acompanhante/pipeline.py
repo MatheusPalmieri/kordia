@@ -151,6 +151,16 @@ class Processor:
             self.tracker.frozen = bool(on) and self.tracker.period is not None
         return getattr(self.tracker, "frozen", False)
 
+    def set_bpm(self, bpm):
+        """Live: change the fixed BPM (metronome mode, or a frozen tempo) keeping the beat phase."""
+        t = self.tracker
+        if isinstance(t, FixedGrid):
+            t.fixed_period = 60.0 / bpm
+            if t.period:
+                t.period = t.fixed_period
+        elif t.frozen:
+            t.period = 60.0 / bpm
+
     def next_chord(self):
         pred = self.memory.predict() if self.memory.locked else None
         return theory.LABELS[pred[0]] if pred else None

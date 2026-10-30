@@ -12,7 +12,8 @@ CHROMA_WIN = 4096     # FFT for chroma (~186 ms): ~5.4 Hz/bin, enough for low E 
 ONSET_FMIN, ONSET_FMAX = 150.0, 5000.0   # ignores our own bass attacks (feedback risk)
 ONSET_MEDIAN_FRAMES = 32                 # adaptive threshold history (~0.75 s)
 ONSET_K = 1.5                            # threshold = median * K + DELTA
-ONSET_DELTA = 0.6                        # absolute floor (flux units, log-magnitude)
+ONSET_DELTA = 0.25                       # absolute floor (flux units); 0.6 missed half the strums of a real mic (2026-10-29 session)
+ONSET_MASK, ONSET_MASK_TIME = 0.25, 0.3       # after a strum the threshold is >= 25% of its flux for 0.3 s (its own ringing is not a strum)
 ONSET_REFRACTORY = 0.10                  # min gap between onsets (a 6-string strum spreads ~70 ms; 16ths at 130 BPM = 115 ms)
 SILENCE_DB = -55.0                       # frame RMS below this = silence
 

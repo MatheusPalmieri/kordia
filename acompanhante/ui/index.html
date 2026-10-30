@@ -85,6 +85,21 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px;
 .next b { color: var(--text); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 1100px) { .two { grid-template-columns: 1fr; } }
+.three { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 18px; }
+@media (max-width: 1180px) { .three { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
+.sig { display: grid; grid-template-columns: 58px minmax(90px, 1fr) minmax(44px, auto); align-items: center; gap: 10px; padding: 7px 0; }
+.sig .lbl { font-weight: 600; }
+.sig .nn { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter.big { height: 10px; }
+.meter.out i { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+.meter.on { box-shadow: 0 0 0 1px rgba(10,132,255,.35); }
+.seg { display: inline-flex; background: var(--track); border-radius: 10px; padding: 2px; margin-bottom: 12px; }
+.seg button { border: 0; background: transparent; color: var(--text); font: inherit; font-weight: 600; font-size: 13px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.seg button.on { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.seg button:disabled { cursor: default; opacity: .55; }
+.bpmstep { border: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--track); color: var(--text); font-size: 20px; cursor: pointer; align-self: center; }
+.bpmstep[hidden] { display: none; }
 .bpm { display: flex; align-items: baseline; gap: 8px; }
 .bpm .n { font-size: 46px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .bpm .u { color: var(--muted); font-weight: 600; }
@@ -147,17 +162,12 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
       <section class="card">
         <h2>Música <span style="text-transform:none;letter-spacing:0;font-weight:500">— opcional</span></h2>
         <div class="row"><label>Tom principal</label><select id="key" style="width:120px"></select></div>
-        <div class="row"><div><label>BPM fixo</label><div class="hint">A grade manda; as trocas caem no tempo</div></div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="stepper"><button data-step="-1">−</button><input type="number" id="bpm" min="30" max="250" value="110"><button data-step="1">+</button></div>
-            <label class="switch"><input type="checkbox" id="bpmOn"><span></span></label>
-          </div></div>
         <div class="row"><div class="stack">
           <div style="display:flex;justify-content:space-between;align-items:center"><label>Progressão conhecida</label><label class="switch"><input type="checkbox" id="progOn"><span></span></label></div>
           <input type="text" id="prog" value="C G Am F" placeholder="ex.: C G Am F" spellcheck="false">
           <div class="chips" id="progChips"></div>
         </div></div>
-        <p class="note">Sem nada ligado, ele só ouve e segue. Tom, BPM e progressão valem a partir do próximo <b>Iniciar</b>.</p>
+        <p class="note">Sem nada ligado, ele só ouve e segue. Tom e progressão valem a partir do próximo <b>Iniciar</b>. O andamento fica no cartão <b>Andamento</b>.</p>
       </section>
     </div>
 
@@ -169,16 +179,24 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
         <div class="next" id="next"></div>
       </section>
 
-      <div class="two">
+      <div class="three">
+        <section class="card">
+          <h2>Sinal</h2>
+          <div class="sig"><span class="lbl">Violão</span><div class="meter big"><i id="mIn"></i><b id="mInMark"></b></div><span class="nn" id="vIn">—</span></div>
+          <div class="sig"><span class="lbl">Baixo</span><div class="meter big out" id="mBassBox"><i id="mBass"></i></div><span class="nn" id="nBass">—</span></div>
+          <div class="sig"><span class="lbl">Teclado</span><div class="meter big out" id="mPadBox"><i id="mPad"></i></div><span class="nn" id="nPad">—</span></div>
+        </section>
         <section class="card">
           <h2>Andamento</h2>
-          <div class="bpm"><span class="n" id="bpmNow">—</span><span class="u">BPM</span></div>
+          <div class="seg" id="tempoSeg"><button data-mode="seguir">Seguir meu tempo</button><button data-mode="fixo">BPM fixo</button></div>
+          <div class="bpm"><button class="bpmstep" data-step="-1" title="−1 BPM">−</button><span class="n" id="bpmNow">—</span><button class="bpmstep" data-step="1" title="+1 BPM">+</button><span class="u">BPM</span></div>
           <div class="beats" id="beats"><i class="first"></i><i></i><i></i><i></i></div>
           <div class="tools">
             <button class="btn ghost" id="clickBtn" title="Ouvir o clique do metrônomo">Clique</button>
-            <input type="range" id="clickVol" min="0" max="100" value="70" style="width:110px" title="Volume do clique">
-            <button class="btn ghost" id="freezeBtn" title="Mantém o BPM detectado agora; você segue o clique">Fixar BPM</button>
+            <input type="range" id="clickVol" min="0" max="100" value="70" style="width:100px" title="Volume do clique">
+            <button class="btn ghost" id="freezeBtn" title="Mantém o BPM detectado agora; daí em diante você segue o clique">Fixar este BPM</button>
           </div>
+          <p class="note" id="tempoHint"></p>
         </section>
         <section class="card">
           <h2>Padrão</h2>
@@ -200,7 +218,7 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
     <span id="engineInfo"></span>
     <span id="sessionInfo"></span>
     <span class="spacer"></span>
-    <span class="warn">Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.</span>
+    <span class="warn" id="warn">Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.</span>
   </footer>
 </div>
 <div class="toast" id="toast"></div>
@@ -211,7 +229,8 @@ const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B
 const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
 // inside the C++/JUCE app the page is served by the WebView resource provider: GET + polling instead of POST + SSE
 const NATIVE = location.hostname === "juce.backend";
-const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "key", "bpm", "bpmOn", "prog", "progOn", "clickVol"];
+const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "key", "prog", "progOn", "clickVol"];
+let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
 let running = false, clickOn = false, lastChord = null, lastError = null, state = {};
 
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
@@ -236,13 +255,13 @@ function pushLive() { clearTimeout(liveTimer); liveTimer = setTimeout(() => api(
 function labels() {
   $("gainVal").textContent = ($("gain").value > 0 ? "+" : "") + $("gain").value + " dB";
   $("volumeVal").textContent = $("volume").value + "%";
-  $("bpm").disabled = !$("bpmOn").checked || running;
   $("prog").disabled = !$("progOn").checked || running;
   const chips = $("prog").value.trim().split(/\s+/).filter(Boolean);
   $("progChips").innerHTML = $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "";
 }
 function lockSettings() {
-  for (const id of ["driver", "buffer", "input", "output", "key", "bpmOn", "progOn"]) $(id).disabled = running;
+  for (const id of ["driver", "buffer", "input", "output", "key", "progOn"]) $(id).disabled = running;
+  tempoControls();
   labels();
   $("startBtn").textContent = running ? "Parar" : "Iniciar";
   $("startBtn").classList.toggle("stop", running);
@@ -262,9 +281,19 @@ async function init() {
   if (recall("key") === undefined) $("key").value = "C";
   clickOn = !!recall("click"); $("clickBtn").classList.toggle("on", clickOn);
   for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (["gain", "volume", "monitor", "dynFixed", "clickVol"].includes(id)) pushLive(); });
-  document.querySelectorAll("[data-step]").forEach(b => b.onclick = () => { if ($("bpm").disabled) return; $("bpm").value = Math.max(30, Math.min(250, +$("bpm").value + +b.dataset.step)); store("bpm", $("bpm").value); });
-  $("clickBtn").onclick = () => { clickOn = !clickOn; store("click", clickOn); $("clickBtn").classList.toggle("on", clickOn); pushLive(); };
-  $("freezeBtn").onclick = () => api("/api/live", { fixar_bpm: !state.frozen }).catch(e => toast(e.message));
+  tempoMode = recall("tempoMode") || "seguir"; bpmValue = recall("bpmValue") || 110;
+  document.querySelectorAll("#tempoSeg button").forEach(b => b.onclick = () => { tempoMode = b.dataset.mode; store("tempoMode", tempoMode); tempoControls(); });
+  document.querySelectorAll(".bpmstep").forEach(b => b.onclick = () => {
+    bpmValue = Math.max(30, Math.min(250, Math.round(bpmValue) + +b.dataset.step)); store("bpmValue", bpmValue);
+    $("bpmNow").textContent = bpmValue;
+    if (running) api("/api/live", { bpm: bpmValue }).catch(e => toast(e.message));   // live: same phase, new tempo
+  });
+  $("clickBtn").onclick = () => { clickOn = !clickOn; store("click", clickOn); $("clickBtn").classList.toggle("on", clickOn); tempoControls(); pushLive(); };
+  $("freezeBtn").onclick = () => {
+    if (!state.frozen && state.bpm) { bpmValue = Math.round(state.bpm); store("bpmValue", bpmValue); }
+    api("/api/live", { fixar_bpm: !state.frozen }).catch(e => toast(e.message));
+  };
+  $("mInMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   $("startBtn").onclick = startStop;
   labels(); lockSettings();
   if (NATIVE) {
@@ -295,12 +324,26 @@ async function loadDevices(type) {
   } catch (e) { toast("Não consegui listar os dispositivos de áudio."); }
 }
 
+function tempoControls() {
+  document.querySelectorAll("#tempoSeg button").forEach(b => { b.classList.toggle("on", b.dataset.mode === tempoMode); b.disabled = running; });
+  const adjustable = tempoMode === "fixo" || (running && state.frozen);
+  document.querySelectorAll(".bpmstep").forEach(b => b.hidden = !adjustable);
+  $("freezeBtn").hidden = tempoMode === "fixo";
+  if (!running) $("bpmNow").textContent = tempoMode === "fixo" ? bpmValue : "—";
+  $("tempoHint").textContent = tempoMode === "fixo"
+    ? (clickOn ? "O clique começa no Iniciar: conte e entre. As trocas caem na grade." : "As trocas caem na grade deste BPM (ligue o Clique para ouvi-lo).")
+    : "Ele detecta o seu andamento e acompanha se você acelerar. O clique entra quando ele pegar o tempo; “Fixar” congela o BPM.";
+}
+
+function db(x) { return x > 0 ? 20 * Math.log10(x) : -120; }
+function bar(el, d) { el.style.width = running ? Math.max(0, Math.min(100, (d + 60) / 60 * 100)) + "%" : "0"; }
+
 async function startStop() {
   $("startBtn").disabled = true;
   try {
     if (running) await api("/api/stop", {});
     else await api("/api/start", { type: $("driver").value || null, buffer: NATIVE ? +$("buffer").value : null, input: $("input").value, output: $("output").value, tom: $("key").value || null,
-      bpm: $("bpmOn").checked ? +$("bpm").value : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
+      bpm: tempoMode === "fixo" ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
   } catch (e) { toast(e.message); }
   $("startBtn").disabled = false;
 }
@@ -325,11 +368,17 @@ function render(s) {
   $("confVal").textContent = running ? Math.round(c * 100) + "%" : "";
   $("next").innerHTML = running && s.next ? `Próximo: <b>${s.next}</b>` : "";
   $("meter").style.width = running ? Math.max(0, Math.min(100, (s.db + 60) / 60 * 100)) + "%" : "0";
-  $("bpmNow").textContent = running && s.bpm ? Math.round(s.bpm) : "—";
+  if (running) $("bpmNow").textContent = s.bpm ? Math.round(s.bpm) : "—";
+  tempoControls();
+  bar($("mIn"), s.db); $("vIn").textContent = running && s.db != null ? Math.round(s.db) + " dB" : "—";
+  const o = (running && s.out) || {};
+  bar($("mBass"), db(o.bass_rms || 0) + 12); bar($("mPad"), db(o.pad_rms || 0) + 12);
+  $("nBass").textContent = o.bass || "—"; $("nPad").textContent = (o.pad || []).join(" ") || "—";
+  $("mBassBox").classList.toggle("on", !!o.bass); $("mPadBox").classList.toggle("on", !!(o.pad && o.pad.length));
   [...$("beats").children].forEach((d, i) => d.classList.toggle("on", running && s.beat === i + 1));
   $("freezeBtn").disabled = !running || s.fixed_grid || !s.bpm;
   $("freezeBtn").classList.toggle("on", !!s.frozen);
-  $("freezeBtn").textContent = s.frozen ? "BPM fixado" : "Fixar BPM";
+  $("freezeBtn").textContent = s.frozen ? "Voltar a seguir" : "Fixar este BPM";
   if (running && s.pattern) {
     const nxt = (s.pattern_pos + 1) % s.pattern.length;
     $("pattern").innerHTML = s.pattern.map((p, i) => `<span class="chip${i === s.pattern_pos ? " now" : i === nxt ? " upcoming" : ""}">${p}</span>`).join("");
@@ -339,6 +388,8 @@ function render(s) {
   $("diary").innerHTML = items || `<li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li>`;
   $("lat").textContent = s.latency_ms ? s.latency_ms + " ms" : "—";
   $("cost").textContent = s.cost_ms != null ? `${s.cost_ms} ms / ${s.budget_ms} ms` : "—";
+  $("warn").textContent = s.warning || "Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.";
+  $("warn").style.fontWeight = s.warning ? "700" : "400";
   $("engineInfo").innerHTML = s.engine ? `Motor <b>${s.engine}</b>` : "";
   $("xruns").textContent = s.xruns; $("xruns").parentElement.classList.toggle("warn", s.xruns > 0);
   $("sessionInfo").innerHTML = s.session ? `Sessão <b>${s.session.split(/[\\/]/).pop()}</b>${s.report ? " · relatório " + s.report : ""} · <a class="link" id="openBtn">Abrir pasta</a>` : "";

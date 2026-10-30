@@ -100,6 +100,7 @@ class Synth:
         self.b_lp, self.a_lp = butter(2, P.PAD_CUTOFF / (P.SR / 2))
         self.zi = np.zeros(2)
         self.reverb = Reverb()
+        self.levels = (0.0, 0.0)   # RMS of the bass and pad buses in the last block (for the UI meters)
 
     def handle(self, ev):
         if ev["type"] == "on":
@@ -155,6 +156,7 @@ class Synth:
         self.voices = alive
 
         pad, self.zi = lfilter(self.b_lp, self.a_lp, pad, zi=self.zi)
+        self.levels = (float(np.sqrt(np.mean(bass ** 2))), float(np.sqrt(np.mean(pad ** 2))))
         wet = self.reverb(pad)
         mix = (bass + P.PAD_DRY * pad)[:, None] + P.PAD_WET * wet
         a = np.clip((t - self.expr_t) / 0.05, 0, 1)

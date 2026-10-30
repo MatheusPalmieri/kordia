@@ -201,3 +201,14 @@ def test_session_records_and_replays(tmp_path):
     audio, cfg, la, sr = load(folder)
     assert len(audio) == P.HOP and abs(audio[0] - 0.1) < 1e-3 and cfg["tom"] == "C" and la == 0.1 and sr == P.SR
     assert (folder / "decisoes.jsonl").read_text(encoding="utf-8").strip()
+
+
+def test_fallback_is_silent_when_the_key_does_not_fit():
+    from acompanhante.engine import Engine
+    eng = Engine(TempoTracker(), ProgressionMemory(), key="C")
+    eng.recent.extend(theory.chord_index(c) for c in ["B", "F#", "G#m", "E"])
+    out = eng._fallback_out(1.0)                                  # B major music: C tonic would be a wrong note
+    assert (out is None or out.mode is None) and eng.cur == (None, None)
+    eng2 = Engine(TempoTracker(), ProgressionMemory(), key="C")
+    eng2.recent.extend(theory.chord_index(c) for c in ["C", "G", "Am", "F"])
+    assert eng2._fallback_out(1.0).mode == "tonic"

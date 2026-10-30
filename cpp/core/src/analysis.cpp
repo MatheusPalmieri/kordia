@@ -60,12 +60,14 @@ std::optional<Onset> OnsetDetector::process(const std::vector<double>& mag, doub
     std::swap(prev_, lm_);
     has_prev_ = true;
     double thr = (hist_.empty() ? 0.0 : median(hist_)) * P::ONSET_K + P::ONSET_DELTA;
+    if (t - last_t_ < P::ONSET_MASK_TIME) thr = std::max(thr, P::ONSET_MASK * last_flux_);   // own ringing
     hist_.push_back(f);
     if ((int)hist_.size() > P::ONSET_MEDIAN_FRAMES) hist_.pop_front();
     bool rising = f > prev_flux_;
     prev_flux_ = flux = f;
     if (f > thr && rising && rms_db > P::SILENCE_DB && t - last_t_ >= P::ONSET_REFRACTORY) {
         last_t_ = t;
+        last_flux_ = f;
         return Onset{t, rms_db, f};
     }
     return std::nullopt;

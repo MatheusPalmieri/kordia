@@ -59,14 +59,19 @@ def templates():
     return T / np.linalg.norm(T, axis=1, keepdims=True)
 
 
+def diatonic(key_pc):
+    """Vocabulary indices of the diatonic triads of a major key (I, IV, V, ii, iii, vi)."""
+    k = key_pc
+    return {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12, 12 + (k + 9) % 12}
+
+
 def key_prior(key):
     """Prior over the 25 states: diatonic triads 1.0, others KEY_PRIOR_OUT, N 1.0. key=None -> uniform."""
     w = np.ones(25)
     if key is None:
         return w / w.sum()
-    k = note_pc(key)
-    diatonic = {k, (k + 5) % 12, (k + 7) % 12, 12 + (k + 2) % 12, 12 + (k + 4) % 12, 12 + (k + 9) % 12}
-    w[:24] = [1.0 if i in diatonic else P.KEY_PRIOR_OUT for i in range(24)]
+    d = diatonic(note_pc(key))
+    w[:24] = [1.0 if i in d else P.KEY_PRIOR_OUT for i in range(24)]
     return w / w.sum()
 
 

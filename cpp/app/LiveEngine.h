@@ -38,6 +38,8 @@ public:
         int pattern[8] = {};
         double conf = 0, db = -120, bpm = 0;
         bool frozen = false, fixedGrid = false, click = false;
+        double bassRms = 0, padRms = 0;
+        int bassNote = -1, nPad = 0, padNotes[8] = {};
         Diary diary[12] = {};
         int nDiary = 0;
     };
@@ -83,6 +85,13 @@ private:
     // +0.42 / -0.58 and almost none near zero. Detected so the UI can say "change driver" instead of playing on noise.
     int corruptCount_ = 0, corruptTotal_ = 0;
     std::atomic<bool> inputCorrupt_{false};
+    // the capture stopped delivering (seen live: exact zeros forever after a dropout storm)
+    long long zeroRun_ = 0;
+    std::atomic<bool> inputDead_{false};
+    std::atomic<double> pendingBpm_{0};   // live BPM change, applied by the audio thread
+    int xrunWindowStart_ = 0;             // UI thread: dropout rate over the last ~5 s
+    juce::uint32 xrunWindowT_ = 0;
+    bool xrunStorm_ = false;
     std::atomic<int> xrunBase_{0};   // dropouts while the driver starts are not counted
     int xruns() const;
     juce::Time started_;

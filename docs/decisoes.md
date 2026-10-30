@@ -76,3 +76,17 @@ Feedback: interface precária, volume baixo, pad parecendo órgão, demora para 
 59. **Mesma interface nos dois apps**, com transporte detectado pela origem da página (`juce.backend` → GET + consulta periódica; senão POST + SSE). Uma interface só para manter.
 60. **Relatório da sessão no app C++ = laboratório Python reproduzindo a sessão** (processo filho). O C++ não precisa de matplotlib nem de código de métricas.
 61. **Memória de progressão limitada a 256 entradas nos dois lados** (só o fim é usado). Sessões longas não crescem sem limite, e o Python continua idêntico ao C++.
+
+## 2026-10-29 — Segundo teste ao vivo (app C++)
+
+Relato: aprendeu bem o padrão no começo, depois "entendeu que estava em silêncio", parou e não voltou; quer o metrônomo já antes de tocar; dois lugares de BPM confusos; quer ver a entrada e a saída (baixo/teclado).
+
+62. **Causa da parada, medida na sessão:** modo exclusivo com dois aparelhos (microfone USB 48 kHz + headset): relógios independentes (o clique vazado mediu 988 Hz em vez de 1000, −1,2 %), falhas de áudio contínuas a partir de ~18 s e captura morta (zeros) a partir de 37 s. **Correção:** voltar ao modo compartilhado, que compensa a deriva, corrigindo o bug do JUCE (decisão 63). Medido: entrada correta, 22 ms, 60 s sem a captura morrer.
+63. **Patch no JUCE 8.0.15** (`juce_WASAPI_windows.cpp`): reconhecer `WAVE_FORMAT_IEEE_FLOAT` simples como float. Causa raiz da "entrada corrompida" da decisão 55. Aplicado pelo CMake na configuração, idempotente, com erro explícito se o código mudar. Vale reportar ao JUCE.
+64. **Piso do detector de palhetadas 0,6 → 0,25** (+ mascaramento: por 0,3 s depois de uma palhetada o limiar é ≥ 25 % do fluxo dela). Na sessão real, o piso 0,6 pegava 30 de ~57 palhetadas (picos reais 0,6–4, contra 3–9 no sintético) e gerava paradas falsas. Com 0,25 + máscara: 55 palhetadas; cenários sintéticos sem mudança. *Alternativa considerada: ganho automático (AGC); descartada porque o nível tocado já era parecido (−29 dB) e o problema era a forma do fluxo, não o volume.*
+65. **A tônica do modo de segurança só toca se o tom configurado bater com o que ele vem ouvindo** (≥ metade dos últimos 8 acordes diatônicos); senão, silêncio. Na sessão real o violão estava em Si (I–V–vi–IV: B F# G#m E) com o tom configurado em Dó, e a segurança tocava Dó por cima.
+66. **Cenário `tom_errado`** (B–F#–G#m–E com tom Dó) e teste de que a segurança fica muda quando o tom não bate.
+67. **BPM em um lugar só** (cartão Andamento: *Seguir meu tempo* / *BPM fixo*, − / + ao vivo, Clique, Fixar este BPM). `Processor.set_bpm` muda o andamento mantendo a fase (grade fixa ou BPM fixado), nos dois lados.
+68. **Cartão Sinal**: nível do violão, medidores de baixo e teclado (RMS dos barramentos no sintetizador) com as notas soando.
+69. **"Sem sinal na entrada" e "rajada de falhas" são avisos no rodapé, não erros**: microfones USB zeram o sinal em sala silenciosa, então zeros por 2 s podem ser normais.
+70. **Hipótese de afinação descartada com medida:** o violão estava a −3 cents de A=440; os acordes meio tom abaixo eram o que foi tocado (Si). Sem estimador de afinação por enquanto.

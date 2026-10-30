@@ -47,3 +47,8 @@ def test_follows_dynamics(rows):
 
 def test_accelerating(rows):
     assert rows["acelerando"]["bpm_erro_medio"] <= 5 and rows["acelerando"]["acc_total"] >= 0.85
+
+
+def test_wrong_key_setting_still_follows_the_audio(rows):
+    """Key set to C, music in B: the audio wins (prior only) and the fallback never plays C over it."""
+    assert rows["tom_errado"]["acc_total"] >= 0.75 and rows["tom_errado"]["errado_confiante_n"] <= 3

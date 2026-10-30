@@ -14,8 +14,9 @@ Cada risco tem mitigação e um cenário de teste que o exercita (ver `04-plano-
 | 8 | **Trocas no meio do compasso.** O modo previsão assume troca no tempo 1. | Memória guarda a duração de cada acorde em tempos (arredondada a meio compasso). | Ainda sem cenário dedicado (pendência). |
 | 9 | **Capotraste e voicings variados.** | Detecta-se o som real; templates não dependem da forma. | `troca_de_tom` usa formas de Dó com capotraste na 2ª casa para tocar em Ré. |
 | 10 | **Falsos disparos** (tocar quando não devia): o erro mais caro. | Parada por ausência de onsets, fim de compasso + fade, esquecimento após silêncio longo, escada de confiança. | Métrica de falsos disparos e de parada em todos os cenários (todos terminam com silêncio). |
-| 11 | **Driver entregando entrada corrompida** (WASAPI compartilhado nesta máquina: float lido como int32). | Modo exclusivo como padrão; detector de corrupção avisa na interface. | `KordiaLiveTest.exe "Windows Audio" 0` mostra o aviso; padrão sem aviso. |
-| 12 | **Modo exclusivo toma a placa** (outros programas mudos). | Documentado; opção de driver na interface. | Manual. |
+| 11 | **Driver entregando entrada corrompida** (bug do JUCE no WASAPI compartilhado: float lido como int32). | Patch no JUCE (decisão 63); detector de corrupção continua avisando. | `KordiaLiveTest.exe "Windows Audio" 0` mostra o aviso; padrão sem aviso. |
+| 12 | **Modo exclusivo toma a placa** e, com entrada e saída em aparelhos diferentes, **derrapa até a captura morrer** (~15–20 s; medido). | Padrão é o modo compartilhado (corrigido); exclusivo só com interface única. Aviso de "sem sinal" e de rajada de falhas. | `KORDIA_SECONDS=60 KordiaLiveTest.exe` (60 s sem a captura morrer). |
+| 13 | **Tom configurado errado** (violão meio tom abaixo, capotraste). | Prior é só prior; a segurança não toca a tônica se o tom não bate. | `tom_errado`; `test_fallback_is_silent_when_the_key_does_not_fit`. |
 
 ## Riscos de método (do próprio protótipo)
 

@@ -24,7 +24,8 @@ namespace P {
 constexpr int HOP = 512, ONSET_WIN = 1024, CHROMA_WIN = 4096;
 constexpr double ONSET_FMIN = 150.0, ONSET_FMAX = 5000.0;
 constexpr int ONSET_MEDIAN_FRAMES = 32;
-constexpr double ONSET_K = 1.5, ONSET_DELTA = 0.6, ONSET_REFRACTORY = 0.10, SILENCE_DB = -55.0;
+constexpr double ONSET_K = 1.5, ONSET_DELTA = 0.25, ONSET_REFRACTORY = 0.10, SILENCE_DB = -55.0;
+constexpr double ONSET_MASK = 0.25, ONSET_MASK_TIME = 0.3;
 constexpr double TEMPO_ENV_SECONDS = 8.0;
 constexpr int TEMPO_ACF_EVERY = 10;
 constexpr double TEMPO_BPM_MIN = 50.0, TEMPO_BPM_MAX = 200.0, TEMPO_PRIOR_BPM = 105.0, TEMPO_PRIOR_OCTAVES = 0.7;
@@ -68,6 +69,7 @@ int chord_index(const std::string& chord);       // 'Am', 'F#m', 'G7', 'Am/G' ->
 std::array<int, 3> chord_pcs(int idx);           // root, third, fifth
 std::array<std::array<double, 12>, 24> templates();
 std::array<double, 25> key_prior(std::optional<int> key_pc);
+bool is_diatonic(int idx, int key_pc);   // I, IV, V, ii, iii, vi of a major key
 
 // ------------------------------------------------------------------ config
 struct RunConfig {
@@ -102,7 +104,7 @@ private:
     std::vector<double> prev_, lm_;
     bool has_prev_ = false;
     std::deque<double> hist_;
-    double last_t_ = -INF, prev_flux_ = 0.0;
+    double last_t_ = -INF, last_flux_ = 0.0, prev_flux_ = 0.0;
 };
 
 class ChordTracker {
@@ -156,6 +158,7 @@ public:
     void update(double t, double flux, const std::optional<Onset>& onset) override;
     bool frozen() const override { return frozen_; }
     void set_frozen(bool f) { frozen_ = f && period > 0; }
+    void set_bpm(double bpm) { if (frozen_) period = 60.0 / bpm; }
 private:
     void pll(double to);
     void acf();
@@ -174,6 +177,7 @@ public:
     void reset() override;
     void update(double t, double flux, const std::optional<Onset>& onset) override;
     double confidence() const override { return period > 0 ? 1.0 : 0.0; }
+    void set_bpm(double bpm) { fixed_period_ = 60.0 / bpm; if (period > 0) period = fixed_period_; }
 private:
     double fixed_period_;
     std::optional<double> start_;
@@ -241,6 +245,7 @@ private:
     double confirm_at_ = 0.0, changed_at_ = 0.0, contra_since_ = 0.0, last_change_t_ = -INF, stop_at_ = 0.0;
     std::optional<int> expected_, prev_chord_, contra_;
     int misses_ = 0;
+    std::deque<int> recent_;   // last chords played: does the configured key match the music?
 public:
     void set_frame(double f) { frame_ = f; }
 };
@@ -268,6 +273,8 @@ public:
     void beat(double t, bool strong, double period, int vel, std::vector<Event>& evs);
     void click(double t, bool accent, int vel, std::vector<Event>& evs);
     void expression(double t, double value, std::vector<Event>& evs);
+    int bass() const { return bass_; }                    // sounding bass note (-1: none)
+    const std::vector<int>& pad() const { return pad_; }  // sounding pad notes
     std::vector<Event> events;    // history (bounded by the owner in live mode)
     std::vector<Change> changes;
 private:
@@ -284,6 +291,7 @@ public:
     explicit Synth(double sr);
     void handle(const Event& e);
     void render(double t0, int n, double* left, double* right);  // adds nothing: overwrites
+    double bass_rms = 0.0, pad_rms = 0.0;   // last block, for the UI meters
 private:
     struct Voice { Inst inst; int pitch, vel; double on, off, rel; };   // off < 0: held
     struct Comb { int D; double g, d; std::vector<double> buf; int i = 0; double process(double x); };
@@ -325,6 +333,8 @@ public:
     void analyze(const double* x);
     double time() const { return s_ / sr_; }   // analysis time (end of last block)
     void freeze_tempo(bool on);
+    void set_bpm(double bpm);   // live: fixed BPM (metronome mode or frozen tempo), keeping the beat phase
+    const Synth& synth() const { return synth_; }
     std::optional<int> next_chord() const;
     std::optional<int> beat_in_bar() const;
 

@@ -84,6 +84,10 @@ def parse_config(d):
     return RunConfig(modo=modo, tom=key, bpm=bpm, progressao=prog, clique=bool(d.get("clique"))), dev_in, dev_out
 
 
+def note_name(midi):
+    return f"{theory.NOTE_NAMES[midi % 12]}{midi // 12 - 1}"
+
+
 def playing(cur, key):
     chord, mode = cur
     if mode is None:
@@ -185,6 +189,8 @@ class Live:
                 p.dyn.fixed = bool(d["dinamica_fixa"])
             if "fixar_bpm" in d:
                 p.freeze_tempo(d["fixar_bpm"])
+            if d.get("bpm"):
+                p.set_bpm(float(np.clip(float(d["bpm"]), 30, 250)))
 
     # --- audio thread ---
     def _callback(self, indata, outdata, frames, t, status):
@@ -249,6 +255,9 @@ class Live:
             "frozen": getattr(p.tracker, "frozen", False), "fixed_grid": p.engine.metronome,
             "pattern": [theory.LABELS[c] for c in known] if known else None,
             "pattern_pos": p.memory.pos if known else None, "next": p.next_chord(), "clique": p.click,
+            "out": {"bass_rms": p.synth.levels[0], "pad_rms": p.synth.levels[1],
+                    "bass": note_name(p.acc.bass) if p.acc.bass is not None else None,
+                    "pad": [note_name(n) for n in p.acc.pad]},
         })
         return s
 

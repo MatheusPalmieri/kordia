@@ -21,6 +21,7 @@ class OnsetDetector:
         self.prev = None
         self.hist = deque(maxlen=P.ONSET_MEDIAN_FRAMES)
         self.last_t = -np.inf
+        self.last_flux = 0.0
         self.prev_flux = 0.0
         self.flux = 0.0
 
@@ -30,10 +31,12 @@ class OnsetDetector:
         flux = 0.0 if self.prev is None else float(np.sum(np.maximum(lm - self.prev, 0.0))) / 10.0
         self.prev = lm
         thr = (np.median(self.hist) if self.hist else 0.0) * P.ONSET_K + P.ONSET_DELTA
+        if t - self.last_t < P.ONSET_MASK_TIME:
+            thr = max(thr, P.ONSET_MASK * self.last_flux)
         self.hist.append(flux)
         rising = flux > self.prev_flux
         self.prev_flux, self.flux = flux, flux
         if flux > thr and rising and rms_db > P.SILENCE_DB and t - self.last_t >= P.ONSET_REFRACTORY:
-            self.last_t = t
+            self.last_t, self.last_flux = t, flux
             return Onset(t, rms_db, flux)
         return None

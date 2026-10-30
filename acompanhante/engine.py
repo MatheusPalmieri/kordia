@@ -42,6 +42,7 @@ class Engine:
         self.contra = None
         self.contra_since = 0.0
         self.last_change_t = -np.inf
+        self.recent = deque(maxlen=8)   # last chords played: does the configured key match the music?
         self.reason = ""
         self.stop_at = None
         self.memory.reset()
@@ -55,6 +56,8 @@ class Engine:
         if (chord, mode) == self.cur:
             return None
         self.cur = (chord, mode)
+        if mode == "full":
+            self.recent.append(chord)
         if reason is not None:
             self.reason = reason
         return Output(chord, mode, t)
@@ -71,6 +74,10 @@ class Engine:
     def _fallback_out(self, t):
         if self.key is None:
             return self._set(None, None, t, "perdido sem tom: silêncio")
+        d = theory.diatonic(theory.note_pc(self.key))
+        if sum(c in d for c in self.recent) * 2 < len(self.recent):
+            # what we heard is mostly outside the configured key: its tonic would be a wrong note
+            return self._set(None, None, t, "perdido; o tom configurado não bate com o que ouvi: silêncio")
         return self._set(None, "tonic", t, "perdido: pad na tônica")
 
     # --- main step ---

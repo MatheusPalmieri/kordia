@@ -2,6 +2,24 @@
 FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(JUCE)
 
+# Patch (JUCE 8.0.15): in shared mode Windows may answer IsFormatSupported with a plain WAVE_FORMAT_IEEE_FLOAT
+# "nearest format"; JUCE then only recognises float for WAVE_FORMAT_EXTENSIBLE and reads float samples as int32
+# (measured here: every input value near +0.42 / -0.58). Idempotent string patch at configure time.
+set(_wasapi ${juce_SOURCE_DIR}/modules/juce_audio_devices/native/juce_WASAPI_windows.cpp)
+file(READ ${_wasapi} _src)
+set(_old "const bool isFloat = format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE && format->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;")
+set(_new "const bool isFloat = (format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE && format->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) || format->Format.wFormatTag == WAVE_FORMAT_IEEE_FLOAT; /* kordia patch */")
+string(FIND "${_src}" "kordia patch" _patched)
+if(_patched EQUAL -1)
+  string(FIND "${_src}" "${_old}" _found)
+  if(_found EQUAL -1)
+    message(FATAL_ERROR "JUCE WASAPI patch no longer applies: check juce_WASAPI_windows.cpp (isFloat) after a JUCE upgrade")
+  endif()
+  string(REPLACE "${_old}" "${_new}" _src "${_src}")
+  file(WRITE ${_wasapi} "${_src}")
+  message(STATUS "Kordia: patched JUCE WASAPI float detection")
+endif()
+
 # WebView2 SDK (NuGet package) for the UI; downloaded once into the build tree
 set(WEBVIEW2_VERSION 1.0.2210.55)
 set(WEBVIEW2_DIR ${CMAKE_BINARY_DIR}/webview2/Microsoft.Web.WebView2.${WEBVIEW2_VERSION})
