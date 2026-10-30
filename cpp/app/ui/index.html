@@ -3,37 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>Kordia</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23000'/%3E%3Cpath d='M160 112V400M356 112 232 256 356 400' fill='none' stroke='%23fff' stroke-width='46' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
+/* a cor diz quem falou (âmbar ouvido, gelo tocado, coral discordância); o traço diz a certeza (cheio confirmado, tracejado palpite) */
 :root {
-  --bg: #f5f5f7; --bg2: #e9e9ee; --card: rgba(255,255,255,.78); --line: rgba(0,0,0,.08);
-  --text: #1d1d1f; --muted: #6e6e73; --faint: #aeaeb2;
-  --blue: #0a84ff; --green: #30b158; --orange: #ff9f0a; --purple: #8e5cf6; --red: #ff3b30; --gray: #8e8e93;
-  --track: rgba(120,120,128,.2); --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 28px rgba(0,0,0,.06);
-}
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #000; --bg2: #111114; --card: rgba(28,28,30,.82); --line: rgba(255,255,255,.08);
-    --text: #f5f5f7; --muted: #98989d; --faint: #48484a; --track: rgba(120,120,128,.32);
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35); }
+  --bg: #09090b; --panel: #131316; --raised: #26262c; --line: rgba(255,255,255,.08);
+  --text: #f4f4f6; --muted: #a9a9b2; --faint: #8e8e98; --quiet: #3a3a42;
+  --heard: #ffb65c; --played: #9ccbff; --alert: #ff8a75;
+  --warm-bg: #2c1f12; --warm-text: #ffd9a8; --warm-btn: #4a3419;
+  --bad-bg: #33140f; --bad-text: #ffc9bf; --bad-btn: #552419;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  background: radial-gradient(1200px 600px at 70% -10%, var(--bg2), var(--bg)); color: var(--text);
-  -webkit-font-smoothing: antialiased; font-size: 14px; letter-spacing: -.01em;
-}
-.app { max-width: 1280px; margin: 0 auto; padding: 22px 24px 28px; display: flex; flex-direction: column; gap: 18px; min-height: 100%; }
-header { display: flex; align-items: center; gap: 16px; }
-.logo { display: block; flex: none; width: 44px; height: 44px; border-radius: 22.5%; background: #000; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+body { font-family: var(--display); background: var(--bg); color: var(--text); font-size: 14px; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ul, ol, dl, dd { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+button, input, select { font: inherit; color: inherit; }
+button { border: 0; background: none; cursor: pointer; }
+button:disabled { cursor: default; opacity: .45; }
+:focus-visible { outline: 2px solid var(--played); outline-offset: 2px; }
+.logo { display: block; flex: none; width: 32px; height: 32px; border-radius: 22.5%; background: #000; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
 .logo svg { display: block; width: 100%; height: 100%; fill: none; stroke: #fff; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px rgba(214,232,255,.9)); }
-.splash { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #000; color: #f5f5f7; transition: opacity .5s ease; }
+
+/* entrada */
+.splash { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: #000; color: #f5f5f7; transition: opacity .5s ease; }
 .splash.done { opacity: 0; pointer-events: none; }
 .splash .logo { width: 148px; height: 148px; margin-bottom: 14px; }
 .splash .logo svg { stroke-width: 28; filter: drop-shadow(0 0 3px rgba(214,232,255,.95)) drop-shadow(0 0 14px rgba(214,232,255,.7)) drop-shadow(0 0 34px rgba(160,200,255,.45)); animation: neon-on 1s ease-out both, neon-breathe 2.2s ease-in-out 1s infinite alternate; }
-.splash-name { font-family: -apple-system, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui; font-size: 30px; font-weight: 600; letter-spacing: -.02em; animation: splash-rise .7s ease-out .3s both; }
-.splash-note { color: #98989d; font-size: 13px; animation: splash-rise .7s ease-out .45s both; }
+.splash-name { font-size: 30px; font-weight: 600; letter-spacing: -.02em; animation: splash-rise .7s ease-out .3s both; }
+.splash-note { color: var(--muted); font-size: 13px; animation: splash-rise .7s ease-out .45s both; }
 .splash-bar { width: 132px; height: 2px; margin-top: 14px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; animation: splash-rise .7s ease-out .45s both; }
 .splash-bar i { display: block; width: 40%; height: 100%; border-radius: 2px; background: #fff; box-shadow: 0 0 8px rgba(214,232,255,.9); animation: splash-sweep 1.2s ease-in-out infinite; }
 @keyframes neon-on { 0% { opacity: 0; } 35% { opacity: .55; } 50% { opacity: .25; } 100% { opacity: 1; } }
@@ -41,123 +44,247 @@ header { display: flex; align-items: center; gap: 16px; }
 @keyframes splash-rise { from { opacity: 0; transform: translateY(6px); } }
 @keyframes splash-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 @media (prefers-reduced-motion: reduce) { .splash * { animation: none !important; } }
-.brand { font-family: -apple-system, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui; font-size: 26px; font-weight: 700; letter-spacing: -.03em; }
-.brand small { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-.spacer { flex: 1; }
-.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 600; font-size: 13px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray); }
-.btn { appearance: none; border: 0; border-radius: 999px; padding: 11px 26px; font: inherit; font-weight: 650; font-size: 15px; cursor: pointer; transition: transform .12s, background .2s, opacity .2s; }
-.btn:active { transform: scale(.97); }
-.btn.primary { background: var(--blue); color: #fff; box-shadow: 0 4px 14px rgba(10,132,255,.35); }
-.btn.stop { background: var(--red); box-shadow: 0 4px 14px rgba(255,59,48,.35); }
-.btn.ghost { background: var(--track); color: var(--text); padding: 7px 14px; font-size: 13px; font-weight: 600; }
-.btn.ghost.on { background: var(--blue); color: #fff; }
-.btn:disabled { opacity: .4; cursor: default; }
-.grid { display: block; }
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); overflow-y: auto; padding: 18px 18px 28px;
-  background: var(--bg); border-left: 1px solid var(--line); box-shadow: -12px 0 40px rgba(0,0,0,.35); z-index: 20;
-  transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column; gap: 16px; }
-.drawer.open { transform: none; }
-.drawer-head { display: flex; align-items: center; justify-content: space-between; }
-.drawer-head h3 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
-.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 15; }
-.backdrop.open { opacity: 1; pointer-events: auto; }
-.quick { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 600; font-size: 13px; }
-.quick select { width: auto; background: transparent; padding: 4px 6px; font-weight: 700; }
-.icon-btn { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
-.layer { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
-.layer:first-of-type { border-top: 0; }
-.layer label { font-weight: 500; }
-.layer input[type=range]:disabled { opacity: .35; }
-.col { display: flex; flex-direction: column; gap: 18px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); contain: content; padding: 16px 18px; }
-.card h2 { margin: 0 0 12px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
-.row:first-of-type { border-top: 0; padding-top: 0; }
-.row label { font-weight: 500; }
-.row .hint { color: var(--muted); font-size: 12px; }
-.stack { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-select, input[type=text], input[type=number] {
-  font: inherit; color: var(--text); background: var(--track); border: 0; border-radius: 9px; padding: 7px 10px; outline: none; min-width: 0;
-}
-select { width: 100%; cursor: pointer; }
-select:focus, input:focus { box-shadow: 0 0 0 3px rgba(10,132,255,.35); }
-input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px; background: var(--track); outline: none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: pointer; }
-.val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12.5px; min-width: 52px; text-align: right; }
-.switch { position: relative; width: 44px; height: 26px; flex: none; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.switch span { position: absolute; inset: 0; border-radius: 26px; background: var(--track); transition: background .2s; cursor: pointer; }
-.switch span::after { content: ""; position: absolute; width: 22px; height: 22px; left: 2px; top: 2px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.25); transition: transform .22s cubic-bezier(.3,.7,.4,1.2); }
-.switch input:checked + span { background: var(--green); }
-.switch input:checked + span::after { transform: translateX(18px); }
-.switch input:disabled + span { opacity: .45; cursor: default; }
-.meter { height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; position: relative; }
-.meter i { position: absolute; inset: 0; transform: scaleX(0); transform-origin: left; will-change: transform; background: linear-gradient(90deg, var(--green), var(--green) 75%, var(--orange) 90%, var(--red)); }
-.meter b { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--faint); }
-.stepper { display: inline-flex; align-items: center; background: var(--track); border-radius: 9px; }
-.stepper button { border: 0; background: transparent; color: var(--text); font-size: 17px; width: 30px; height: 30px; cursor: pointer; }
-.stepper input { width: 52px; text-align: center; background: transparent; padding: 4px 0; font-variant-numeric: tabular-nums; }
+
+/* controles */
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 12px; background: var(--raised); color: var(--text); font-weight: 600; white-space: nowrap; }
+.btn.primary { padding: 0 22px; background: var(--text); color: var(--bg); font-size: 15px; font-weight: 650; }
+.btn.on { background: var(--played); color: var(--bg); }
+.btn.small { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+.btn.square { width: 44px; padding: 0; }
+select, input[type=text] { width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--raised); }
+input[type=range] { width: 100%; height: 28px; margin: 0; accent-color: var(--played); }
+input[type=checkbox], input[type=radio] { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--played); }
+.warm input[type=range], .warm input[type=radio] { accent-color: var(--heard); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .label { color: var(--muted); }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.check { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; border-top: 1px solid var(--line); font-weight: 500; cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+/* medidores: só transform, sem layout */
+.meter { position: relative; height: 10px; border-radius: 5px; background: var(--raised); overflow: hidden; }
+.meter i { position: absolute; inset: 0; transform: scaleX(0); transform-origin: left; background: var(--heard); will-change: transform; }
+.meter.out i { background: var(--played); }
+.meter.thin { height: 4px; border-radius: 2px; }
+.meter-wrap { position: relative; }
+.meter-wrap b { position: absolute; top: -3px; bottom: -3px; left: 8.33%; width: 2px; background: var(--text); }
+
+/* estrutura */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-height: 72px; padding: 12px 24px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 650; letter-spacing: -.02em; }
+.nav { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--panel); }
+.nav button { min-height: 38px; padding: 0 14px; border-radius: 9px; color: var(--muted); font-weight: 550; }
+.nav button.on { background: var(--raised); color: var(--text); }
+.grow { flex: 1 1 auto; }
+.state { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--faint); }
+.alert { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 24px 0; padding: 10px 16px; border-radius: 14px; background: var(--warm-bg); color: var(--warm-text); }
+.alert span { flex: 1 1 320px; }
+.alert .btn { background: var(--warm-btn); color: var(--warm-text); }
+.alert.erro { background: var(--bad-bg); color: var(--bad-text); }
+.alert.erro .btn { background: var(--bad-btn); color: var(--bad-text); }
+.wrap { max-width: 1680px; margin: 0 auto; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+.play { display: grid; grid-template-columns: 292px minmax(0, 1fr) 292px; gap: 16px; align-items: stretch; }
+@media (max-width: 1120px) { .play { grid-template-columns: 1fr 1fr; } .stage { grid-column: 1 / -1; grid-row: 1; } }
+@media (max-width: 760px) { .play { grid-template-columns: minmax(0, 1fr); } .top { padding: 10px 14px; } .wrap { padding: 12px 14px; } }
+.card { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; contain: content; }
+.card h2 { font-size: 13px; font-weight: 600; color: var(--muted); }
+.card h2.heard { color: var(--heard); }
+.card h2.played { color: var(--played); }
+.big-name { font-size: 22px; font-weight: 650; letter-spacing: -.02em; }
+.ellipsis { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* painel de entrada */
+.cand { display: grid; grid-template-columns: 54px minmax(0, 1fr) 40px; align-items: center; gap: 10px; }
+.cand b { font-size: 17px; font-weight: 650; }
+.cand:first-child b { color: var(--heard); }
+.cand:not(:first-child) b, .cand span { color: var(--muted); }
+.cand:not(:first-child) .meter i { background: #5a5a64; }
+.cand span { text-align: right; }
+.cand .meter { height: 6px; }
+.chroma { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
+.chroma div { display: flex; flex-direction: column; gap: 6px; }
+.chroma s { position: relative; display: block; height: 76px; }
+.chroma s i { position: absolute; inset: 0; border-radius: 3px; background: var(--heard); transform: scaleY(0); transform-origin: bottom; will-change: transform; }
+.chroma span { text-align: center; font-size: 10.5px; color: var(--muted); }
+
+/* centro */
+.stage { padding: 20px 24px 24px; }
+.tempo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-height: 44px; }
+.beats { display: flex; gap: 8px; }
+.beats i { width: 14px; height: 14px; border-radius: 50%; background: var(--raised); }
+.beats i.on { background: var(--played); }
+.beats i.on:first-child { background: var(--text); }
+.bpm { font-size: 18px; font-weight: 650; }
+.bpm small { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.now { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 12px 48px; padding: 8px 0; }
+.chord { font-size: clamp(110px, 14vw, 208px); line-height: 1; font-weight: 700; letter-spacing: -.05em; color: var(--played); text-align: center; }
+.chord.idle { color: var(--quiet); }
+.chord.hear { color: var(--heard); }
+.sub { margin-top: 8px; min-height: 22px; color: var(--muted); font-size: 16px; text-align: center; }
+.sub strong { color: var(--text); font-weight: 650; }
+.nextbox { display: flex; flex-direction: column; gap: 2px; padding-bottom: 32px; color: var(--muted); }
+.nextbox b { font-size: 64px; line-height: 1.05; font-weight: 650; letter-spacing: -.03em; }
+.lanes { display: flex; flex-direction: column; gap: 6px; }
+.lane { display: grid; grid-template-columns: 58px repeat(8, minmax(0, 1fr)); gap: 4px; align-items: stretch; }
+.lane > span { align-self: center; font-weight: 600; }
+.cell { display: grid; place-items: center; min-height: 42px; border-radius: 8px; font-weight: 650; border: 1px dashed var(--quiet); }
+.cell.h { border: 0; background: rgba(255,182,92,.2); }
+.cell.p { border: 0; background: rgba(156,203,255,.2); }
+.cell.h.cur { background: var(--heard); color: var(--bg); }
+.cell.p.cur { background: var(--played); color: var(--bg); }
+.cell.miss { background: var(--alert); color: var(--bg); }
+.cell.guess { border: 1.5px dashed var(--played); color: var(--played); }
+
+/* aprendendo */
+.learn { flex: 1 1 auto; display: flex; flex-direction: column; gap: 20px; }
+.learn-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 32px; }
+.learn-head h1 { font-size: 27px; font-weight: 650; letter-spacing: -.025em; text-wrap: pretty; }
+.learn-head p { margin-top: 8px; color: var(--muted); font-size: 15px; line-height: 1.45; text-wrap: pretty; }
+.learn-head > div:first-child { flex: 1 1 300px; }
+.pair { display: flex; gap: 26px; }
+.pair div { display: flex; flex-direction: column; gap: 2px; color: var(--muted); }
+.pair b { font-size: 54px; line-height: 1.05; font-weight: 700; letter-spacing: -.03em; color: var(--heard); }
+.pair div + div b { color: var(--played); }
+.laps { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+.lap { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px; align-items: center; }
+.lap > span { font-weight: 550; }
+.lap > span.guess { color: var(--played); }
+.lap-cells { display: grid; gap: 5px; }
+.slot { display: grid; place-items: center; min-height: 50px; min-width: 0; border-radius: 10px; font-size: 15px; font-weight: 650; border: 1px dashed var(--quiet); }
+.slot.h { border: 1px solid transparent; }
+.slot.doubt { border: 1.5px solid var(--alert); }
+.slot.cur { border: 2px solid var(--text); }
+.slot.guess { border: 1.5px dashed var(--played); color: var(--played); }
+.gates { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 24px; }
+.gates li { display: flex; gap: 10px; }
+.gates svg { flex: none; margin-top: 1px; fill: none; stroke-width: 1.6; }
+.gates b { display: block; font-weight: 600; }
+.gates span { color: var(--muted); font-size: 13px; }
+.seq { display: flex; flex-wrap: wrap; gap: 6px; }
+.seq span { min-width: 56px; padding: 12px; border-radius: 10px; background: rgba(255,182,92,.3); font-size: 15px; font-weight: 650; text-align: center; }
+.seq span:last-child { outline: 2px solid var(--text); outline-offset: -2px; }
+
+/* saída */
+.layer { display: flex; align-items: center; gap: 12px; min-height: 54px; border-top: 1px solid var(--line); }
+.layer input { margin: 0 2px; }
+.layer label { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+.layer .row { display: flex; justify-content: space-between; gap: 10px; }
+.layer b { font-weight: 600; white-space: nowrap; }
+.layer em { min-width: 0; color: var(--muted); font-style: normal; font-size: 12.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.layer.off b { color: var(--muted); }
+
+/* como começar */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 12px; background: var(--bg); }
+.seg button { min-height: 40px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: 13px; }
+.seg button.on { background: var(--raised); color: var(--text); }
+.stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stepper b { font-size: 38px; font-weight: 650; letter-spacing: -.03em; }
+.stepper small { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { padding: 5px 11px; border-radius: 999px; background: var(--track); font-weight: 600; font-size: 13px; transition: all .2s; }
-.chip.now { background: var(--blue); color: #fff; transform: scale(1.06); }
-.chip.upcoming { box-shadow: inset 0 0 0 2px var(--blue); }
-.stage { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 26px 18px 22px; min-height: 330px; text-align: center; }
-.chord { font-family: -apple-system, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui; font-size: 168px; line-height: 1; font-weight: 700; letter-spacing: -.05em; transition: transform .18s, opacity .18s; }
-.chord.idle { color: var(--faint); }
-.chord.bump { transform: scale(1.06); }
-.sub { height: 22px; color: var(--muted); font-weight: 600; margin-top: 4px; }
-.heard { margin-top: 18px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 500; }
-.heard strong { color: var(--text); font-size: 18px; min-width: 40px; text-align: left; }
-.conf { width: 160px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
-.conf i { display: block; height: 100%; transform: scaleX(0); transform-origin: left; will-change: transform; background: var(--blue); }
-.next { margin-top: 10px; color: var(--muted); height: 20px; }
-.next b { color: var(--text); }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-@media (max-width: 1100px) { .two { grid-template-columns: 1fr; } }
-.three { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 18px; }
-@media (max-width: 1180px) { .three { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
-.sig { display: grid; grid-template-columns: 58px minmax(90px, 1fr) minmax(44px, auto); align-items: center; gap: 10px; padding: 7px 0; }
-.sig .lbl { font-weight: 600; }
-.sig .nn { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meter.big { height: 10px; }
-.meter.out i { background: linear-gradient(90deg, var(--blue), var(--purple)); }
-.meter.on { box-shadow: 0 0 0 1px rgba(10,132,255,.35); }
-.seg { display: inline-flex; background: var(--track); border-radius: 10px; padding: 2px; margin-bottom: 12px; }
-.seg button { border: 0; background: transparent; color: var(--text); font: inherit; font-weight: 600; font-size: 13px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-.seg button.on { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
-.seg button:disabled { cursor: default; opacity: .55; }
-.bpmstep { border: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--track); color: var(--text); font-size: 20px; cursor: pointer; align-self: center; }
-.bpmstep[hidden] { display: none; }
-.bpm { display: flex; align-items: baseline; gap: 8px; }
-.bpm .n { font-size: 46px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-.bpm .u { color: var(--muted); font-weight: 600; }
-.beats { display: flex; gap: 10px; margin: 10px 0 14px; }
-.beats i { width: 16px; height: 16px; border-radius: 50%; background: var(--track); transition: background .06s, transform .06s; }
-.beats i.on { background: var(--blue); transform: scale(1.25); }
-.beats i.on.first { background: var(--purple); }
-.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.diary { list-style: none; margin: 0; padding: 0; max-height: 236px; overflow: auto; }
-.diary li { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.chip { padding: 5px 11px; border-radius: 999px; background: var(--raised); font-weight: 600; font-size: 13px; }
+
+/* diário e saúde */
+.lower { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 16px; }
+@media (max-width: 760px) { .lower { grid-template-columns: minmax(0, 1fr); } }
+.lower .card { gap: 8px; padding: 14px 20px; }
+.diary { max-height: 132px; overflow: auto; }
+.diary li { display: grid; grid-template-columns: 60px 48px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid rgba(255,255,255,.06); }
 .diary li:first-child { border-top: 0; }
-.diary time { color: var(--faint); font-variant-numeric: tabular-nums; font-size: 12px; min-width: 48px; }
-.diary .c { font-weight: 700; min-width: 44px; }
-.diary .m { color: var(--muted); }
-.empty { color: var(--faint); padding: 6px 0; }
-footer { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; align-items: center; }
-footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.warn { color: var(--orange); }
-.link { color: var(--blue); cursor: pointer; text-decoration: none; font-weight: 600; }
-.audio-alert { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--orange); background: var(--card); font-weight: 600; }
-.audio-alert[hidden] { display: none; }
-.audio-alert.erro { border-color: var(--red); }
-.audio-alert span { flex: 1 1 280px; }
-.input-list { margin: 0; padding: 0; list-style: none; }
+.diary time, .events time { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+.diary b { font-weight: 650; }
+.diary span { color: var(--muted); }
+.stats { display: flex; flex-direction: column; gap: 9px; }
+.stats div { display: flex; justify-content: space-between; gap: 12px; }
+.stats dt { color: var(--muted); }
+.stats dd { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.stats .bad { color: var(--alert); }
+
+/* contagem */
+.count { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; min-height: calc(100vh - 72px); text-align: center; }
+.count b { font-size: clamp(200px, 34vw, 480px); line-height: .9; font-weight: 700; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.count p { font-size: 26px; color: var(--muted); }
+
+/* palco */
+.palco { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; gap: 24px; padding: 24px clamp(16px, 3vw, 40px) 32px; background: #000; }
+.palco header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; font-size: 18px; }
+.palco .btn { min-height: 48px; background: #1c1c21; }
+.palco main { flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px clamp(32px, 7vw, 120px); }
+.palco .main-chord { font-size: clamp(170px, 30vw, 460px); line-height: .95; font-weight: 700; letter-spacing: -.055em; text-shadow: 0 0 44px rgba(156,203,255,.42); text-align: center; }
+.palco .shape { font-size: 30px; color: var(--muted); text-align: center; min-height: 40px; }
+.palco .shape strong { color: var(--text); font-weight: 650; }
+.palco .upcoming { display: flex; flex-direction: column; gap: 4px; font-size: 24px; color: var(--muted); }
+.palco .upcoming b { font-size: clamp(72px, 10vw, 148px); line-height: 1; font-weight: 650; letter-spacing: -.04em; color: var(--played); }
+.palco .bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.palco .bar i { height: 14px; border-radius: 7px; background: #1c1c21; }
+.palco .bar i.on { background: var(--played); }
+.palco .bar i.on:first-child { background: var(--text); }
+
+/* configuração */
+.setup { min-height: 100vh; display: flex; flex-direction: column; gap: 28px; padding: clamp(20px, 4vw, 48px); }
+.steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 32px; color: var(--muted); }
+.steps .on { color: var(--text); font-weight: 650; }
+.setup main { flex: 1 1 auto; width: 100%; max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 32px 56px; align-content: center; align-items: center; font-size: 15px; }
+.setup h1 { font-size: clamp(34px, 4vw, 48px); line-height: 1.08; font-weight: 650; letter-spacing: -.035em; text-wrap: balance; }
+.setup .lead { margin-top: 12px; color: var(--muted); font-size: 17px; line-height: 1.45; text-wrap: pretty; }
+.setup form { display: flex; flex-direction: column; gap: 20px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; }
+.setup fieldset { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.setup legend { padding: 0; margin-bottom: 8px; color: var(--muted); }
+.radio { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 8px 14px; border-radius: 12px; cursor: pointer; font-weight: 600; }
+.radio:has(input:checked) { background: var(--raised); }
+.radio span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.notes { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.preview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 24px; }
+.preview div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 12px; background: var(--panel); }
+.preview span { color: var(--muted); font-size: 13px; }
+.preview b { font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
+.echo { padding: 12px 14px; border-radius: 12px; background: var(--warm-bg); color: var(--warm-text); line-height: 1.4; }
+
+/* sessões e relatório */
+.page { max-width: 1320px; margin: 0 auto; padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 20px; }
+.page h1 { font-size: 34px; font-weight: 650; letter-spacing: -.03em; }
+.table { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; }
+table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+thead th { padding: 14px 16px; color: var(--muted); font-size: 13px; font-weight: 500; text-align: left; }
+tbody tr { border-top: 1px solid var(--line); }
+tbody td { padding: 0 16px; }
+tbody .open { display: flex; align-items: center; min-height: 50px; width: 100%; font-weight: 600; text-align: left; }
+td.bad { color: var(--alert); font-weight: 650; }
+td.dim { color: var(--muted); }
+.report-lanes { display: flex; flex-direction: column; gap: 6px; }
+.rl { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: center; }
+.rl > span { font-weight: 600; }
+.rcells { display: flex; gap: 1px; height: 72px; }
+.rcells i { flex: 1 1 0; min-width: 0; border-radius: 2px; background: var(--panel); }
+.axis { position: relative; height: 18px; margin-left: 66px; color: var(--muted); font-size: 12.5px; }
+.axis span { position: absolute; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; color: var(--muted); font-size: 13px; }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; }
+.report-low { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+@media (max-width: 860px) { .report-low { grid-template-columns: minmax(0, 1fr); } }
+.events { max-height: 300px; overflow: auto; }
+.events li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.events li:first-child { border-top: 0; }
+
+/* ajustes */
+.backdrop { position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 40; width: min(440px, 100vw); overflow-y: auto; display: flex; flex-direction: column; gap: 26px; padding: 20px 24px 32px; background: var(--panel); border-left: 1px solid rgba(255,255,255,.1); transform: translateX(105%); visibility: hidden; transition: transform .24s cubic-bezier(.2,.8,.2,1), visibility 0s .24s; }
+.drawer.open { transform: none; visibility: visible; transition: transform .24s cubic-bezier(.2,.8,.2,1); }
+.drawer h1 { font-size: 24px; font-weight: 650; letter-spacing: -.02em; }
+.drawer section { display: flex; flex-direction: column; gap: 12px; }
+.drawer h2 { font-size: 13px; font-weight: 600; color: var(--muted); }
+.mix { display: grid; grid-template-columns: 112px minmax(0, 1fr) 40px 24px; align-items: center; gap: 10px; min-height: 44px; }
+.mix.off label { color: var(--muted); }
+.mix .num { color: var(--muted); font-size: 12.5px; text-align: right; }
+.input-list { color: var(--muted); font-size: 13px; line-height: 1.6; }
 .input-list .off { color: var(--faint); }
-.toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 30px); opacity: 0; background: rgba(30,30,32,.94); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 500; transition: all .25s; pointer-events: none; max-width: 560px; }
+
+.toast { position: fixed; left: 50%; bottom: 28px; z-index: 70; max-width: 560px; padding: 12px 18px; border-radius: 14px; background: #2a2a30; color: #fff; font-weight: 500; transform: translate(-50%, 30px); opacity: 0; transition: all .25s; pointer-events: none; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
-.note { font-size: 12px; color: var(--muted); line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -168,121 +295,245 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
   <div class="splash-note">Preparando o áudio…</div>
   <div class="splash-bar"><i></i></div>
 </div>
-<div class="app">
-  <header>
-    <span class="logo"><svg viewBox="0 0 512 512"><use href="#logo"/></svg></span>
-    <div class="brand">Kordia<small>Baixo e pad que ouvem o seu violão</small></div>
-    <div class="spacer"></div>
-    <span class="quick" title="Tom principal: Automático = ele descobre pelos acordes">Tom <select id="key"></select></span>
-    <span class="pill"><span class="dot" id="stateDot"></span><span id="stateText">Parado</span></span>
-    <button class="icon-btn" id="settingsBtn" title="Ajustes: áudio, som e música" aria-label="Ajustes"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+
+<!-- primeiro uso -->
+<div class="setup" id="setup" hidden>
+  <ol class="steps"><li data-step="0">1 Entrada</li><li data-step="1">2 Instrumento</li><li data-step="2">3 Saída</li></ol>
+  <main id="setup0" class="warm">
+    <div><h1>Por onde o Kordia vai te ouvir?</h1><p class="lead">Toque alguns acordes. A barra precisa passar da marca.</p></div>
+    <form>
+      <fieldset><legend>Entrada</legend><div id="setupInputs"></div><ul class="notes" id="setupInactive"></ul></fieldset>
+      <div class="block">
+        <div class="spread"><span class="label">Nível</span><span class="num" style="font-size:20px;font-weight:650" id="setupDb">—</span></div>
+        <div class="meter-wrap"><div class="meter" style="height:14px;border-radius:7px"><i id="setupMeter"></i></div><b></b></div>
+      </div>
+      <div class="field">
+        <div class="spread"><label for="setupGain">Ganho</label><span class="num" id="setupGainVal"></span></div>
+        <input type="range" id="setupGain" min="-12" max="36" step="1">
+      </div>
+      <div class="spread"><span class="label" id="setupHeard">Toque para testar.</span><button type="button" class="btn primary" data-go="1">Continuar</button></div>
+    </form>
+  </main>
+  <main id="setup1" class="warm" hidden>
+    <div>
+      <h1>O que você vai tocar?</h1>
+      <p class="lead">Com a afinação certa, a tela mostra o acorde que soa e a forma que você faz.</p>
+      <div class="preview" id="tunePreview"></div>
+    </div>
+    <form>
+      <fieldset><legend>Instrumento</legend><div id="setupInstruments"></div></fieldset>
+      <fieldset><legend>Afinação</legend><div id="setupTunings"></div></fieldset>
+      <div class="spread"><button type="button" class="btn" data-go="0">Voltar</button><button type="button" class="btn primary" data-go="2">Continuar</button></div>
+    </form>
+  </main>
+  <main id="setup2" hidden>
+    <div><h1>Onde o baixo e o pad vão soar?</h1><p class="lead">Faça o teste antes de tocar: uma nota curta de baixo sai pela saída escolhida.</p></div>
+    <form>
+      <fieldset><legend>Saída</legend><div id="setupOutputs"></div></fieldset>
+      <p class="echo" id="setupEcho" hidden>Microfone e caixa de som juntos fazem ele ouvir a si mesmo. Prefira fone ou o violão ligado direto.</p>
+      <button type="button" class="btn" id="testTone">Testar o som</button>
+      <div class="spread"><button type="button" class="btn" data-go="1">Voltar</button><button type="button" class="btn primary" id="setupDone">Concluir</button></div>
+    </form>
+  </main>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="brand"><span class="logo"><svg viewBox="0 0 512 512"><use href="#logo"/></svg></span>Kordia</div>
+    <nav class="nav" aria-label="Principal"><button id="navPlay" class="on">Tocar</button><button id="navSessions">Sessões</button></nav>
+    <div class="grow"></div>
+    <span class="hint num" id="detail"></span>
+    <span class="state" id="stateBox"><span class="dot" id="stateDot"></span><span id="stateText">Parado</span></span>
+    <button class="btn square" id="settingsBtn" aria-label="Ajustes"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
     <button class="btn primary" id="startBtn">Iniciar</button>
   </header>
 
-  <div class="audio-alert" id="audioAlert" role="alert" hidden>
+  <div class="alert" id="audioAlert" role="alert" hidden>
     <span id="audioAlertText"></span>
-    <button class="btn ghost" id="audioAlertOpen" hidden>Abrir ajustes do Windows</button>
-    <button class="btn ghost" id="audioAlertSkip">Ignorar</button>
+    <button class="btn small" id="audioAlertOpen" hidden>Abrir ajustes do Windows</button>
+    <button class="btn small" id="audioAlertSkip">Ignorar</button>
   </div>
+  <div class="alert" id="warnBar" role="status" hidden><span id="warn"></span></div>
 
-  <div class="backdrop" id="backdrop"></div>
-  <aside class="drawer" id="drawer">
-      <div class="drawer-head"><h3>Ajustes</h3><button class="btn ghost" id="closeSettings">Fechar</button></div>
-      <section class="card">
-        <h2>Áudio</h2>
-        <div class="row" id="driverRow" hidden><div class="stack"><label>Driver</label><select id="driver"></select></div></div>
-        <div class="row" id="bufferRow" hidden><div class="stack"><label>Latência do driver</label>
-          <select id="buffer"><option value="256">Baixa (~5 ms) — pode falhar</option><option value="480" selected>Normal (~10 ms)</option><option value="960">Segura (~20 ms)</option></select></div></div>
-        <div class="row"><div class="stack"><label>Entrada</label><select id="input"></select></div></div>
-        <div class="row"><div class="stack"><label>Entradas no Windows</label><ul class="input-list note" id="inputList"></ul></div></div>
-        <div class="row"><div class="stack"><label>Saída</label><select id="output"></select></div></div>
-        <div class="row"><div class="stack">
-          <div style="display:flex;justify-content:space-between"><label>Ganho da entrada</label><span class="val" id="gainVal"></span></div>
-          <input type="range" id="gain" min="-12" max="36" step="1" value="0">
-          <div class="meter" title="Nível de entrada — passe da marca quando tocar"><i id="meter"></i><b id="meterMark"></b></div>
-        </div></div>
-        <div class="row"><label>Ouvir o violão na saída</label><label class="switch"><input type="checkbox" id="monitor"><span></span></label></div>
+  <div class="count" id="countView" hidden><b id="countNum"></b><p>Entre no próximo compasso</p></div>
+
+  <div class="wrap" id="playView">
+    <div class="play">
+      <section class="card" aria-label="Entrada">
+        <div class="block" style="gap:4px">
+          <h2 class="heard" style="margin-bottom:8px">Entrada</h2>
+          <div class="big-name" id="inName">Violão</div>
+          <div class="hint ellipsis" id="inInfo"></div>
+        </div>
+        <div class="block">
+          <div class="spread"><span class="label">Nível</span><span class="num" style="font-size:18px;font-weight:600" id="vIn">—</span></div>
+          <div class="meter-wrap"><div class="meter"><i id="mIn"></i></div><b></b></div>
+          <div class="hint">A marca é o piso de escuta: toque acima dela.</div>
+        </div>
+        <div class="block" style="gap:10px"><span class="label">O que ele está ouvindo</span><div class="block" style="gap:10px" id="cands"></div></div>
+        <div class="block" style="gap:10px"><span class="label">Notas na palhetada</span><div class="chroma" id="chroma"></div></div>
       </section>
 
-      <section class="card">
-        <h2>Som</h2>
-        <div class="row"><div class="stack">
-          <div style="display:flex;justify-content:space-between"><label>Volume do acompanhamento</label><span class="val" id="volumeVal"></span></div>
-          <input type="range" id="volume" min="0" max="200" step="5" value="100">
-        </div></div>
-        <div class="row"><div><label>Dinâmica fixa</label><div class="hint">Desligado: segue a força da sua batida</div></div><label class="switch"><input type="checkbox" id="dynFixed"><span></span></label></div>
-      </section>
+      <section class="card stage" aria-label="O que está tocando">
+        <div class="tempo" id="tempoBar">
+          <div class="beats" id="beats"><i></i><i></i><i></i><i></i></div>
+          <button class="btn small square bpmstep" data-step="-1" aria-label="Menos um BPM" hidden>−</button>
+          <span class="bpm num"><span id="bpmNow">—</span> <small>BPM</small></span>
+          <button class="btn small square bpmstep" data-step="1" aria-label="Mais um BPM" hidden>+</button>
+          <div class="grow"></div>
+          <button class="btn small" id="freezeBtn" title="Mantém o BPM detectado agora; daí em diante você segue o clique" hidden>Fixar este BPM</button>
+          <button class="btn small" id="clickBtn">Clique</button>
+          <button class="btn small" id="palcoBtn" hidden>Modo palco</button>
+        </div>
 
-      <section class="card">
-        <h2>Instrumentos</h2>
-        <div id="layers"></div>
-        <p class="note">Liga e desliga com ele tocando. Cada um tem o próprio volume.</p>
-      </section>
+        <div class="now" id="vNow">
+          <div><div class="chord idle" id="chord">—</div><div class="sub" id="chordSub"></div></div>
+          <div class="nextbox" id="nextBox" hidden>Próximo<b id="nextChord"></b></div>
+        </div>
+        <div class="lanes" id="lanes" hidden>
+          <div class="lane"><span style="color:var(--heard)">Ouvido</span><div style="display:contents" id="laneHeard"></div></div>
+          <div class="lane"><span style="color:var(--played)">Tocado</span><div style="display:contents" id="lanePlayed"></div></div>
+        </div>
 
-      <section class="card">
-        <h2>Música</h2>
-        <div class="row"><div><label>Aprender segurando a tônica</label><div class="hint">Até reconhecer o padrão, só um pad suave na tônica do tom (sem baixo, sem trocar acorde)</div></div><label class="switch"><input type="checkbox" id="learn" checked><span></span></label></div>
-        <div class="row"><div><label>Manter o padrão aprendido</label><div class="hint">Depois de reconhecer, segue o padrão mesmo se você errar ou atrasar; só muda se você tocar outra coisa por 1½ compasso</div></div><label class="switch"><input type="checkbox" id="hold" checked><span></span></label></div>
-        <div class="row"><div class="stack">
-          <div style="display:flex;justify-content:space-between;align-items:center"><label>Progressão conhecida</label><label class="switch"><input type="checkbox" id="progOn"><span></span></label></div>
-          <input type="text" id="prog" value="C G Am F" placeholder="ex.: C G Am F" spellcheck="false">
-          <div class="chips" id="progChips"></div>
-        </div></div>
-        <p class="note">O tom fica no topo da tela. A progressão vale a partir do próximo <b>Iniciar</b>; o resto muda na hora.</p>
-      </section>
-  </aside>
-
-  <div class="grid">
-    <div class="col">
-      <section class="card stage">
-        <div class="chord idle" id="chord">—</div>
-        <div class="sub" id="chordSub"></div>
-        <div class="heard">Ouvindo <strong id="heard">—</strong><div class="conf"><i id="conf"></i></div><span id="confVal" class="val"></span></div>
-        <div class="next" id="next"></div>
-      </section>
-
-      <div class="three">
-        <section class="card">
-          <h2>Sinal</h2>
-          <div class="sig"><span class="lbl">Violão</span><div class="meter big"><i id="mIn"></i><b id="mInMark"></b></div><span class="nn" id="vIn">—</span></div>
-          <div class="sig"><span class="lbl">Baixo</span><div class="meter big out" id="mBassBox"><i id="mBass"></i></div><span class="nn" id="nBass">—</span></div>
-          <div class="sig"><span class="lbl">Teclado</span><div class="meter big out" id="mPadBox"><i id="mPad"></i></div><span class="nn" id="nPad">—</span></div>
-        </section>
-        <section class="card">
-          <h2>Andamento</h2>
-          <div class="seg" id="tempoSeg"><button data-mode="seguir">Seguir meu tempo</button><button data-mode="fixo">BPM fixo</button></div>
-          <div class="bpm"><button class="bpmstep" data-step="-1" title="−1 BPM">−</button><span class="n" id="bpmNow">—</span><button class="bpmstep" data-step="1" title="+1 BPM">+</button><span class="u">BPM</span></div>
-          <div class="beats" id="beats"><i class="first"></i><i></i><i></i><i></i></div>
-          <div class="tools">
-            <button class="btn ghost" id="clickBtn" title="Ouvir o clique do metrônomo">Clique</button>
-            <input type="range" id="clickVol" min="0" max="100" value="70" style="width:100px" title="Volume do clique">
-            <button class="btn ghost" id="freezeBtn" title="Mantém o BPM detectado agora; daí em diante você segue o clique">Fixar este BPM</button>
+        <div class="learn" id="vLearn" hidden>
+          <div class="learn-head">
+            <div><h1 id="learnTitle"></h1><p id="learnNote"></p></div>
+            <div class="pair"><div>Ouvindo<b id="learnHeard">—</b></div><div>Tocando<b id="learnPlaying">—</b></div></div>
           </div>
-          <p class="note" id="tempoHint"></p>
-        </section>
-        <section class="card">
-          <h2>Padrão</h2>
-          <div class="chips" id="pattern"><span class="empty">Ainda aprendendo — toque a progressão duas vezes</span></div>
-        </section>
-      </div>
+          <div class="laps" id="laps"></div>
+          <ul class="gates" id="gates"></ul>
+        </div>
+      </section>
 
+      <section class="card" id="outPanel" aria-label="Saída" hidden>
+        <div class="block" style="gap:4px">
+          <h2 class="played" style="margin-bottom:8px">Saída</h2>
+          <div class="big-name" id="outCount"></div>
+          <div class="hint ellipsis" id="outInfo"></div>
+        </div>
+        <ul id="outLayers"></ul>
+        <div class="field">
+          <div class="spread"><label for="volumeLive">Volume do acompanhamento</label><span class="num" id="volumeLiveVal"></span></div>
+          <input type="range" id="volumeLive" min="0" max="200" step="5">
+        </div>
+      </section>
+
+      <form class="card" id="beginPanel" aria-label="Como começar">
+        <div class="big-name">Como começar</div>
+        <div class="field"><label for="key">Tom</label><select id="key"></select></div>
+        <div class="block">
+          <span class="label">Andamento</span>
+          <div class="seg" id="tempoSeg"><button type="button" data-mode="seguir">Seguir meu tempo</button><button type="button" data-mode="fixo">BPM fixo</button></div>
+          <div class="stepper" id="bpmPick"><button type="button" class="btn square bpmstep2" data-step="-1" aria-label="Menos um BPM">−</button><b class="num"><span id="bpmPickVal"></span> <small>BPM</small></b><button type="button" class="btn square bpmstep2" data-step="1" aria-label="Mais um BPM">+</button></div>
+          <p class="hint" id="tempoHint"></p>
+        </div>
+        <div>
+          <label class="check">Aprender segurando a tônica<input type="checkbox" id="learn" checked></label>
+          <label class="check">Manter o padrão aprendido<input type="checkbox" id="hold" checked></label>
+          <label class="check">Progressão conhecida<input type="checkbox" id="progOn"></label>
+        </div>
+        <div class="field" id="progField" hidden>
+          <input type="text" id="prog" value="C G Am F" placeholder="ex.: C G Am F" spellcheck="false" aria-label="Progressão conhecida">
+          <div class="chips" id="progChips"></div>
+        </div>
+      </form>
+    </div>
+
+    <div class="lower">
       <section class="card">
-        <h2>Diário</h2>
-        <ul class="diary" id="diary"><li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li></ul>
+        <h2>Por que ele fez isso</h2>
+        <ol class="diary" id="diary"></ol>
+      </section>
+      <section class="card">
+        <dl class="stats">
+          <div><dt>Latência</dt><dd id="lat">—</dd></div>
+          <div><dt>Processamento</dt><dd id="cost">—</dd></div>
+          <div><dt>Falhas de áudio</dt><dd id="xruns">0</dd></div>
+        </dl>
       </section>
     </div>
   </div>
 
-  <footer>
-    <span>Latência <b id="lat">—</b></span>
-    <span>Processamento <b id="cost">—</b></span>
-    <span>Falhas de áudio <b id="xruns">0</b></span>
-    <span id="engineInfo"></span>
-    <span id="sessionInfo"></span>
-    <span class="spacer"></span>
-    <span class="warn" id="warn">Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.</span>
-  </footer>
+  <div class="page" id="sessionsView" hidden>
+    <div class="spread" style="flex-wrap:wrap">
+      <h1>Sessões</h1>
+      <label class="radio" style="min-height:44px;padding:0"><input type="checkbox" id="hideTests">Esconder testes de até 5 s</label>
+    </div>
+    <div class="table"><table>
+      <thead><tr><th>Quando</th><th>Duração</th><th>Tom</th><th>Andamento</th><th>Travou em</th><th>Falhas de áudio</th></tr></thead>
+      <tbody id="sessionRows"></tbody>
+    </table></div>
+  </div>
+
+  <div class="page" id="reportView" hidden>
+    <div class="spread" style="flex-wrap:wrap;align-items:flex-end">
+      <div class="block" style="gap:4px"><h1 id="reportTitle"></h1><p class="hint" style="font-size:15px" id="reportInfo"></p></div>
+      <div class="chips"><button class="btn" id="reportSvg" hidden>Abrir relatório completo</button><button class="btn" id="reportFolder">Abrir pasta</button></div>
+    </div>
+    <section class="card">
+      <div class="report-lanes">
+        <div class="rl"><span style="color:var(--heard)">Ouvido</span><div class="rcells" id="rHeard"></div></div>
+        <div class="rl"><span style="color:var(--played)">Tocado</span><div class="rcells" id="rPlayed"></div></div>
+        <div class="axis num" id="rAxis"></div>
+      </div>
+      <ul class="legend">
+        <li><i style="background:var(--heard)"></i>Ouvido, mais forte quanto maior a confiança</li>
+        <li><i style="background:var(--alert)"></i>Ouviu diferente do que tocou</li>
+        <li><i style="background:var(--played)"></i>Acorde tocado</li>
+        <li><i style="background:#2f4358"></i>Segurando a tônica</li>
+      </ul>
+    </section>
+    <div class="report-low">
+      <section class="card"><div class="big-name" style="font-size:18px">O que aconteceu</div><ol class="events" id="rEvents"></ol></section>
+      <section class="card"><dl class="stats" id="rStats"></dl></section>
+    </div>
+  </div>
 </div>
+
+<!-- palco: só o que se lê a dois metros -->
+<div class="palco" id="palco" hidden>
+  <header>
+    <span class="state"><span class="dot" id="pDot" style="width:12px;height:12px"></span><span id="pState"></span></span>
+    <span class="hint num" style="font-size:18px" id="pBpm"></span>
+    <div class="grow"></div>
+    <button class="btn" id="palcoExit">Por dentro</button>
+    <button class="btn" id="palcoStop">Parar</button>
+  </header>
+  <main>
+    <div><div class="main-chord" id="pChord">—</div><div class="shape" id="pShape"></div></div>
+    <div class="upcoming" id="pNextBox">Próximo<b id="pNext"></b></div>
+  </main>
+  <div class="bar" id="pBeats"><i></i><i></i><i></i><i></i></div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-label="Ajustes">
+  <div class="spread"><h1>Ajustes</h1><button class="btn" id="closeSettings">Fechar</button></div>
+  <section>
+    <h2>Som</h2>
+    <div class="field"><div class="spread"><label for="gain">Ganho da entrada</label><span class="num" id="gainVal"></span></div><input type="range" id="gain" min="-12" max="36" step="1" value="0"></div>
+    <div class="field"><div class="spread"><label for="volume">Volume do acompanhamento</label><span class="num" id="volumeVal"></span></div><input type="range" id="volume" min="0" max="200" step="5" value="100"></div>
+    <div class="field"><div class="spread"><label for="clickVol">Volume do clique</label><span class="num" id="clickVolVal"></span></div><input type="range" id="clickVol" min="0" max="100" value="70"></div>
+  </section>
+  <section><h2>Instrumentos</h2><div id="layers"></div></section>
+  <section style="gap:0">
+    <h2 style="margin-bottom:8px">Música</h2>
+    <label class="check">Ouvir o violão na saída<input type="checkbox" id="monitor"></label>
+    <label class="check">Dinâmica fixa<input type="checkbox" id="dynFixed"></label>
+  </section>
+  <section>
+    <h2>Só com a música parada</h2>
+    <div class="field"><label for="instrument">Instrumento</label><select id="instrument"></select></div>
+    <div class="field"><label for="tuning">Afinação</label><select id="tuning"></select></div>
+    <div class="field"><label for="input">Entrada</label><select id="input"></select></div>
+    <ul class="input-list" id="inputList" aria-label="Entradas no Windows"></ul>
+    <div class="field"><label for="output">Saída</label><select id="output"></select></div>
+    <div class="field" id="driverRow" hidden><label for="driver">Driver</label><select id="driver"></select></div>
+    <div class="field" id="bufferRow" hidden><label for="buffer">Latência do driver</label>
+      <select id="buffer"><option value="256">Baixa (~5 ms), pode falhar</option><option value="480" selected>Normal (~10 ms)</option><option value="960">Segura (~20 ms)</option></select></div>
+    <button class="btn" id="redoSetup">Refazer a configuração</button>
+  </section>
+</aside>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -290,13 +541,20 @@ const $ = id => document.getElementById(id);
 const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const LAYERS = [["worship", "Pad worship", true, 100], ["orgao", "Órgão", false, 70], ["piano", "Piano elétrico", false, 70],
                 ["guitarra", "Pad de guitarra", false, 70], ["cordas", "Cordas", false, 70], ["baixo", "Baixo", true, 100]];
-const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
+const INSTRUMENTS = ["Violão", "Guitarra limpa"], TUNINGS = ["Padrão", "Meio tom abaixo", "Um tom abaixo"];
+const NOTE_NAMES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const STATE = { OCIOSO: ["Esperando", "var(--faint)"], OUVINDO: ["Seguindo", "var(--heard)"], TRAVADO: ["Travado", "var(--played)"],
+                FALLBACK: ["Na dúvida", "var(--alert)"], ENCERRANDO: ["Encerrando", "var(--faint)"] };
 const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "hold", "learn", "key", "prog", "progOn", "clickVol",
-              ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
+              "instrument", "tuning", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 const LIVE = ["gain", "volume", "monitor", "dynFixed", "hold", "learn", "clickVol", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
+const BAR_LANE = 5;                  // bars already played on the lanes; the current one and two guesses follow
+const MIN_HEARD_DB = -50, MIN_CHORD_CONF = .45;   // below these it shows no chord, as the engine's own ladder does
 let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
 let running = false, live = false, clickOn = false, lastChord = null, lastError = null, state = {};
-let inputsSeen = null, listenError = null, skippedAlert = null, windowsPage = "";
+let inputsSeen = null, listenError = null, skippedAlert = null, windowsPage = "", lastInputs = [];
+let palcoOn = false, view = "play", currentReport = "", sessionList = [], wasRunning = false;
+let bars = [], barHeard = {}, lastBeat = 0, lastPlaying = null;
 const AUDIO_CHECK_MS = 3000;   // a device plugged in shows up within this time; slower than the UI poll on purpose
 
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
@@ -306,14 +564,29 @@ function val(el) { return el.type === "checkbox" ? el.checked : el.value; }
 const shown = new Map();
 function write(id, prop, v) { const k = id + "." + prop; if (shown.get(k) !== v) { shown.set(k, v); $(id)[prop] = v; } }
 const text = (id, v) => write(id, "textContent", v), html = (id, v) => write(id, "innerHTML", v);
+const hide = (id, v) => write(id, "hidden", v);
 const level = (el, x) => { el.style.transform = `scaleX(${Math.max(0, Math.min(1, x))})`; };   // no layout: only the compositor moves
+const levelY = (el, x) => { el.style.transform = `scaleY(${Math.max(0, Math.min(1, x))})`; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 4200); }
 async function api(path, body) {
   const r = await fetch(body === undefined ? path : path + "?q=" + encodeURIComponent(JSON.stringify(body)));
   const j = await r.json();
-  if (j.ok === false) throw new Error(j.error);
+  if (j && j.ok === false) throw new Error(j.error);
   return j;
 }
+
+// C# -> C♯, Ebm -> E♭m: only how it looks, the engine keeps its own names
+const pretty = c => c ? String(c).replace(/^([A-G])#/, "$1♯").replace(/^([A-G])b/, "$1♭") : "—";
+// the shape played on a guitar tuned down: it sounds Eb, the hand makes E
+function shape(c) {
+  const t = +$("tuning").value, m = /^([A-G][#b]?)(.*)$/.exec(c || "");
+  if (!t || !m) return "";
+  const pc = NOTE_NAMES.indexOf(m[1]);
+  return pc < 0 ? "" : pretty(NOTE_NAMES[(pc + t) % 12] + m[2]);
+}
+const root = c => (/^[A-G][#b]?/.exec(c || "") || [""])[0];
+
 function liveSettings() {
   const g = id => $("on_" + id).checked ? $("vol_" + id).value / 100 : 0;
   return { gain_db: +$("gain").value, volume: $("volume").value / 100, monitor: $("monitor").checked,
@@ -325,31 +598,93 @@ let liveTimer;
 function pushLive() { clearTimeout(liveTimer); liveTimer = setTimeout(() => api("/api/live", liveSettings()).catch(e => toast(e.message)), 60); }
 
 function labels() {
-  text("gainVal", ($("gain").value > 0 ? "+" : "") + $("gain").value + " dB");
-  text("volumeVal", $("volume").value + "%");
+  const gain = ($("gain").value > 0 ? "+" : "") + $("gain").value + " dB";
+  text("gainVal", gain); text("setupGainVal", gain);
+  text("volumeVal", $("volume").value + "%"); text("volumeLiveVal", $("volume").value + "%");
+  text("clickVolVal", $("clickVol").value + "%");
+  $("setupGain").value = $("gain").value; $("volumeLive").value = $("volume").value;
   $("prog").disabled = !$("progOn").checked || running;
+  hide("progField", !$("progOn").checked);
   const chips = $("prog").value.trim().split(/\s+/).filter(Boolean);
-  html("progChips", $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "");
-  LAYERS.forEach(([id]) => $("vol_" + id).disabled = !$("on_" + id).checked);
+  html("progChips", $("progOn").checked ? chips.map(c => `<span class="chip">${esc(pretty(c))}</span>`).join("") : "");
+  LAYERS.forEach(([id]) => {
+    const on = $("on_" + id).checked;
+    $("vol_" + id).disabled = !on;
+    $("mix_" + id).classList.toggle("off", !on);
+    text("mixval_" + id, $("vol_" + id).value + "%");
+  });
+  const device = n => (/\(([^)]*)\)/.exec(n || "") || [])[1] || n || "";
+  const tuned = TUNINGS[+$("tuning").value], where = device($("input").value);
+  text("inName", INSTRUMENTS[+$("instrument").value]);
+  text("inInfo", (+$("tuning").value ? tuned + " · " : "") + where);
+  $("inInfo").title = $("input").value;
+  $("outInfo").title = $("output").value;
+  const echo = /array|microphone|microfone/i.test($("input").value) && /speaker|alto-falante/i.test($("output").value);
+  hide("setupEcho", !echo);
 }
 function lockSettings() {
-  for (const id of ["driver", "buffer", "input", "output", "key", "progOn"]) $(id).disabled = running;
+  for (const id of ["driver", "buffer", "input", "output", "key", "progOn", "instrument", "tuning", "redoSetup"]) $(id).disabled = running;
   tempoControls();
   labels();
   $("startBtn").textContent = running ? "Parar" : "Iniciar";
-  $("startBtn").classList.toggle("stop", running);
+  $("navSessions").disabled = running;   // during a song nothing extra runs
+  hide("outPanel", !running);
+  hide("beginPanel", running);
+  hide("palcoBtn", !running);
 }
 
-async function init() {
-  $("key").innerHTML = KEYS.map(k => `<option value="${k}">${k || "Automático"}</option>`).join("");
+function openSettings(open) { $("drawer").classList.toggle("open", open); $("backdrop").classList.toggle("open", open); }
+
+function buildControls() {
+  $("key").innerHTML = KEYS.map(k => `<option value="${k}">${k ? pretty(k) : "Automático"}</option>`).join("");
+  $("instrument").innerHTML = INSTRUMENTS.map((n, i) => `<option value="${i}">${n}</option>`).join("");
+  $("tuning").innerHTML = TUNINGS.map((n, i) => `<option value="${i}">${n}</option>`).join("");
   $("layers").innerHTML = LAYERS.map(([id, name, on, vol]) =>
-    `<div class="layer"><label for="on_${id}">${name}</label><input type="range" id="vol_${id}" min="0" max="150" value="${vol}">` +
-    `<label class="switch"><input type="checkbox" id="on_${id}"${on ? " checked" : ""}><span></span></label></div>`).join("");
-  const openSettings = open => { $("drawer").classList.toggle("open", open); $("backdrop").classList.toggle("open", open); };
+    `<div class="mix" id="mix_${id}"><label for="vol_${id}">${name}</label><input type="range" id="vol_${id}" min="0" max="150" value="${vol}">` +
+    `<span class="num" id="mixval_${id}"></span><input type="checkbox" id="on_${id}" aria-label="Ligar ${name}"${on ? " checked" : ""}></div>`).join("");
+  $("outLayers").innerHTML = LAYERS.map(([id, name]) =>
+    `<li class="layer" id="row_${id}"><input type="checkbox" id="out_${id}" aria-label="Ligar ${name}"><label for="out_${id}">` +
+    `<span class="row"><b>${name}</b><em id="note_${id}"></em></span><span class="meter out thin"><i id="level_${id}" style="display:block"></i></span></label></li>`).join("") +
+    `<li class="layer" id="row_clique"><input type="checkbox" id="out_clique" aria-label="Ligar clique"><label for="out_clique"><span class="row"><b>Clique</b><em id="note_clique"></em></span></label></li>`;
+  $("chroma").innerHTML = NOTE_NAMES.map((n, i) => `<div><s><i id="pc${i}"></i></s><span>${pretty(n)}</span></div>`).join("");
+  $("cands").innerHTML = [0, 1, 2].map(i => `<div class="cand"><b id="c${i}">—</b><div class="meter"><i id="cm${i}"></i></div><span class="num" id="cp${i}"></span></div>`).join("");
+}
+
+// the first-use steps fill these from the same controls the drawer uses: one source for every setting
+function radios(host, name, options, selectId, onPick) {
+  $(host).innerHTML = options.map(([value, label]) =>
+    `<label class="radio"><input type="radio" name="${name}" value="${esc(value)}"${value == $(selectId).value ? " checked" : ""}><span title="${esc(label)}">${esc(label)}</span></label>`).join("");
+  $(host).querySelectorAll("input").forEach(r => r.onchange = () => {
+    $(selectId).value = r.value;
+    $(selectId).dispatchEvent(new Event("input", { bubbles: true }));
+    $(selectId).dispatchEvent(new Event("change", { bubbles: true }));
+    if (onPick) onPick();
+  });
+}
+function showTuning() {
+  const t = +$("tuning").value;
+  $("tunePreview").innerHTML = [["G", 7, ""], ["D", 2, ""], ["Em", 4, "m"], ["C", 0, ""]].map(([s, pc, q]) =>
+    `<div><span>Forma ${s}</span><b>${pretty(NOTE_NAMES[(pc - t + 12) % 12] + q)}</b></div>`).join("");
+}
+function showSetup(step) {
+  document.querySelectorAll(".steps li").forEach(l => l.classList.toggle("on", +l.dataset.step === step));
+  [0, 1, 2].forEach(i => $("setup" + i).hidden = i !== step);
+  const opts = id => [...$(id).options].map(o => [o.value, o.textContent]);
+  radios("setupInputs", "entrada", opts("input"), "input");
+  radios("setupOutputs", "saida", opts("output"), "output");
+  radios("setupInstruments", "instrumento", opts("instrument"), "instrument");
+  radios("setupTunings", "afinacao", opts("tuning"), "tuning", showTuning);
+  showTuning();
+  $("setupInactive").innerHTML = lastInputs.filter(i => !i.active).map(i => `<li>${esc(i.name)}: ${esc(i.state)}</li>`).join("");
+}
+function enterSetup() { $("setup").hidden = false; $("app").hidden = true; openSettings(false); showSetup(0); }
+function leaveSetup() { store("setupDone", true); $("setup").hidden = true; $("app").hidden = false; }
+
+async function init() {
+  buildControls();
   $("settingsBtn").onclick = () => openSettings(true);
   $("closeSettings").onclick = $("backdrop").onclick = () => openSettings(false);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") openSettings(false); });
-  $("meterMark").style.left = ((-55 + 60) / 60 * 100) + "%";
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { openSettings(false); setPalco(false); } });
   await loadDevices(recall("driver"));
   $("driver").addEventListener("change", () => loadDevices($("driver").value).then(listen));
   for (const id of ["buffer", "input", "output"]) $(id).addEventListener("change", listen);
@@ -362,33 +697,62 @@ async function init() {
   if (recall("key") === undefined) $("key").value = "";
   clickOn = !!recall("click"); $("clickBtn").classList.toggle("on", clickOn);
   for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (LIVE.includes(id)) pushLive(); });
+  const mirror = (id, target) => $(id).addEventListener("input", () => { $(target).value = $(id).value; $(target).dispatchEvent(new Event("input")); });
+  mirror("setupGain", "gain"); mirror("volumeLive", "volume");
+  for (const [id] of LAYERS)
+    $("out_" + id).onchange = () => { $("on_" + id).checked = $("out_" + id).checked; $("on_" + id).dispatchEvent(new Event("input")); };
+  $("out_clique").onchange = () => setClick($("out_clique").checked);
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => showSetup(+b.dataset.go));
+  $("setupDone").onclick = leaveSetup;
+  $("redoSetup").onclick = enterSetup;
+  $("testTone").onclick = () => api("/api/live", { testar_som: true }).then(() => { $("testTone").textContent = "Ouviu? Testar de novo"; }).catch(e => toast(e.message));
   tempoMode = recall("tempoMode") || "seguir"; bpmValue = recall("bpmValue") || 110;
   document.querySelectorAll("#tempoSeg button").forEach(b => b.onclick = () => { tempoMode = b.dataset.mode; store("tempoMode", tempoMode); tempoControls(); });
-  document.querySelectorAll(".bpmstep").forEach(b => b.onclick = () => {
+  const stepBpm = b => () => {
     bpmValue = Math.max(30, Math.min(250, Math.round(bpmValue) + +b.dataset.step)); store("bpmValue", bpmValue);
-    text("bpmNow", String(bpmValue));
+    text("bpmPickVal", String(bpmValue)); text("bpmNow", String(bpmValue));
     if (running) api("/api/live", { bpm: bpmValue }).catch(e => toast(e.message));   // live: same phase, new tempo
-  });
-  $("clickBtn").onclick = () => {
-    if (!running) {   // stopped: the click button starts everything, so the click is heard right away
-      clickOn = true; store("click", clickOn); $("clickBtn").classList.add("on"); tempoControls(); startStop(); return;
-    }
-    clickOn = !clickOn; store("click", clickOn); $("clickBtn").classList.toggle("on", clickOn); tempoControls(); pushLive();
   };
+  document.querySelectorAll(".bpmstep, .bpmstep2").forEach(b => b.onclick = stepBpm(b));
+  $("clickBtn").onclick = () => setClick(!clickOn);
   $("freezeBtn").onclick = () => {
     if (!state.frozen && state.bpm) { bpmValue = Math.round(state.bpm); store("bpmValue", bpmValue); }
     api("/api/live", { fixar_bpm: !state.frozen }).catch(e => toast(e.message));
   };
-  $("mInMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   $("startBtn").onclick = startStop;
+  $("palcoStop").onclick = startStop;
+  $("palcoBtn").onclick = () => setPalco(true);
+  $("palcoExit").onclick = () => setPalco(false);
+  palcoOn = !!recall("palco");
+  $("navPlay").onclick = () => setView("play");
+  $("navSessions").onclick = () => setView("sessions");
+  $("hideTests").checked = !!recall("hideTests");
+  $("hideTests").onchange = () => { store("hideTests", $("hideTests").checked); showSessions(); };
+  $("reportFolder").onclick = () => api("/api/open", { name: currentReport }).catch(e => toast(e.message));
+  $("reportSvg").onclick = () => api("/api/open", { name: currentReport, svg: true }).catch(e => toast(e.message));
+  $("sessionRows").onclick = e => { const b = e.target.closest("[data-name]"); if (b) openReport(b.dataset.name); };
   $("audioAlertOpen").onclick = () => api("/api/windows_settings", { page: windowsPage }).catch(e => toast(e.message));
   $("audioAlertSkip").onclick = () => { skippedAlert = $("audioAlertText").textContent; $("audioAlert").hidden = true; };
-  $("sessionInfo").onclick = e => { if (e.target.id === "openBtn") api("/api/open", {}); };
   labels(); lockSettings();
+  if (recall("setupDone") || location.search.includes("snapshot")) $("app").hidden = false; else enterSetup();
   await listen();
   checkAudio();
   const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, document.hidden ? 500 : running ? 50 : 100); };   // minimized: nobody is looking
   poll();
+}
+
+function setClick(on) {
+  clickOn = on; store("click", on); $("clickBtn").classList.toggle("on", on); tempoControls();
+  if (running) pushLive();
+}
+function setPalco(on) { palcoOn = on; store("palco", on); }
+function setView(v) {
+  view = v;
+  $("navPlay").classList.toggle("on", v === "play");
+  $("navSessions").classList.toggle("on", v !== "play");
+  hide("sessionsView", v !== "sessions");
+  hide("reportView", v !== "report");
+  if (v === "sessions") loadSessions();
 }
 
 async function loadDevices(type) {
@@ -397,11 +761,11 @@ async function loadDevices(type) {
     if (d.types) {   // C++ engine: pick the Windows audio driver (WASAPI / exclusive / DirectSound)
       $("driverRow").hidden = false;
       $("bufferRow").hidden = false;
-      $("driver").innerHTML = d.types.map(t => `<option value="${t}">${t}</option>`).join("");
+      $("driver").innerHTML = d.types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
       $("driver").value = d.type;
     }
-    $("input").innerHTML = d.inputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
-    $("output").innerHTML = d.outputs.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
+    $("input").innerHTML = d.inputs.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+    $("output").innerHTML = d.outputs.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
     $("input").value = d.default_input; $("output").value = d.default_output;
     for (const id of ["input", "output"]) {
       const v = recall(id);
@@ -414,12 +778,13 @@ function tempoControls() {
   document.querySelectorAll("#tempoSeg button").forEach(b => { b.classList.toggle("on", b.dataset.mode === tempoMode); b.disabled = running; });
   const adjustable = tempoMode === "fixo" || (running && state.frozen) || (!running && clickOn);
   document.querySelectorAll(".bpmstep").forEach(b => b.hidden = !adjustable);
-  $("freezeBtn").hidden = tempoMode === "fixo";
+  hide("bpmPick", !adjustable);
+  hide("freezeBtn", !running || tempoMode === "fixo");
+  text("bpmPickVal", String(bpmValue));
   if (!running) text("bpmNow", String(tempoMode === "fixo" || clickOn ? bpmValue : "—"));
   text("tempoHint", tempoMode === "fixo"
     ? (clickOn ? "No Iniciar ele conta 4 tempos: entre no compasso seguinte. As trocas caem na cabeça do tempo." : "No Iniciar ele conta 4 tempos e o clique para; as trocas seguem na cabeça do tempo.")
-    : (clickOn ? "No Iniciar ele conta 4 tempos neste BPM: entre no compasso seguinte. Depois ele segue o seu tempo. “Fixar” congela."
-               : "Ele detecta o seu andamento e acompanha se você acelerar. Ligue o Clique para ouvir o metrônomo desde o início."));
+    : (clickOn ? "No Iniciar ele conta 4 tempos neste BPM. Depois ele segue o seu tempo." : "Ele detecta o seu andamento e acompanha se você acelerar."));
 }
 
 function db(x) { return x > 0 ? 20 * Math.log10(x) : -120; }
@@ -438,6 +803,7 @@ function showAudioCheck(c) {
   $("audioAlert").classList.toggle("erro", !!listenError || c.level === "erro");
   $("audioAlertText").textContent = message;
   $("audioAlertOpen").hidden = !windowsPage;
+  lastInputs = c.inputs;
   $("inputList").replaceChildren(...[...c.inputs].sort((a, b) => b.active - a.active).map(i => {
     const li = document.createElement("li");
     li.textContent = `${i.name}: ${i.state}`;
@@ -467,67 +833,269 @@ async function startStop() {
   let failed = false;
   try {
     if (stopping) await api("/api/stop", {});
-    else await api("/api/start", { ...deviceSettings(), tom: $("key").value || null, contagem: tempoMode === "fixo" || clickOn,
-      bpm: tempoMode === "fixo" ? bpmValue : null, bpm_inicial: tempoMode === "seguir" && clickOn ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
+    else {
+      bars = []; barHeard = {}; lastBeat = 0;
+      setView("play");
+      await api("/api/start", { ...deviceSettings(), tom: $("key").value || null, contagem: tempoMode === "fixo" || clickOn,
+        bpm: tempoMode === "fixo" ? bpmValue : null, bpm_inicial: tempoMode === "seguir" && clickOn ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null,
+        instrumento: INSTRUMENTS[+$("instrument").value], afinacao: +$("tuning").value, ...liveSettings() });
+    }
   } catch (e) { toast(e.message); failed = true; }
-  if (stopping || failed) { running = false; lockSettings(); await listen(); }
+  if (stopping || failed) {
+    const session = stopping && state.session ? state.session.split(/[\\/]/).pop() : "";
+    running = false; lockSettings(); await listen();
+    if (session) openReport(session);
+  }
   $("startBtn").disabled = false;
 }
 
 function fmt(t) { const m = Math.floor(t / 60), s = (t % 60).toFixed(1).padStart(4, "0"); return `${m}:${s}`; }
+const clock = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+// 2026-10-30_18-40-11 -> 30/10, 18:40:11
+function when(name) { const m = /^\d+-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)/.exec(name); return m ? `${m[2]}/${m[1]}, ${m[3]}:${m[4]}:${m[5]}` : name; }
+
+// ---- ouvido × tocado, compasso a compasso
+function trackBars(s, playing) {
+  if (!running || !s.beat) return;
+  if (s.heard && s.conf >= MIN_CHORD_CONF) barHeard[s.heard] = (barHeard[s.heard] || 0) + 1;
+  if (s.beat < lastBeat) {   // the bar closed
+    const heard = Object.keys(barHeard).sort((a, b) => barHeard[b] - barHeard[a])[0] || null;
+    bars.push({ heard, played: lastPlaying });
+    if (bars.length > BAR_LANE) bars.shift();
+    barHeard = {};
+  }
+  lastBeat = s.beat; lastPlaying = playing;
+}
+function drawLanes(s, playing) {
+  const blank = n => '<div class="cell"></div>'.repeat(n);
+  const past = bars.map(b => {
+    const miss = b.heard && b.played && root(b.heard) !== root(b.played);
+    return [`<div class="cell h${miss ? " miss" : ""}">${pretty(b.heard)}</div>`, `<div class="cell p">${pretty(b.played)}</div>`];
+  });
+  const guesses = [];
+  if (s.pattern) for (const k of [1, 2]) guesses.push(s.pattern[(s.pattern_pos + k) % s.pattern.length]);
+  html("laneHeard", blank(BAR_LANE - past.length) + past.map(p => p[0]).join("") + `<div class="cell h cur">${pretty(s.heard)}</div>` + blank(2));
+  html("lanePlayed", blank(BAR_LANE - past.length) + past.map(p => p[1]).join("") + `<div class="cell p cur">${pretty(playing)}</div>` +
+       guesses.map(g => `<div class="cell guess">${pretty(g)}</div>`).join("") + blank(2 - guesses.length));
+}
+
+// ---- aprendendo
+function gate(done, title, note) {
+  const ring = done ? "var(--played)" : "var(--faint)";
+  return `<li><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" stroke="${ring}"${done ? "" : ' stroke-dasharray="3 3"'}/>` +
+         (done ? '<path d="M6 10.2 8.8 13 14 7.5" stroke="var(--played)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' : "") +
+         `</svg><div><b>${title}</b><span>${note}</span></div></li>`;
+}
+function drawGrid(L) {
+  const size = L.size || 8, first = L.heard - L.slots.length;
+  const rows = new Map();
+  L.slots.forEach((slot, i) => {
+    const n = first + i, row = Math.floor(n / size);
+    if (!rows.has(row)) rows.set(row, new Array(size).fill(null));
+    rows.get(row)[n % size] = slot;
+  });
+  const order = [...rows.keys()].slice(-2);
+  const last = L.heard - 1, lastCol = last % size, lastRow = Math.floor(last / size);
+  const guess = L.size ? new Array(size).fill(null).map((_, col) => {
+    for (const row of [...order].reverse()) if (rows.get(row)[col] && rows.get(row)[col].c) return rows.get(row)[col].c;
+    return null;
+  }) : null;
+  const before = order.length > 1 ? rows.get(order[order.length - 2]) : null;
+  const columns = `grid-template-columns:repeat(${size},minmax(0,1fr))`;
+  const draw = (label, cells, cls) => `<div class="lap"><span class="${cls}">${label}</span><div class="lap-cells" style="${columns}">${cells}</div></div>`;
+  let body = order.map(row => draw(`Volta ${row - (rows.keys().next().value) + 1}`, rows.get(row).map((slot, col) => {
+    if (!slot || !slot.c) return '<div class="slot"></div>';
+    const other = before ? rows.get(order[row === order[0] ? 1 : 0])[col] : null;
+    const doubt = other && other.c && root(other.c) !== root(slot.c) ? " doubt" : "";
+    const cur = row === lastRow && col === lastCol ? " cur" : "";
+    return `<div class="slot h${doubt}${cur}" style="background:rgba(255,182,92,${(slot.s / 200).toFixed(2)})">${pretty(slot.c)}</div>`;
+  }).join(""), "")).join("");
+  if (guess) body += draw("Provável", guess.map(c => `<div class="slot${c ? " guess" : ""}">${c ? pretty(c) : ""}</div>`).join(""), "guess");
+  html("laps", body);
+  // what disagrees between the two laps on screen, in words
+  let note = "Quando uma volta inteira se repetir, ele trava e entra o baixo.";
+  if (before) {
+    const col = rows.get(order[order.length - 1]).findIndex((slot, c) => slot && slot.c && before[c] && before[c].c && root(slot.c) !== root(before[c].c));
+    if (col >= 0) note = `Ouvi ${pretty(before[col].c)} no compasso ${Math.floor(col / 2) + 1} da volta anterior e ${pretty(rows.get(order[order.length - 1])[col].c)} nesta. A soma das voltas decide.`;
+  }
+  return note;
+}
+function drawLearning(s, playing) {
+  const L = s.learn;
+  if (!L) return;
+  text("learnHeard", pretty(s.heard));
+  text("learnPlaying", pretty(playing));
+  if (s.state === "OCIOSO") { text("learnTitle", "Esperando você tocar."); text("learnNote", "Ele segura a tônica até entender a volta."); html("laps", ""); html("gates", ""); return; }
+  if (!s.grid) {
+    text("learnTitle", L.seq.length > 1 ? `Até aqui ouvi ${L.seq.length} acordes em ordem.` : "Ainda procurando a volta.");
+    text("learnNote", "Trava quando uma volta inteira começar a se repetir.");
+    html("laps", `<div class="seq">${L.seq.map(c => `<span>${pretty(c)}</span>`).join("")}</div>`);
+    html("gates", "");
+    return;
+  }
+  const bars = L.size / 2;
+  const lap = `${bars} ${bars === 1 ? "compasso" : "compassos"} por volta`;
+  text("learnTitle", !L.size ? "Ainda procurando a volta." : L.tail >= L.last ? `Até aqui entendi ${lap}.` : `Talvez ${lap}.`);
+  text("learnNote", drawGrid(L));
+  if (!L.size) { html("gates", gate(false, "Nenhuma volta se repetiu ainda", `${L.heard} meios compassos ouvidos`)); return; }
+  const pct = Math.round(100 * L.hits / L.tail), need = Math.round(100 * L.match), laps = L.heard / L.size;
+  html("gates", gate(L.hits >= L.match * L.tail, `${pct}% da volta se repete`, `${L.hits} de ${L.tail} meios compassos; precisa de ${need}%`) +
+    gate(L.recent, `Últimos ${L.last} ${L.recent ? "iguais" : "ainda diferentes"}`, "A seção não pode ter acabado de mudar") +
+    gate(L.roots >= 2, `${L.roots} ${L.roots === 1 ? "fundamental" : "fundamentais"}`, "Precisa de pelo menos 2") +
+    gate(laps >= L.laps, `${laps.toFixed(2).replace(".", ",")} de ${L.laps} voltas`, "Voltas inteiras ouvidas"));
+}
+
+function drawOutputs(s) {
+  const o = (running && s.out) || {};
+  const pad = (o.pad || []).join(" ");
+  let sounding = 0;
+  LAYERS.forEach(([id], k) => {
+    const on = $("on_" + id).checked, bass = id === "baixo", rms = bass ? o.bass_rms || 0 : (o.layers || [])[k] || 0;
+    if (shown.get("out." + id) !== on) { shown.set("out." + id, on); $("out_" + id).checked = on; $("row_" + id).classList.toggle("off", !on); }
+    level($("level_" + id), running && on ? (db(rms) + 48) / 48 : 0);
+    if (on && rms > 1e-4) sounding++;
+    text("note_" + id, !on ? "desligado" : bass ? (o.bass || (s.learning ? "espera o padrão" : "")) : pad);
+  });
+  text("outCount", sounding === 0 ? "Em silêncio" : sounding === 1 ? "1 instrumento soando" : `${sounding} instrumentos soando`);
+  if (shown.get("out.click") !== clickOn) { shown.set("out.click", clickOn); $("out_clique").checked = clickOn; $("row_clique").classList.toggle("off", !clickOn); }
+  text("note_clique", clickOn ? (s.bpm ? Math.round(s.bpm) + " BPM" : "") : "desligado");
+  text("outInfo", ($("output").value.replace(/\s*\(.*$/, "") || "") + (s.latency_ms ? ` · ${s.latency_ms} ms` : ""));
+}
 
 let renders = 0;
 function render(s) {
   state = s;
   const reading = ++renders % 4 === 1;   // numbers people read: 5 times a second is plenty, and each change is a layout
-  if (s.running !== running) { running = s.running; lockSettings(); }
+  if (s.running !== running) {
+    running = s.running; lockSettings();
+    if (running) setView("play");
+  }
   if (s.error && s.error !== lastError) toast("O áudio parou: " + s.error);
   lastError = s.error;
   live = running || !!s.listening;
-  const counting = running && s.count > 0;
-  const st = running ? s.state : null;
-  $("stateDot").style.background = st ? STATE_COLOR[st] : s.listening ? "var(--blue)" : "var(--gray)";
-  text("stateText", counting ? "Contando" : st ? s.state_text : s.listening ? "Só ouvindo — ainda não toca" : "Parado");
-  const heardNow = s.listening && s.db > -50 ? (s.conf >= .45 && s.heard ? s.heard : s.note) : null;   // a single note has no chord: show the note
-  const chord = counting ? String(s.count) : running && s.playing ? s.playing : heardNow;
+  const counting = running && s.count > 0, st = running ? s.state : null, learning = running && !!s.learning;
+
+  const [name, color] = counting ? ["Contando", "var(--text)"] : !running ? [s.listening ? "Só ouvindo" : "Parado", s.listening ? "var(--heard)" : "var(--faint)"]
+    : learning && st !== "ENCERRANDO" ? ["Aprendendo", "var(--heard)"] : STATE[st] || ["Tocando", "var(--played)"];
+  $("stateDot").style.background = $("pDot").style.background = color;
+  text("stateText", name); text("pState", name);
+  $("stateBox").title = running && s.state_text ? s.state_text : "";
+  text("detail", !running ? "" : [s.key_detected ? pretty(s.key_detected) : "", s.bpm ? Math.round(s.bpm) + " BPM" : ""].filter(Boolean).join(" · "));
+
+  const inView = view === "play";
+  hide("countView", !(counting && inView));
+  hide("playView", counting || !inView);
+  hide("palco", !(running && palcoOn));
+
+  // entrada
+  const hearing = live && s.db > MIN_HEARD_DB;
+  bar($("mIn"), s.db); bar($("setupMeter"), s.db);
+  if (reading) { const t = live && s.db != null ? Math.round(s.db) + " dB" : "—"; text("vIn", t); text("setupDb", t); }
+  for (let i = 0; i < 12; ++i) levelY($("pc" + i), hearing && s.chroma ? s.chroma[i] / 100 : 0);
+  for (let i = 0; i < 3; ++i) {
+    const c = hearing && s.top ? s.top[i] : null;
+    text("c" + i, c ? pretty(c.c) : "—");
+    level($("cm" + i), c ? c.p / 100 : 0);
+    if (reading) text("cp" + i, c ? c.p + "%" : "");
+  }
+  const heardNow = s.listening && hearing ? (s.conf >= MIN_CHORD_CONF && s.heard ? s.heard : s.note) : null;   // a single note has no chord: show the note
+  text("setupHeard", heardNow ? `Sinal bom. Ouvi ${pretty(heardNow)}.` : "Toque para testar.");
+
+  // centro
+  const showLearn = learning && !counting;
+  const playing = running ? s.playing : null;
+  hide("vNow", showLearn);
+  hide("vLearn", !showLearn);
+  hide("lanes", !running || showLearn || !s.beat);
+  const chord = counting ? null : running ? playing : heardNow;
   const el = $("chord");
-  if (chord !== lastChord) { el.textContent = chord || "—"; el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 160); lastChord = chord; }
-  el.classList.toggle("idle", !chord || !!s.listening);
-  text("chordSub", counting ? "entre no próximo compasso" : s.listening ? "aperte Iniciar para ele tocar junto" : running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : ""));
-  const keyName = s.key_detected && !$("key").value ? `Automático (${s.key_detected})` : "Automático";
-  if ($("key").options[0].text !== keyName) $("key").options[0].text = keyName;
-  text("heard", live && s.heard ? s.heard : "—");
-  const c = live ? s.conf || 0 : 0;
-  level($("conf"), c); $("conf").style.background = c >= .7 ? "var(--green)" : c >= .45 ? "var(--orange)" : "var(--gray)";
-  if (reading) text("confVal", live ? Math.round(c * 100) + "%" : "");
-  html("next", running && s.next ? `Próximo: <b>${s.next}</b>` : "");
-  bar($("meter"), s.db);
+  if (chord !== lastChord) { el.textContent = pretty(chord); $("pChord").textContent = pretty(chord); lastChord = chord; }
+  el.classList.toggle("idle", !chord);
+  el.classList.toggle("hear", !running && !!chord);
+  const form = shape(chord), sub = !running ? (s.listening ? "Ouvindo seu violão. Ainda não toca nada." : "") : "";
+  html("chordSub", form && running ? `sua forma: <strong>${form}</strong>${s.playing_extra ? " · " + esc(s.playing_extra) : ""}` : sub || esc(running && s.playing_extra ? s.playing_extra : ""));
+  text("nextChord", pretty(s.next));
+  hide("nextBox", !(running && s.next));
+  if (counting) text("countNum", String(s.count));
+  trackBars(s, playing);
+  if (running && !showLearn && s.beat) drawLanes(s, playing);
+  if (showLearn) drawLearning(s, playing);
+
+  // andamento
   if (running) text("bpmNow", String(s.bpm ? Math.round(s.bpm) : "—"));
   tempoControls();
-  bar($("mIn"), s.db);
-  if (reading) text("vIn", live && s.db != null ? Math.round(s.db) + " dB" : "—");
-  const o = (running && s.out) || {};
-  bar($("mBass"), db(o.bass_rms || 0) + 12); bar($("mPad"), db(o.pad_rms || 0) + 12);
-  text("nBass", o.bass || "—"); text("nPad", (o.pad || []).join(" ") || "—");
-  $("mBassBox").classList.toggle("on", !!o.bass); $("mPadBox").classList.toggle("on", !!(o.pad && o.pad.length));
   [...$("beats").children].forEach((d, i) => d.classList.toggle("on", running && s.beat === i + 1));
+  [...$("pBeats").children].forEach((d, i) => d.classList.toggle("on", running && s.beat === i + 1));
   $("freezeBtn").disabled = !running || s.fixed_grid || !s.bpm;
   $("freezeBtn").classList.toggle("on", !!s.frozen);
   text("freezeBtn", s.frozen ? "Voltar a seguir" : "Fixar este BPM");
-  if (running && s.pattern) {
-    const nxt = (s.pattern_pos + 1) % s.pattern.length;
-    html("pattern", s.pattern.map((p, i) => `<span class="chip${i === s.pattern_pos ? " now" : i === nxt ? " upcoming" : ""}">${p}</span>`).join(""));
+  const keyName = s.key_detected && !$("key").value ? `Automático (${pretty(s.key_detected)})` : "Automático";
+  if ($("key").options[0].text !== keyName) $("key").options[0].text = keyName;
+
+  // saída
+  if (running) drawOutputs(s);
+
+  // palco
+  if (running && palcoOn) {
+    text("pBpm", s.bpm ? Math.round(s.bpm) + " BPM" : "");
+    html("pShape", form ? `sua forma: <strong>${form}</strong>` : learning ? "aprendendo o padrão" : "");
+    text("pNext", pretty(s.next));
+    hide("pNextBox", !s.next);
   }
-  else html("pattern", `<span class="empty">${running ? "Ainda aprendendo — toque a progressão" : "Aparece quando ele reconhecer a progressão"}</span>`);
-  const items = (s.diary || []).map(d => `<li><time>${fmt(d.t)}</time><span class="c" style="color:${STATE_COLOR[d.estado] || "inherit"}">${d.acorde ? d.acorde : (d.modo === undefined ? "•" : "—")}</span><span class="m">${d.motivo || ""}</span></li>`).join("");
-  html("diary", items || `<li class="empty">As decisões do acompanhamento aparecem aqui, com o motivo.</li>`);
+
+  // diário e saúde
+  const items = (s.diary || []).map(d => `<li><time>${fmt(d.t)}</time><b style="color:${(STATE[d.estado] || [])[1] || "inherit"}">${d.acorde ? pretty(d.acorde) : (d.modo === undefined ? "•" : "—")}</b><span>${esc(d.motivo || "")}</span></li>`).join("");
+  html("diary", items || '<li class="hint" style="display:block">As decisões do acompanhamento aparecem aqui, com o motivo.</li>');
   text("lat", s.latency_ms ? s.latency_ms + " ms" : "—");
-  if (reading) text("cost", s.cost_ms != null ? `${s.cost_ms} ms / ${s.budget_ms} ms` : "—");
-  text("warn", s.warning || "Microfone + caixa de som juntos fazem o sistema ouvir a si mesmo. Prefira fone ou o violão ligado direto.");
-  $("warn").style.fontWeight = s.warning ? "700" : "400";
-  html("engineInfo", s.engine ? `Motor <b>${s.engine}</b>` : "");
-  text("xruns", String(s.xruns)); $("xruns").parentElement.classList.toggle("warn", s.xruns > 0);
-  html("sessionInfo", s.session ? `Sessão <b>${s.session.split(/[\\/]/).pop()}</b>${s.report ? " · relatório " + s.report : ""} · <a class="link" id="openBtn">Abrir pasta</a>` : "");
+  if (reading) text("cost", s.cost_ms != null && s.budget_ms ? `${String(s.cost_ms).replace(".", ",")} de ${s.budget_ms} ms` : "—");
+  text("xruns", String(s.xruns)); $("xruns").classList.toggle("bad", s.xruns > 0);
+  text("warn", s.warning || ""); hide("warnBar", !s.warning);
+}
+
+// ---- sessões
+async function loadSessions() {
+  try { sessionList = await api("/api/sessions"); showSessions(); }
+  catch (e) { toast("Não consegui ler as sessões."); }
+}
+function showSessions() {
+  const hideTests = $("hideTests").checked;
+  const rows = sessionList.filter(s => !hideTests || s.duracao_s > 5).map(s => `<tr>
+    <td><button class="open" data-name="${esc(s.name)}">${esc(when(s.name))}</button></td>
+    <td>${clock(s.duracao_s || 0)}</td><td>${pretty(s.tom)}</td>
+    <td>${s.bpm ? Math.round(s.bpm) + " BPM" + (s.clique ? ", clique" : "") : "Seguindo"}</td>
+    <td>${s.travou != null ? clock(s.travou) : "—"}</td>
+    <td class="${s.falhas ? "bad" : "dim"}">${s.falhas || 0}</td></tr>`);
+  $("sessionRows").innerHTML = rows.join("") || '<tr><td colspan="6" class="dim" style="padding:16px">Nenhuma sessão gravada.</td></tr>';
+}
+async function openReport(name) {
+  try {
+    const r = await api("/api/session", { name });
+    if (!r || !r.colunas) return toast("Essa sessão não existe mais.");
+    currentReport = name;
+    const run = (r.config && r.config.run) || {}, sum = r.resumo || {};
+    text("reportTitle", "Sessão de " + when(name));
+    const tuned = r.config && r.config.afinacao ? TUNINGS[r.config.afinacao] : "";
+    text("reportInfo", [(r.config && r.config.instrumento) || "", tuned, pretty(run.tom), run.bpm ? `${Math.round(run.bpm)} BPM${run.clique ? " com clique" : ""}` : "Seguindo", clock(sum.duracao_s || 0)].filter(s => s && s !== "—").join(" · "));
+    $("reportSvg").hidden = !r.relatorio;
+    const cols = r.colunas, span = (cols.length ? cols[cols.length - 1].t : 0) + (cols.length > 1 ? cols[1].t - cols[0].t : 1);
+    const tip = c => `${clock(c.t)}: ouviu ${pretty(c.heard)} (${c.conf}%), tocou ${c.played ? pretty(c.played) : "nada"}`;
+    $("rHeard").innerHTML = cols.map(c => `<i title="${esc(tip(c))}" style="background:${c.miss ? "var(--alert)" : `rgba(255,182,92,${(c.conf / 100).toFixed(2)})`}"></i>`).join("");
+    $("rPlayed").innerHTML = cols.map(c => `<i title="${esc(tip(c))}" style="background:${!c.played ? "transparent" : c.played === "tônica" ? "#2f4358" : "var(--played)"}"></i>`).join("");
+    const step = span > 300 ? 60 : span > 60 ? 30 : 10;
+    let axis = "";
+    for (let t = 0; t < span; t += step) axis += `<span style="left:${(100 * t / span).toFixed(1)}%">${clock(t)}</span>`;
+    $("rAxis").innerHTML = axis;
+    // the moments that matter: repeated "ouvi X" and predicted changes say nothing new
+    const routine = /^(previsto pelo padrão|ouvi \S+|metronomo: .*)$/;
+    const events = (r.decisoes || []).filter(d => d.motivo && !routine.test(d.motivo));
+    $("rEvents").innerHTML = events.map(d => `<li><time>${clock(d.t)}</time><span>${esc(d.motivo)}</span></li>`).join("") || '<li class="hint" style="display:block">Nada fora da rotina.</li>';
+    const num = v => String(v).replace(".", ",");
+    const stat = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+    $("rStats").innerHTML = stat("Primeiro travamento", r.travou != null ? clock(r.travou) : "não travou") + stat("Decisões", sum.decisoes ?? "—") +
+      stat("Falhas de áudio", sum.falhas_de_audio ?? "—") + stat("Latência", (sum.latencia_ms ?? "—") + " ms") +
+      stat("Processamento médio", num((sum.proc_ms_media || 0).toFixed(2)) + " ms") + stat("Pico", num((sum.proc_ms_max || 0).toFixed(2)) + " ms");
+    setView("report");
+  } catch (e) { toast("Não consegui abrir o relatório."); }
 }
 
 const SPLASH_MIN_MS = 1400;   // long enough for the neon to light up; the audio devices usually answer sooner
