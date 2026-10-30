@@ -5,6 +5,22 @@ Definição de cada métrica em [`04-plano-de-testes.md`](04-plano-de-testes.md)
 
 ---
 
+## v6 — 2026-10-29 (aprender na tônica, tom automático, camadas)
+
+**Sessões reais** (violão meio tom abaixo; reproduzidas sem tom configurado, com aprender na tônica + manter o padrão):
+
+| sessão | soou em | antes de travar | travou em |
+|---|---|---|---|
+| formas de Dó (22:50) | Si (B F# G#m E) | só pad em Si | 25,5 s |
+| formas de Ré (22:51) | Dó# (C# G# A#m F#) | só pad em Dó# | 22,6 s |
+| formas de Sol (22:52) | Fá# (F# C# D#m B) | só pad em Fá# | 22,2 s |
+
+Acordes ouvidos com confiança: Sol → 98 % dentro da progressão; Dó → 89 % (G#m às vezes vira G#); Ré → o A#m da pestana quase não aparece (vira C#).
+
+**Cenários** (14, laboratório com os padrões antigos): média 0,90, latência travada 44 ms; nada mudou em relação à v5. Com aprender na tônica: antes de travar só há a tônica (C nos cenários em Dó, B no `tom_errado`), testado em 3 cenários.
+
+---
+
 ## v5 — 2026-10-29 (manter o padrão)
 
 Cenários (14; núcleo C++): média **0,90**, latência média 122 ms, travada 44 ms, falso disparo médio 0,02 s (só `erros_com_padrao`, que roda com o modo manter e encerra 0,6 s depois do fim).

@@ -16,6 +16,7 @@ Cada risco tem mitigação e um cenário de teste que o exercita (ver `04-plano-
 | 10 | **Falsos disparos** (tocar quando não devia): o erro mais caro. | Parada por ausência de onsets, fim de compasso + fade, esquecimento após silêncio longo, escada de confiança. | Métrica de falsos disparos e de parada em todos os cenários (todos terminam com silêncio). |
 | 11 | **Driver entregando entrada corrompida** (bug do JUCE no WASAPI compartilhado: float lido como int32). | Patch no JUCE (decisão 63); detector de corrupção continua avisando. | `KordiaLiveTest.exe "Windows Audio" 0` mostra o aviso; padrão sem aviso. |
 | 12 | **Modo exclusivo toma a placa** e, com entrada e saída em aparelhos diferentes, **derrapa até a captura morrer** (~15–20 s; medido). | Padrão é o modo compartilhado (corrigido); exclusivo só com interface única. Aviso de "sem sinal" e de rajada de falhas. | `KORDIA_SECONDS=60 KordiaLiveTest.exe` (60 s sem a captura morrer). |
+| 14 | **Pestanas** (Fá, Si menor): a nota que diferencia o acorde chega fraca; A#m vira C#. | Aprender na tônica e manter o padrão reduzem o dano; melhora de detecção pendente (precisa de gravações rotuladas). | Sessões reais de 2026-10-29 22:50/22:51. |
 | 13 | **Tom configurado errado** (violão meio tom abaixo, capotraste). | Prior é só prior; a segurança não toca a tônica se o tom não bate. | `tom_errado`; `test_fallback_is_silent_when_the_key_does_not_fit`. |
 
 ## Riscos de método (do próprio protótipo)

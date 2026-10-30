@@ -85,3 +85,18 @@
 - Mudança deliberada (outra parte, outro tom): aceita quando o áudio discorda com confiança por 1½ compasso seguido.
 - Parada: depois de 5 tempos sem palhetada (uma entrada atrasada não é o fim); esquece após 2 compassos.
 - Desligado: comportamento anterior (o áudio manda; contradição sustentada por ½ pulso destrava).
+
+### RF13 — Aprender segurando a tônica (configurável; padrão: ligado)
+- Até o padrão travar: só um pad suave (60 %) na tônica do tom, sem baixo e sem seguir acorde a acorde (era "uma sambança de troca de nota").
+- O tom é o configurado enquanto bater com os acordes ouvidos; senão, o detectado por eles; sem nenhum dos dois, silêncio.
+- Com o padrão travado: acompanhamento completo. Se destravar (mudança deliberada), volta a aprender na tônica.
+
+### RF14 — Tom automático
+- Opção *Automático* no seletor de tom: deduz a tonalidade maior pelos acordes ouvidos (I, IV e V pesam mais; precisa de 3 acordes diferentes). A tela mostra o tom detectado.
+
+### RF15 — Camadas de instrumento
+- Pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo; cada um liga/desliga e tem volume próprio, ao vivo.
+
+### RF9 (revisão) — Interface
+- Tela principal enxuta; Áudio, Som/Instrumentos e Música avançada num painel de Ajustes. Tom no topo.
+- O botão Clique inicia tudo quando parado; no modo seguir, o clique começa no BPM escolhido e depois segue o músico.

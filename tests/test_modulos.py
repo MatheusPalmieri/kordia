@@ -203,15 +203,19 @@ def test_session_records_and_replays(tmp_path):
     assert (folder / "decisoes.jsonl").read_text(encoding="utf-8").strip()
 
 
-def test_fallback_is_silent_when_the_key_does_not_fit():
+def test_fallback_uses_the_key_that_fits_the_music():
+    """Key set to C but the music is in B: the safety tonic is B (detected), never C; too little heard: silence."""
     from acompanhante.engine import Engine
     eng = Engine(TempoTracker(), ProgressionMemory(), key="C")
-    eng.recent.extend(theory.chord_index(c) for c in ["B", "F#", "G#m", "E"])
-    out = eng._fallback_out(1.0)                                  # B major music: C tonic would be a wrong note
-    assert (out is None or out.mode is None) and eng.cur == (None, None)
+    eng.heard.extend(theory.chord_index(c) for c in ["B", "F#", "G#m", "E"])
+    assert eng._fallback_out(1.0).chord == theory.note_pc("B")
     eng2 = Engine(TempoTracker(), ProgressionMemory(), key="C")
-    eng2.recent.extend(theory.chord_index(c) for c in ["C", "G", "Am", "F"])
-    assert eng2._fallback_out(1.0).mode == "tonic"
+    eng2.heard.extend(theory.chord_index(c) for c in ["B", "F#"])     # not C, and not enough to tell
+    out = eng2._fallback_out(1.0)
+    assert (out is None or out.mode is None) and eng2.cur == (None, None)
+    eng3 = Engine(TempoTracker(), ProgressionMemory(), key="C")
+    eng3.heard.extend(theory.chord_index(c) for c in ["C", "G", "Am", "F"])
+    assert eng3._fallback_out(1.0).mode == "tonic" and eng3.cur[0] == 0
 
 
 def test_click_before_playing_in_follow_mode():

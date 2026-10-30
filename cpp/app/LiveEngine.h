@@ -39,6 +39,8 @@ public:
         double conf = 0, db = -120, bpm = 0;
         bool frozen = false, fixedGrid = false, click = false;
         double bassRms = 0, padRms = 0;
+        int key = -1;          // current tonic (configured if it fits, else detected)
+        bool learning = false;
         int bassNote = -1, nPad = 0, padNotes[8] = {};
         Diary diary[12] = {};
         int nDiary = 0;
@@ -89,6 +91,9 @@ private:
     long long zeroRun_ = 0;
     std::atomic<bool> inputDead_{false};
     std::atomic<double> pendingBpm_{0};   // live BPM change, applied by the audio thread
+    std::atomic<float> layerGain_[kordia::P::N_LAYERS] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    std::atomic<float> bassGain_{1.0f};
+    std::atomic<bool> learn_{true};
     int xrunWindowStart_ = 0;             // UI thread: dropout rate over the last ~5 s
     juce::uint32 xrunWindowT_ = 0;
     bool xrunStorm_ = false;

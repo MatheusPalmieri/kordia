@@ -81,8 +81,18 @@ def parse_config(d):
             except (KeyError, ValueError, IndexError):
                 raise ValueError(f"Acorde não reconhecido: {c!r} (use C, Am, F#m, Bb...)") from None
     modo = "metronomo" if bpm else ("decorado" if prog else "livre")
+    seed = d.get("bpm_inicial")
+    seed = float(np.clip(float(seed), 30, 250)) if seed else None
     return (RunConfig(modo=modo, tom=key, bpm=bpm, progressao=prog, clique=bool(d.get("clique")),
-                      manter_padrao=bool(d.get("manter_padrao", True))), dev_in, dev_out)
+                      manter_padrao=bool(d.get("manter_padrao", True)),
+                      aprender_na_tonica=bool(d.get("aprender_na_tonica", True)), bpm_inicial=seed), dev_in, dev_out)
+
+
+def _safe_key(eng):
+    try:   # read from the HTTP thread while the audio thread appends to eng.heard
+        return eng.current_key()
+    except RuntimeError:
+        return None
 
 
 def note_name(midi):
@@ -192,6 +202,12 @@ class Live:
                 p.freeze_tempo(d["fixar_bpm"])
             if "manter_padrao" in d:
                 p.engine.hold = bool(d["manter_padrao"])
+            if "aprender_na_tonica" in d:
+                p.engine.learn = bool(d["aprender_na_tonica"])
+            if isinstance(d.get("camadas"), list):
+                p.synth.layers = [float(np.clip(float(g), 0, 2)) for g in d["camadas"]][:len(P.LAYERS)]
+            if "baixo" in d:
+                p.synth.bass_gain = float(np.clip(float(d["baixo"]), 0, 2))
             if d.get("bpm"):
                 p.set_bpm(float(np.clip(float(d["bpm"]), 30, 250)))
 
@@ -258,7 +274,8 @@ class Live:
             "frozen": getattr(p.tracker, "frozen", False), "fixed_grid": p.engine.metronome,
             "pattern": [theory.LABELS[c] for c in known] if known else None,
             "pattern_pos": p.memory.pos if known else None, "next": p.next_chord(), "clique": p.click,
-            "hold": p.engine.hold,
+            "hold": p.engine.hold, "learning": p.engine.learn and eng.state != TRAVADO,
+            "key_detected": theory.NOTE_NAMES[k] if (k := _safe_key(eng)) is not None else None,
             "out": {"bass_rms": p.synth.levels[0], "pad_rms": p.synth.levels[1],
                     "bass": note_name(p.acc.bass) if p.acc.bass is not None else None,
                     "pad": [note_name(n) for n in p.acc.pad]},

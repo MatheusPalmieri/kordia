@@ -195,6 +195,9 @@ juce::String LiveEngine::start(const juce::var& q) {
     }
     cfg.clique = (bool)q["clique"];
     cfg.manter_padrao = q.hasProperty("manter_padrao") ? (bool)q["manter_padrao"] : true;
+    cfg.aprender_na_tonica = q.hasProperty("aprender_na_tonica") ? (bool)q["aprender_na_tonica"] : true;
+    if (q["bpm_inicial"].isDouble() || q["bpm_inicial"].isInt())
+        cfg.bpm_inicial = juce::jlimit(30.0, 250.0, (double)q["bpm_inicial"]);
     cfg.modo = cfg.bpm ? "metronomo" : (cfg.progressao ? "decorado" : "livre");
 
     dm_.getAvailableDeviceTypes();
@@ -275,6 +278,8 @@ juce::String LiveEngine::start(const juce::var& q) {
     run->setProperty("progressao", cfg.progressao ? juce::var(juce::String(*cfg.progressao)) : juce::var());
     run->setProperty("clique", cfg.clique);
     run->setProperty("manter_padrao", cfg.manter_padrao);
+    run->setProperty("aprender_na_tonica", cfg.aprender_na_tonica);
+    run->setProperty("bpm_inicial", cfg.bpm_inicial ? juce::var(*cfg.bpm_inicial) : juce::var());
     auto info = new juce::DynamicObject();
     info->setProperty("run", juce::var(run));
     info->setProperty("lookahead", lookahead_);
@@ -329,6 +334,11 @@ void LiveEngine::setLive(const juce::var& q) {
     if (q.hasProperty("dinamica_fixa")) dynFixed_ = (bool)q["dinamica_fixa"];
     if (q.hasProperty("fixar_bpm")) freeze_ = (bool)q["fixar_bpm"];
     if (q.hasProperty("manter_padrao")) hold_ = (bool)q["manter_padrao"];
+    if (q.hasProperty("aprender_na_tonica")) learn_ = (bool)q["aprender_na_tonica"];
+    if (auto* layers = q["camadas"].getArray())
+        for (int k = 0; k < kordia::P::N_LAYERS && k < layers->size(); ++k)
+            layerGain_[k] = (float)juce::jlimit(0.0, 2.0, (double)(*layers)[k]);
+    if (q.hasProperty("baixo")) bassGain_ = (float)juce::jlimit(0.0, 2.0, (double)q["baixo"]);
     if (q.hasProperty("bpm") && (q["bpm"].isDouble() || q["bpm"].isInt()))
         pendingBpm_ = juce::jlimit(30.0, 250.0, (double)q["bpm"]);
 }
@@ -344,6 +354,9 @@ void LiveEngine::audioDeviceIOCallbackWithContext(const float* const* in, int nu
     proc_->click_vel = (int)(clickVolume_ * 127);
     proc_->dyn().fixed = dynFixed_;
     proc_->set_hold(hold_);
+    proc_->set_learn(learn_);
+    for (int k = 0; k < P::N_LAYERS; ++k) proc_->synth().layers[(size_t)k] = layerGain_[k];
+    proc_->synth().bass_gain = bassGain_;
     if (freeze_ != proc_->tracker().frozen()) proc_->freeze_tempo(freeze_);
     if (double b = pendingBpm_.exchange(0.0); b > 0) proc_->set_bpm(b);
 
@@ -481,6 +494,9 @@ void LiveEngine::publish() {
     s.fixedGrid = eng.metronome;
     s.click = proc_->click;
     s.bassRms = proc_->synth().bass_rms;
+    auto key = eng.current_key();
+    s.key = key ? *key : -1;
+    s.learning = eng.learn && eng.state != State::Travado;
     s.padRms = proc_->synth().pad_rms;
     s.bassNote = proc_->acc().bass();
     s.nPad = juce::jmin(8, (int)proc_->acc().pad().size());
@@ -566,6 +582,8 @@ juce::var LiveEngine::snapshot() {
     o->setProperty("fixed_grid", s.fixedGrid);
     o->setProperty("clique", s.click);
     o->setProperty("hold", hold_.load());
+    o->setProperty("learning", s.learning);
+    o->setProperty("key_detected", s.key >= 0 ? juce::var(juce::String(label(s.key))) : juce::var());
     o->setProperty("next", s.next >= 0 ? juce::var(juce::String(label(s.next))) : juce::var());
     auto noteName = [](int m) { return juce::String(label(m % 12)) + juce::String(m / 12 - 1); };
     auto* out = new juce::DynamicObject();

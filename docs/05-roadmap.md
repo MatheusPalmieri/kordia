@@ -10,6 +10,10 @@ App com interface web moderna, entrada/saída de áudio, tom, BPM fixo, progress
 - Matheus toca e manda as pastas de `sessoes/`; cada problema ouvido vira cenário ou teste de regressão.
 - Prioridades: travamento e manutenção do padrão com violão real, latência reativa, confusão de terça.
 
+## Fase 0.7 — Próximo (pedidos do Matheus)
+- Reconhecimento de pestanas (Fá, Si menor): gravar e rotular trechos com e sem pestana; testar templates por voicing e peso do baixo com dados reais.
+- Mais timbres e presets de instrumentos (ex.: "worship básico", "órgão + baixo").
+
 ## Fase 1 — Refinamento
 - Atacar os 3 maiores problemas do baseline (ver `resultados.md`).
 - Calibrar o equilíbrio "seguir o que ouve × seguir o que aprendeu" (risco 7).

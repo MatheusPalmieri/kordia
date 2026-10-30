@@ -37,8 +37,22 @@ header { display: flex; align-items: center; gap: 16px; }
 .btn.ghost { background: var(--track); color: var(--text); padding: 7px 14px; font-size: 13px; font-weight: 600; }
 .btn.ghost.on { background: var(--blue); color: #fff; }
 .btn:disabled { opacity: .4; cursor: default; }
-.grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
-@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.grid { display: block; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); overflow-y: auto; padding: 18px 18px 28px;
+  background: var(--bg); border-left: 1px solid var(--line); box-shadow: -12px 0 40px rgba(0,0,0,.35); z-index: 20;
+  transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); display: flex; flex-direction: column; gap: 16px; }
+.drawer.open { transform: none; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head h3 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 15; }
+.backdrop.open { opacity: 1; pointer-events: auto; }
+.quick { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 600; font-size: 13px; }
+.quick select { width: auto; background: transparent; padding: 4px 6px; font-weight: 700; }
+.icon-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 18px; cursor: pointer; }
+.layer { display: grid; grid-template-columns: 1fr 120px 44px; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.layer:first-of-type { border-top: 0; }
+.layer label { font-weight: 500; }
+.layer input[type=range]:disabled { opacity: .35; }
 .col { display: flex; flex-direction: column; gap: 18px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); backdrop-filter: blur(24px) saturate(1.6); padding: 16px 18px; }
 .card h2 { margin: 0 0 12px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -129,12 +143,15 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
   <header>
     <div class="brand">Kordia<small>Baixo e pad que ouvem o seu violão</small></div>
     <div class="spacer"></div>
+    <span class="quick" title="Tom principal: Automático = ele descobre pelos acordes">Tom <select id="key"></select></span>
     <span class="pill"><span class="dot" id="stateDot"></span><span id="stateText">Parado</span></span>
+    <button class="icon-btn" id="settingsBtn" title="Ajustes: áudio, som e música">⚙</button>
     <button class="btn primary" id="startBtn">Iniciar</button>
   </header>
 
-  <div class="grid">
-    <div class="col">
+  <div class="backdrop" id="backdrop"></div>
+  <aside class="drawer" id="drawer">
+      <div class="drawer-head"><h3>Ajustes</h3><button class="btn ghost" id="closeSettings">Fechar</button></div>
       <section class="card">
         <h2>Áudio</h2>
         <div class="row" id="driverRow" hidden><div class="stack"><label>Driver</label><select id="driver"></select></div></div>
@@ -160,18 +177,25 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
       </section>
 
       <section class="card">
-        <h2>Música <span style="text-transform:none;letter-spacing:0;font-weight:500">— opcional</span></h2>
-        <div class="row"><label>Tom principal</label><select id="key" style="width:120px"></select></div>
+        <h2>Instrumentos</h2>
+        <div id="layers"></div>
+        <p class="note">Liga e desliga com ele tocando. Cada um tem o próprio volume.</p>
+      </section>
+
+      <section class="card">
+        <h2>Música</h2>
+        <div class="row"><div><label>Aprender segurando a tônica</label><div class="hint">Até reconhecer o padrão, só um pad suave na tônica do tom (sem baixo, sem trocar acorde)</div></div><label class="switch"><input type="checkbox" id="learn" checked><span></span></label></div>
         <div class="row"><div><label>Manter o padrão aprendido</label><div class="hint">Depois de reconhecer, segue o padrão mesmo se você errar ou atrasar; só muda se você tocar outra coisa por 1½ compasso</div></div><label class="switch"><input type="checkbox" id="hold" checked><span></span></label></div>
         <div class="row"><div class="stack">
           <div style="display:flex;justify-content:space-between;align-items:center"><label>Progressão conhecida</label><label class="switch"><input type="checkbox" id="progOn"><span></span></label></div>
           <input type="text" id="prog" value="C G Am F" placeholder="ex.: C G Am F" spellcheck="false">
           <div class="chips" id="progChips"></div>
         </div></div>
-        <p class="note">Sem nada ligado, ele só ouve e segue. Tom e progressão valem a partir do próximo <b>Iniciar</b>. O andamento fica no cartão <b>Andamento</b>.</p>
+        <p class="note">O tom fica no topo da tela. A progressão vale a partir do próximo <b>Iniciar</b>; o resto muda na hora.</p>
       </section>
-    </div>
+  </aside>
 
+  <div class="grid">
     <div class="col">
       <section class="card stage">
         <div class="chord idle" id="chord">—</div>
@@ -227,10 +251,14 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
 <script>
 const $ = id => document.getElementById(id);
 const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const LAYERS = [["worship", "Pad worship", true, 100], ["orgao", "Órgão", false, 70], ["piano", "Piano elétrico", false, 70],
+                ["guitarra", "Pad de guitarra", false, 70], ["cordas", "Cordas", false, 70], ["baixo", "Baixo", true, 100]];
 const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
 // inside the C++/JUCE app the page is served by the WebView resource provider: GET + polling instead of POST + SSE
 const NATIVE = location.hostname === "juce.backend";
-const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "hold", "key", "prog", "progOn", "clickVol"];
+const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "hold", "learn", "key", "prog", "progOn", "clickVol",
+              ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
+const LIVE = ["gain", "volume", "monitor", "dynFixed", "hold", "learn", "clickVol", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
 let running = false, clickOn = false, lastChord = null, lastError = null, state = {};
 
@@ -247,8 +275,11 @@ async function api(path, body) {
   return j;
 }
 function liveSettings() {
+  const g = id => $("on_" + id).checked ? $("vol_" + id).value / 100 : 0;
   return { gain_db: +$("gain").value, volume: $("volume").value / 100, monitor: $("monitor").checked,
-           dinamica_fixa: $("dynFixed").checked, manter_padrao: $("hold").checked, clique: clickOn, click_volume: $("clickVol").value / 100 };
+           dinamica_fixa: $("dynFixed").checked, manter_padrao: $("hold").checked, aprender_na_tonica: $("learn").checked,
+           clique: clickOn, click_volume: $("clickVol").value / 100,
+           camadas: LAYERS.slice(0, 5).map(([id]) => g(id)), baixo: g("baixo") };
 }
 let liveTimer;
 function pushLive() { clearTimeout(liveTimer); liveTimer = setTimeout(() => api("/api/live", liveSettings()).catch(e => toast(e.message)), 60); }
@@ -259,6 +290,7 @@ function labels() {
   $("prog").disabled = !$("progOn").checked || running;
   const chips = $("prog").value.trim().split(/\s+/).filter(Boolean);
   $("progChips").innerHTML = $("progOn").checked ? chips.map(c => `<span class="chip">${c}</span>`).join("") : "";
+  LAYERS.forEach(([id]) => $("vol_" + id).disabled = !$("on_" + id).checked);
 }
 function lockSettings() {
   for (const id of ["driver", "buffer", "input", "output", "key", "progOn"]) $(id).disabled = running;
@@ -269,7 +301,14 @@ function lockSettings() {
 }
 
 async function init() {
-  $("key").innerHTML = KEYS.map(k => `<option value="${k}">${k || "Nenhum"}</option>`).join("");
+  $("key").innerHTML = KEYS.map(k => `<option value="${k}">${k || "Automático"}</option>`).join("");
+  $("layers").innerHTML = LAYERS.map(([id, name, on, vol]) =>
+    `<div class="layer"><label for="on_${id}">${name}</label><input type="range" id="vol_${id}" min="0" max="150" value="${vol}">` +
+    `<label class="switch"><input type="checkbox" id="on_${id}"${on ? " checked" : ""}><span></span></label></div>`).join("");
+  const openSettings = open => { $("drawer").classList.toggle("open", open); $("backdrop").classList.toggle("open", open); };
+  $("settingsBtn").onclick = () => openSettings(true);
+  $("closeSettings").onclick = $("backdrop").onclick = () => openSettings(false);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") openSettings(false); });
   $("meterMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   await loadDevices(recall("driver"));
   $("driver").addEventListener("change", () => loadDevices($("driver").value));
@@ -279,9 +318,9 @@ async function init() {
     if (el.tagName === "SELECT" && ![...el.options].some(o => o.value == v)) continue;
     if (el.type === "checkbox") el.checked = v; else el.value = v;
   }
-  if (recall("key") === undefined) $("key").value = "C";
+  if (recall("key") === undefined) $("key").value = "";
   clickOn = !!recall("click"); $("clickBtn").classList.toggle("on", clickOn);
-  for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (["gain", "volume", "monitor", "dynFixed", "hold", "clickVol"].includes(id)) pushLive(); });
+  for (const id of SAVE) $(id).addEventListener("input", () => { store(id, val($(id))); labels(); if (LIVE.includes(id)) pushLive(); });
   tempoMode = recall("tempoMode") || "seguir"; bpmValue = recall("bpmValue") || 110;
   document.querySelectorAll("#tempoSeg button").forEach(b => b.onclick = () => { tempoMode = b.dataset.mode; store("tempoMode", tempoMode); tempoControls(); });
   document.querySelectorAll(".bpmstep").forEach(b => b.onclick = () => {
@@ -289,7 +328,12 @@ async function init() {
     $("bpmNow").textContent = bpmValue;
     if (running) api("/api/live", { bpm: bpmValue }).catch(e => toast(e.message));   // live: same phase, new tempo
   });
-  $("clickBtn").onclick = () => { clickOn = !clickOn; store("click", clickOn); $("clickBtn").classList.toggle("on", clickOn); tempoControls(); pushLive(); };
+  $("clickBtn").onclick = () => {
+    if (!running) {   // stopped: the click button starts everything, so the click is heard right away
+      clickOn = true; store("click", clickOn); $("clickBtn").classList.add("on"); tempoControls(); startStop(); return;
+    }
+    clickOn = !clickOn; store("click", clickOn); $("clickBtn").classList.toggle("on", clickOn); tempoControls(); pushLive();
+  };
   $("freezeBtn").onclick = () => {
     if (!state.frozen && state.bpm) { bpmValue = Math.round(state.bpm); store("bpmValue", bpmValue); }
     api("/api/live", { fixar_bpm: !state.frozen }).catch(e => toast(e.message));
@@ -327,13 +371,14 @@ async function loadDevices(type) {
 
 function tempoControls() {
   document.querySelectorAll("#tempoSeg button").forEach(b => { b.classList.toggle("on", b.dataset.mode === tempoMode); b.disabled = running; });
-  const adjustable = tempoMode === "fixo" || (running && state.frozen);
+  const adjustable = tempoMode === "fixo" || (running && state.frozen) || (!running && clickOn);
   document.querySelectorAll(".bpmstep").forEach(b => b.hidden = !adjustable);
   $("freezeBtn").hidden = tempoMode === "fixo";
-  if (!running) $("bpmNow").textContent = tempoMode === "fixo" ? bpmValue : "—";
+  if (!running) $("bpmNow").textContent = tempoMode === "fixo" || clickOn ? bpmValue : "—";
   $("tempoHint").textContent = tempoMode === "fixo"
     ? (clickOn ? "O clique começa no Iniciar: conte e entre. As trocas caem na grade." : "As trocas caem na grade deste BPM (ligue o Clique para ouvi-lo).")
-    : "Ele detecta o seu andamento e acompanha se você acelerar. O clique entra quando ele pegar o tempo; “Fixar” congela o BPM.";
+    : (clickOn ? "O clique começa no Iniciar neste BPM; quando você tocar, ele passa a seguir o seu tempo. “Fixar” congela."
+               : "Ele detecta o seu andamento e acompanha se você acelerar. Ligue o Clique para ouvir o metrônomo desde o início.");
 }
 
 function db(x) { return x > 0 ? 20 * Math.log10(x) : -120; }
@@ -344,7 +389,7 @@ async function startStop() {
   try {
     if (running) await api("/api/stop", {});
     else await api("/api/start", { type: $("driver").value || null, buffer: NATIVE ? +$("buffer").value : null, input: $("input").value, output: $("output").value, tom: $("key").value || null,
-      bpm: tempoMode === "fixo" ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
+      bpm: tempoMode === "fixo" ? bpmValue : null, bpm_inicial: tempoMode === "seguir" && clickOn ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
   } catch (e) { toast(e.message); }
   $("startBtn").disabled = false;
 }
@@ -362,7 +407,8 @@ function render(s) {
   const chord = running && s.playing ? s.playing : null;
   const el = $("chord");
   if (chord !== lastChord) { el.textContent = chord || "—"; el.classList.toggle("idle", !chord); el.classList.add("bump"); setTimeout(() => el.classList.remove("bump"), 160); lastChord = chord; }
-  $("chordSub").textContent = running && s.playing_extra ? s.playing_extra : "";
+  $("chordSub").textContent = running && s.learning && s.playing ? "aprendendo o padrão — segurando a tônica" : (running && s.playing_extra ? s.playing_extra : "");
+  $("key").options[0].text = s.key_detected && !$("key").value ? `Automático (${s.key_detected})` : "Automático";
   $("heard").textContent = running && s.heard ? s.heard : "—";
   const c = running ? s.conf || 0 : 0;
   $("conf").style.width = (c * 100) + "%"; $("conf").style.background = c >= .7 ? "var(--green)" : c >= .45 ? "var(--orange)" : "var(--gray)";

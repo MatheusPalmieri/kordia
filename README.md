@@ -22,17 +22,13 @@ Dê dois cliques em **`Acompanhante.bat`**. Ele abre o app C++ (`cpp/build/app/K
 
 No app C++ aparecem também **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
-1. **Áudio:** escolha a entrada (microfone, interface, mesa) e a saída (já vem o alto-falante padrão). Toque e ajuste o **ganho** até a barra passar da marca cinza na batida.
-2. **Música (opcional):** tom principal, **Manter o padrão aprendido** (ligado: depois de reconhecer a progressão, ele segue com ela mesmo se você errar um acorde, atrasar uma troca ou entrar atrasado; só aceita uma mudança se você tocar outra coisa por 1½ compasso; desligado: o áudio manda a cada momento) e **progressão conhecida** (ex.: `C G Am F`). Sem nada, ele só ouve e segue. Se o tom configurado não bater com o que você toca, ele segue o áudio mesmo assim e não usa a tônica errada como segurança.
-   **Andamento:** escolha *Seguir meu tempo* (ele detecta e acompanha se você acelerar) ou *BPM fixo* (grade fixa; com o **Clique** ligado, o metrônomo começa no Iniciar e você entra contando). O BPM é um só e dá para mudar com − / + com ele tocando. No modo seguir, **Fixar este BPM** congela o andamento detectado.
-3. **Iniciar** e toque.
+Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes (⚙)**:
 
-Ao vivo (mudam sem parar):
-- **Volume** do acompanhamento (até 200 %), **dinâmica fixa** ou seguindo a sua batida, **ouvir o violão** na saída.
-- **Clique:** ouve o metrônomo. Com BPM fixo, o clique começa no Iniciar e você segue ele. No modo livre, o clique segue o andamento que ele detectou.
-- **Fixar BPM:** congela o andamento detectado agora; daí em diante você segue o clique.
+- **Áudio:** driver (padrão *Windows Audio*), latência do driver, entrada, saída, ganho (com medidor), ouvir o violão na saída.
+- **Som:** volume (até 200 %), dinâmica fixa e **Instrumentos**: pad worship, órgão, piano elétrico, pad de guitarra, cordas e baixo, cada um com liga/desliga e volume, mudando com ele tocando.
+- **Música:** *Aprender segurando a tônica* (até reconhecer o padrão, só um pad suave na tônica, sem baixo e sem ficar trocando de acorde), *Manter o padrão aprendido* (erros e atrasos não destravam; só uma mudança de 1½ compasso) e progressão conhecida.
 
-A janela mostra o acorde tocado (grande), o que está ouvindo e a confiança, o **próximo acorde** previsto, o estado, o cartão **Sinal** (nível do violão na entrada e medidores do **baixo** e do **teclado**, com as notas que estão soando), o BPM com o pulso do compasso, o **padrão aprendido** e um **diário** com cada decisão e o motivo.
+**Andamento:** *Seguir meu tempo* ou *BPM fixo*. O botão **Clique** já inicia tudo se estiver parado: o metrônomo começa na hora, antes de você tocar (no modo seguir ele começa no BPM escolhido e depois acompanha o seu tempo). − / + mudam o BPM com ele tocando; *Fixar este BPM* congela o detectado.
 
 > **Importante:** microfone + caixa de som no mesmo ambiente fazem o sistema ouvir o próprio baixo/pad (pior cenário medido). Prefira **fone** ou o violão **ligado direto**.
 
