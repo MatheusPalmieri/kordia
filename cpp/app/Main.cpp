@@ -47,6 +47,11 @@ private:
         auto q = juce::JSON::parse(juce::URL::removeEscapeChars(url.fromFirstOccurrenceOf("?q=", false, false)));
         if (path == "/" || path == "/index.html") return bytes(BinaryData::index_html, BinaryData::index_htmlSize, "text/html");
         if (path == "/api/devices") return json(engine_.devices());
+        if (path == "/api/audio_check") return json(engine_.audioCheck(q["input"].toString()));
+        if (path == "/api/windows_settings") {   // only these two pages: the value comes from the page
+            juce::Process::openDocument(q["page"].toString() == "privacidade" ? "ms-settings:privacy-microphone" : "ms-settings:sound", {});
+            return json(ok());
+        }
         if (path == "/api/state") return json(engine_.snapshot());
         if (path == "/api/start") return json(ok(engine_.start(q)));
         if (path == "/api/listen") return json(ok(engine_.start(q, true)));

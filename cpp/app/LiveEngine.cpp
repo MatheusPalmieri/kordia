@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "AudioCheck.h"
+
 using namespace kordia;
 
 static void copyText(char* dst, size_t cap, const std::string& s) {
@@ -167,6 +169,26 @@ juce::var LiveEngine::devices() {
     o->setProperty("types", typeList);
     o->setProperty("inputs", ins);
     o->setProperty("outputs", outs);
+    return juce::var(o);
+}
+
+juce::var LiveEngine::audioCheck(const juce::String& selectedInput) {
+    static const char* STATE_NAME[] = {"ativa", "desativada", "não conectada", "desconectada"};
+    const AudioSystem sys = read_audio_system();
+    const AudioDiagnosis d = diagnose(sys, selectedInput.toStdString());
+    juce::Array<juce::var> inputs;
+    for (const auto& in : sys.inputs) {
+        auto* i = new juce::DynamicObject();
+        i->setProperty("name", juce::String::fromUTF8(in.name.c_str()));
+        i->setProperty("state", juce::String::fromUTF8(STATE_NAME[in.state]));
+        i->setProperty("active", in.state == AudioInput::ACTIVE);
+        inputs.add(juce::var(i));
+    }
+    auto* o = new juce::DynamicObject();
+    o->setProperty("level", juce::String(d.level));
+    o->setProperty("message", juce::String::fromUTF8(d.message.c_str()));
+    o->setProperty("settings", juce::String(d.settings));
+    o->setProperty("inputs", inputs);
     return juce::var(o);
 }
 

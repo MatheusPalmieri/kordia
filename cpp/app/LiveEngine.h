@@ -18,6 +18,7 @@ public:
     ~LiveEngine() override;
 
     juce::var devices();
+    juce::var audioCheck(const juce::String& selectedInput);   // every input Windows knows and what is wrong, if anything
     // empty = ok, else an error message for the UI. preview: only listens (shows what it hears, plays and records nothing)
     juce::String start(const juce::var& request, bool preview = false);
     void stop();

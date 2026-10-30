@@ -18,6 +18,7 @@
 #include <windows.h>
 #endif
 
+#include "../app/AudioCheck.h"
 #include "lab.h"
 
 using namespace lab;
@@ -689,6 +690,66 @@ TEST(click_sessions_learn_the_cycle_on_the_downbeat) {
     double acc = 0;
     for (const auto& x : r) acc += x.s.acc;
     CHECK(acc / (double)r.size() >= 0.85 && r[5].veredito == "ok");
+}
+
+// ------------------------------------------------------------------ audio check
+static const std::string BUILTIN = "Microphone Array (Intel Smart Sound Technology for Digital Microphones)";
+static const std::string STOMP_IN = "Digital Audio Interface (Line 6 HX Stomp)";
+
+// the machine where the bug was found: the pedal unplugged, the app silently on the laptop microphone
+static AudioSystem stomp_unplugged() {
+    AudioSystem s;
+    s.inputs = {{STOMP_IN, AudioInput::NOT_PRESENT},
+                {"Microphone (Line 6 HX Stomp)", AudioInput::NOT_PRESENT},
+                {"Headset Microphone (AirPods Pro2 Hands-Free)", AudioInput::NOT_PRESENT},
+                {"Microphone (G733 Gaming Headset)", AudioInput::NOT_PRESENT},
+                {"Microphone (Realtek(R) Audio)", AudioInput::UNPLUGGED},
+                {"Stereo Mix (Realtek(R) Audio)", AudioInput::DISABLED},
+                {BUILTIN, AudioInput::ACTIVE}};
+    return s;
+}
+
+TEST(audio_check_names_the_interface_that_is_missing) {
+    auto d = diagnose(stomp_unplugged(), BUILTIN);
+    CHECK(d.level == "aviso");
+    CHECK(d.message.find("Line 6 HX Stomp não está conectado") != std::string::npos);
+    CHECK(d.message.find("Line 6 HX Stomp, Line 6 HX Stomp") == std::string::npos);   // two inputs, one device
+    CHECK(d.message.find("G733") == std::string::npos && d.message.find("AirPods") == std::string::npos);   // headsets are not the guitar
+    CHECK(d.message.find("Realtek") == std::string::npos);   // an empty jack is the computer's own
+}
+
+TEST(audio_check_stays_quiet_when_the_interface_is_in_use) {
+    auto s = stomp_unplugged();
+    s.inputs[0].state = AudioInput::ACTIVE;
+    CHECK(diagnose(s, STOMP_IN).level == "ok");
+}
+
+TEST(audio_check_points_to_the_interface_left_unselected) {
+    auto s = stomp_unplugged();
+    s.inputs[0].state = AudioInput::ACTIVE;
+    auto d = diagnose(s, BUILTIN);
+    CHECK(d.level == "aviso" && d.message.find("está conectado") != std::string::npos);
+}
+
+TEST(audio_check_blocking_problems_come_first) {
+    auto s = stomp_unplugged();
+    s.bad_drivers = {"HX Stomp"};
+    CHECK(diagnose(s, BUILTIN).message.find("Driver sem funcionar: HX Stomp") != std::string::npos);
+
+    s.inputs.back().muted = true;
+    auto muted = diagnose(s, BUILTIN);
+    CHECK(muted.level == "erro" && muted.settings == "som" && muted.message.find("muda") != std::string::npos);
+
+    s.mic_blocked = true;
+    CHECK(diagnose(s, BUILTIN).settings == "privacidade");
+}
+
+TEST(audio_check_without_any_active_input) {
+    auto s = stomp_unplugged();
+    s.inputs.back().state = AudioInput::DISABLED;
+    auto d = diagnose(s, "");
+    CHECK(d.level == "erro" && d.message.find("Line 6 HX Stomp") != std::string::npos);
+    CHECK(diagnose(AudioSystem{}, "").message.find("nenhuma entrada") != std::string::npos);
 }
 
 int main(int argc, char** argv) {

@@ -20,6 +20,35 @@ if(_patched EQUAL -1)
   message(STATUS "Kordia: patched JUCE WASAPI float detection")
 endif()
 
+# Patch (JUCE 8.0.15): the capture stream asks for raw audio (AUDCLNT_STREAMOPTIONS_RAW). In shared mode the voice
+# effects of the laptop microphone ate the signal (measured here, same room: -94 dB shared, -47 dB exclusive).
+# JUCE declares IAudioClient2 but never calls it, and its AudioClientProperties lacks the Options field. Same idea as above.
+file(READ ${_wasapi} _src)
+string(FIND "${_src}" "kordia raw" _patched)
+if(_patched EQUAL -1)
+  set(_old_struct "AUDIO_STREAM_CATEGORY   eCategory;")
+  set(_new_struct "AUDIO_STREAM_CATEGORY   eCategory;\n    int                     Options;   // kordia raw")
+  set(_old_client "nullptr, (void**) newClient.resetAndGetPointerAddress()));")
+  set(_new_client [=[nullptr, (void**) newClient.resetAndGetPointerAddress()));
+
+        // kordia raw: voice effects must not touch the guitar; a device without raw mode simply ignores it
+        if (newClient != nullptr && ! isExclusiveMode (deviceMode) && getDataFlow (device) == eCapture)
+            if (auto client2 = newClient.getInterface<IAudioClient2>())
+            {
+                AudioClientProperties properties { sizeof (properties), FALSE, AudioCategory_Other, 1 };
+                client2->SetClientProperties (&properties);
+            }]=])
+  string(FIND "${_src}" "${_old_struct}" _found_struct)
+  string(FIND "${_src}" "${_old_client}" _found_client)
+  if(_found_struct EQUAL -1 OR _found_client EQUAL -1)
+    message(FATAL_ERROR "JUCE WASAPI raw patch no longer applies: check juce_WASAPI_windows.cpp (createClient) after a JUCE upgrade")
+  endif()
+  string(REPLACE "${_old_struct}" "${_new_struct}" _src "${_src}")
+  string(REPLACE "${_old_client}" "${_new_client}" _src "${_src}")
+  file(WRITE ${_wasapi} "${_src}")
+  message(STATUS "Kordia: patched JUCE WASAPI raw capture")
+endif()
+
 # WebView2 SDK (NuGet package) for the UI; downloaded once into the build tree
 set(WEBVIEW2_VERSION 1.0.2210.55)
 set(WEBVIEW2_DIR ${CMAKE_BINARY_DIR}/webview2/Microsoft.Web.WebView2.${WEBVIEW2_VERSION})
@@ -40,7 +69,7 @@ juce_add_gui_app(KordiaApp
 
 juce_add_binary_data(KordiaUI SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/ui/index.html)
 
-target_sources(KordiaApp PRIVATE Main.cpp LiveEngine.cpp)
+target_sources(KordiaApp PRIVATE Main.cpp LiveEngine.cpp AudioCheck.cpp)
 add_dependencies(KordiaApp kordia_lab)
 target_compile_definitions(KordiaApp PRIVATE
   JUCE_WEB_BROWSER=1
@@ -60,7 +89,7 @@ target_link_libraries(KordiaApp PRIVATE
 
 # headless smoke test of the live path (real devices, volume 0)
 juce_add_console_app(KordiaLiveTest PRODUCT_NAME "KordiaLiveTest")
-target_sources(KordiaLiveTest PRIVATE LiveTest.cpp LiveEngine.cpp)
+target_sources(KordiaLiveTest PRIVATE LiveTest.cpp LiveEngine.cpp AudioCheck.cpp)
 add_dependencies(KordiaLiveTest kordia_lab)
 target_compile_definitions(KordiaLiveTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_WASAPI=1 JUCE_ASIO=0
   KORDIA_REPO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../.." KORDIA_LAB_EXE="$<TARGET_FILE:kordia_lab>")

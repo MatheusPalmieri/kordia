@@ -41,6 +41,18 @@ Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `tasks atalho`; 
 
 Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
+**Verificação de áudio:** com o app parado, ele consulta o Windows a cada 3 s e mostra um aviso no topo da janela, com o botão *Abrir ajustes do Windows* quando o problema se resolve lá. Em **Ajustes → Áudio**, *Entradas no Windows* lista todas as entradas conhecidas e o estado de cada uma.
+
+| Aviso | O que fazer |
+|---|---|
+| Windows bloqueando o microfone | Liberar o microfone para apps da área de trabalho na privacidade do Windows |
+| Entrada muda | Tirar o mudo ou subir o volume dela no Windows |
+| Driver sem funcionar | Reinstalar o driver do fabricante da interface |
+| Interface não conectada, app no microfone do computador | Conferir o cabo USB e se o aparelho está ligado; ao conectar, o app percebe sozinho |
+| Interface conectada, app no microfone do computador | Trocar em **Ajustes → Entrada**; a escolha fica salva e volta quando o aparelho reconectar |
+
+O app não instala drivers. Interfaces que exigem driver próprio precisam dele instalado pelo fabricante. Fones de ouvido com microfone não contam como interface, então não geram aviso.
+
 Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes** (botão ao lado do estado):
 
 - **Áudio:** driver (padrão *Windows Audio*), latência do driver, entrada, saída, ganho (com medidor), ouvir o violão na saída.

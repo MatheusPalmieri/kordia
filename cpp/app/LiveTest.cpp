@@ -11,6 +11,7 @@ int main(int argc, char** argv) {
     juce::ScopedJuceInitialiser_GUI init;
     LiveEngine engine;
     auto dev = engine.devices();
+    std::cout << "verificacao: " << juce::JSON::toString(engine.audioCheck(dev["default_input"].toString()), true) << std::endl;
     auto* q = new juce::DynamicObject();
     juce::var request(q);   // owns q (reference counted): keep it alive for the whole test
     q->setProperty("type", argc > 1 ? juce::var(juce::String(argv[1])) : dev["type"]);

@@ -149,6 +149,12 @@ footer { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-si
 footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .warn { color: var(--orange); }
 .link { color: var(--blue); cursor: pointer; text-decoration: none; font-weight: 600; }
+.audio-alert { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--orange); background: var(--card); font-weight: 600; }
+.audio-alert[hidden] { display: none; }
+.audio-alert.erro { border-color: var(--red); }
+.audio-alert span { flex: 1 1 280px; }
+.input-list { margin: 0; padding: 0; list-style: none; }
+.input-list .off { color: var(--faint); }
 .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 30px); opacity: 0; background: rgba(30,30,32,.94); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 500; transition: all .25s; pointer-events: none; max-width: 560px; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .note { font-size: 12px; color: var(--muted); line-height: 1.45; }
@@ -173,6 +179,12 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
     <button class="btn primary" id="startBtn">Iniciar</button>
   </header>
 
+  <div class="audio-alert" id="audioAlert" role="alert" hidden>
+    <span id="audioAlertText"></span>
+    <button class="btn ghost" id="audioAlertOpen" hidden>Abrir ajustes do Windows</button>
+    <button class="btn ghost" id="audioAlertSkip">Ignorar</button>
+  </div>
+
   <div class="backdrop" id="backdrop"></div>
   <aside class="drawer" id="drawer">
       <div class="drawer-head"><h3>Ajustes</h3><button class="btn ghost" id="closeSettings">Fechar</button></div>
@@ -182,6 +194,7 @@ footer b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-n
         <div class="row" id="bufferRow" hidden><div class="stack"><label>Latência do driver</label>
           <select id="buffer"><option value="256">Baixa (~5 ms) — pode falhar</option><option value="480" selected>Normal (~10 ms)</option><option value="960">Segura (~20 ms)</option></select></div></div>
         <div class="row"><div class="stack"><label>Entrada</label><select id="input"></select></div></div>
+        <div class="row"><div class="stack"><label>Entradas no Windows</label><ul class="input-list note" id="inputList"></ul></div></div>
         <div class="row"><div class="stack"><label>Saída</label><select id="output"></select></div></div>
         <div class="row"><div class="stack">
           <div style="display:flex;justify-content:space-between"><label>Ganho da entrada</label><span class="val" id="gainVal"></span></div>
@@ -283,6 +296,8 @@ const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume"
 const LIVE = ["gain", "volume", "monitor", "dynFixed", "hold", "learn", "clickVol", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 let tempoMode = "seguir", bpmValue = 110;   // one BPM for everything (fixed mode, frozen tempo, click)
 let running = false, live = false, clickOn = false, lastChord = null, lastError = null, state = {};
+let inputsSeen = null, listenError = null, skippedAlert = null, windowsPage = "";
+const AUDIO_CHECK_MS = 3000;   // a device plugged in shows up within this time; slower than the UI poll on purpose
 
 function store(k, v) { try { localStorage.setItem("kordia." + k, JSON.stringify(v)); } catch (e) {} }
 function recall(k) { try { const v = localStorage.getItem("kordia." + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
@@ -361,8 +376,11 @@ async function init() {
   };
   $("mInMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   $("startBtn").onclick = startStop;
+  $("audioAlertOpen").onclick = () => api("/api/windows_settings", { page: windowsPage }).catch(e => toast(e.message));
+  $("audioAlertSkip").onclick = () => { skippedAlert = $("audioAlertText").textContent; $("audioAlert").hidden = true; };
   labels(); lockSettings();
   await listen();
+  checkAudio();
   const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
   poll();
 }
@@ -404,7 +422,38 @@ function bar(el, d) { el.style.width = live ? Math.max(0, Math.min(100, (d + 60)
 function deviceSettings() { return { type: $("driver").value || null, buffer: +$("buffer").value, input: $("input").value, output: $("output").value }; }
 async function listen() {   // from the moment the app opens: shows what it hears, plays nothing
   if (running || location.search.includes("snapshot")) return;
-  try { await api("/api/listen", { ...deviceSettings(), ...liveSettings() }); } catch (e) { toast(e.message); }
+  try { await api("/api/listen", { ...deviceSettings(), ...liveSettings() }); listenError = null; }
+  catch (e) { listenError = e.message; toast(e.message); }
+}
+function showAudioCheck(c) {
+  const message = listenError || c.message;
+  windowsPage = listenError ? "som" : c.settings;
+  $("audioAlert").hidden = !message || message === skippedAlert;
+  $("audioAlert").classList.toggle("erro", !!listenError || c.level === "erro");
+  $("audioAlertText").textContent = message;
+  $("audioAlertOpen").hidden = !windowsPage;
+  $("inputList").replaceChildren(...[...c.inputs].sort((a, b) => b.active - a.active).map(i => {
+    const li = document.createElement("li");
+    li.textContent = `${i.name}: ${i.state}`;
+    li.classList.toggle("off", !i.active);
+    return li;
+  }));
+}
+async function checkAudio() {   // stopped only: during a song nothing extra runs, and the device stays as it is
+  if (!running && !location.search.includes("snapshot")) {
+    try {
+      let c = await api("/api/audio_check", { input: $("input").value });
+      const active = c.inputs.filter(i => i.active).map(i => i.name).join("|");
+      if (inputsSeen !== null && active !== inputsSeen) {   // plugged or unplugged: a remembered input comes back by itself
+        await loadDevices();
+        await listen();
+        c = await api("/api/audio_check", { input: $("input").value });
+      }
+      inputsSeen = active;
+      showAudioCheck(c);
+    } catch (e) {}
+  }
+  setTimeout(checkAudio, AUDIO_CHECK_MS);
 }
 async function startStop() {
   $("startBtn").disabled = true;
