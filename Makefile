@@ -1,8 +1,5 @@
 PY ?= python
 
-interface:
-	$(PY) tasks.py interface
-
 test:
 	$(PY) tasks.py test
 
@@ -12,4 +9,4 @@ avaliar:
 gerar:
 	$(PY) tasks.py gerar
 
-.PHONY: interface test avaliar gerar
+.PHONY: test avaliar gerar

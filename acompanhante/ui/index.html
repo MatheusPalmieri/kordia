@@ -278,8 +278,6 @@ const KEYS = ["", "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B
 const LAYERS = [["worship", "Pad worship", true, 100], ["orgao", "Órgão", false, 70], ["piano", "Piano elétrico", false, 70],
                 ["guitarra", "Pad de guitarra", false, 70], ["cordas", "Cordas", false, 70], ["baixo", "Baixo", true, 100]];
 const STATE_COLOR = { OCIOSO: "var(--gray)", OUVINDO: "var(--blue)", TRAVADO: "var(--green)", FALLBACK: "var(--orange)", ENCERRANDO: "var(--purple)" };
-// inside the C++/JUCE app the page is served by the WebView resource provider: GET + polling instead of POST + SSE
-const NATIVE = location.hostname === "juce.backend";
 const SAVE = ["driver", "buffer", "input", "output", "gain", "monitor", "volume", "dynFixed", "hold", "learn", "key", "prog", "progOn", "clickVol",
               ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
 const LIVE = ["gain", "volume", "monitor", "dynFixed", "hold", "learn", "clickVol", ...LAYERS.flatMap(([id]) => ["on_" + id, "vol_" + id])];
@@ -291,9 +289,7 @@ function recall(k) { try { const v = localStorage.getItem("kordia." + k); return
 function val(el) { return el.type === "checkbox" ? el.checked : el.value; }
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 4200); }
 async function api(path, body) {
-  const r = NATIVE
-    ? await fetch(body === undefined ? path : path + "?q=" + encodeURIComponent(JSON.stringify(body)))
-    : await fetch(path, { method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const r = await fetch(body === undefined ? path : path + "?q=" + encodeURIComponent(JSON.stringify(body)));
   const j = await r.json();
   if (j.ok === false) throw new Error(j.error);
   return j;
@@ -365,13 +361,8 @@ async function init() {
   $("mInMark").style.left = ((-55 + 60) / 60 * 100) + "%";
   $("startBtn").onclick = startStop;
   labels(); lockSettings();
-  if (NATIVE) {
-    const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
-    poll();
-  } else {
-    const es = new EventSource("/api/events");
-    es.onmessage = ev => { render(JSON.parse(ev.data)); if (location.search.includes("snapshot")) es.close(); };  // ?snapshot: headless captures
-  }
+  const poll = async () => { try { render(await api("/api/state")); } catch (e) {} setTimeout(poll, 50); };
+  poll();
 }
 
 async function loadDevices(type) {
@@ -412,7 +403,7 @@ async function startStop() {
   $("startBtn").disabled = true;
   try {
     if (running) await api("/api/stop", {});
-    else await api("/api/start", { type: $("driver").value || null, buffer: NATIVE ? +$("buffer").value : null, input: $("input").value, output: $("output").value, tom: $("key").value || null,
+    else await api("/api/start", { type: $("driver").value || null, buffer: +$("buffer").value, input: $("input").value, output: $("output").value, tom: $("key").value || null,
       bpm: tempoMode === "fixo" ? bpmValue : null, bpm_inicial: tempoMode === "seguir" && clickOn ? bpmValue : null, progressao: $("progOn").checked ? $("prog").value : null, ...liveSettings() });
   } catch (e) { toast(e.message); }
   $("startBtn").disabled = false;

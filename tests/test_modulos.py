@@ -202,15 +202,15 @@ def test_click_follows_tempo_and_fixed_grid_starts_at_start():
     assert abs(clicks[0]["t"] - 0.5) < 1e-6 and clicks[0]["pitch"] == 77 and len(clicks) == 3
 
 
-def test_session_records_and_replays(tmp_path):
-    from acompanhante.session import SessionRecorder, load
-    rec = SessionRecorder({"run": {"modo": "livre", "tom": "C"}, "lookahead": 0.1}, root=tmp_path)
-    block = np.full(P.HOP, 0.1)
-    rec.feed(block, {k: 0 for k in __import__("acompanhante.session", fromlist=["x"]).FIELDS}, [{"t": 0, "motivo": "x"}])
-    folder = rec.stop({"ok": True})
-    audio, cfg, la, sr = load(folder)
+def test_session_folder_loads(tmp_path):
+    """The two files of a session folder that a replay needs."""
+    import json
+    import soundfile as sf
+    from acompanhante.session import load
+    (tmp_path / "config.json").write_text(json.dumps({"run": {"modo": "livre", "tom": "C"}, "lookahead": 0.1}))
+    sf.write(tmp_path / "entrada.wav", np.full(P.HOP, 0.1), P.SR)
+    audio, cfg, la, sr = load(tmp_path)
     assert len(audio) == P.HOP and abs(audio[0] - 0.1) < 1e-3 and cfg["tom"] == "C" and la == 0.1 and sr == P.SR
-    assert (folder / "decisoes.jsonl").read_text(encoding="utf-8").strip()
 
 
 def test_fallback_uses_the_key_that_fits_the_music():

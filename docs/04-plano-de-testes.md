@@ -76,7 +76,7 @@ Começam frouxos e são apertados a cada versão (ver `tests/test_cenarios.py`):
 
 ## Testes unitários
 
-`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), clique (segue o andamento; com BPM fixo começa no Iniciar), gravação/reprodução de sessão, compensação de latência, e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
+`pytest` cobre cada módulo isolado: gerador (afinação do Karplus-Strong, verdade-base coerente), onsets (contagem em batida conhecida), classificador (cada tríade sintética é reconhecida), tempo (BPM de pulsos sintéticos, rampa), memória (detecção de ciclo e previsão), máquina de estados (parada, esquecimento), MIDI (arquivo válido), clique (segue o andamento; com BPM fixo começa no Iniciar), leitura de sessão gravada, compensação de latência, e **causalidade** (mudar o áudio depois de um instante não altera nenhuma saída antes dele).
 
 ## Gravações reais
 

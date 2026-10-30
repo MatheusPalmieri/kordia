@@ -41,10 +41,9 @@ flowchart LR
 | `pipeline.py` | `Processor`: o sistema inteiro, um bloco por vez; `run()` para arquivos | `Processor.process(bloco) -> saída`; `run(audio, cfg) -> Result` |
 | `metrics.py` | compara resultado com verdade-base | `evaluate(result, truth) -> dict` |
 | `report.py` | figura PNG por cenário | `plot(result, truth, path)` |
-| `cli.py` | `gerar`, `rodar`, `avaliar`, `interface` | — |
-| `app.py` | app ao vivo: servidor HTTP local + fluxo de áudio duplex (sounddevice) | `python -m acompanhante.app` |
-| `ui/index.html` | interface (HTML/CSS/JS), aberta no Edge em modo app | `GET /`, `/api/*` |
-| `session.py` | gravação e reprodução de sessões ao vivo | `SessionRecorder`, `load()` |
+| `cli.py` | `gerar`, `rodar`, `avaliar`, `prova` | — |
+| `ui/index.html` | interface (HTML/CSS/JS), embutida no `Kordia.exe` | `GET /api/<nome>?q=<json>` |
+| `session.py` | leitura das sessões gravadas pelo app | `load()` |
 
 ## Fluxo por bloco
 
@@ -96,27 +95,6 @@ Todos em `acompanhante/params.py`, com unidade e motivo. Ao portar para C++, ess
 - `*_render.wav`: violão original + baixo + pad;
 - log por quadro (tempo, onset, BPM estimado, acorde ouvido, confiança, acorde tocado, estado, nível), usado por métricas e relatórios.
 
-## Modo ao vivo
-
-```mermaid
-flowchart LR
-    MIC[Entrada<br/>mic / interface] -->|bloco 512 @ 22 050 Hz| CB[callback de áudio]
-    CB -->|× ganho| PR[Processor.process]
-    PR -->|baixo + pad + clique, estéreo × volume| OUT[Saída<br/>alto-falante / fone]
-    CB -->|fila| REC[SessionRecorder<br/>thread de escrita]
-    REC --> DISK[(sessoes/data-hora)]
-    PR -. estado .-> API[app.py<br/>HTTP 127.0.0.1]
-    API -->|SSE 20 Hz| UI[ui/index.html<br/>janela Edge --app]
-    UI -->|start / stop / ajustes ao vivo| API
-```
-
-- O fluxo duplex é aberto a 22 050 Hz com bloco de 512 no host API padrão (MME no Windows reamostra sozinho). Medido: ~1 ms de processamento por bloco de 23 ms (pico de 3,6 ms).
-- **Compensação de latência (`lookahead`):** a latência informada pelo driver (entrada + saída, ~115 ms no MME) é passada ao `Processor`. O sintetizador renderiza esse tanto à frente; trocas previstas, fim do compasso, ataques do baixo e **cliques** são emitidos com esse adiantamento para soarem no tempo. Trocas reativas não têm como ser adiantadas.
-- **Clique:** agendado no tempo previsto do rastreador (mesmo mecanismo do baixo). Com BPM fixo + clique, a `FixedGrid` é ancorada no Iniciar (0,5 s + latência), e não na primeira palhetada, e mantém a fase entre músicas. "Fixar BPM" congela o `TempoTracker` (sem PLL nem ACF).
-- **Sessões:** o callback só enfileira (bloco de entrada + linha de estado + decisões novas); uma thread grava WAV, CSV e JSONL. Ao parar, outra thread reproduz a sessão offline (`run(..., lookahead)`) e salva `relatorio.png`.
-- **Janela:** `app.py` abre o Edge com `--app=` e um perfil próprio (`%LOCALAPPDATA%/kordia/edge`). Um watchdog encerra o áudio e o processo quando a janela fecha (nenhum cliente de eventos por 6 s).
-- Sem log por quadro em memória no modo ao vivo (memória limitada); o log vai para o disco.
-
 ## Núcleo C++ e app JUCE
 
 ```mermaid
@@ -143,5 +121,7 @@ flowchart LR
 
 - **`cpp/core`** (`kordia`, biblioteca estática, sem JUCE): port linha a linha do Python, com os mesmos nomes. FFT pelo pocketfft (só cabeçalho). A taxa de análise é um parâmetro de execução: 22 050 Hz no laboratório; ao vivo, taxa da placa ÷ 2 (44,1 kHz → 22 050; 48 kHz → 24 000). A síntese roda na taxa da placa. Todos os tempos do algoritmo estão em segundos, então o resultado musical não depende da taxa (`test_core_is_rate_independent`).
 - **`cpp/python`** (`kordia_core`): `run_offline(audio, cfg, lookahead, sr)` devolve as mesmas peças do `Result` do Python; `pipeline.run(..., backend="cpp")` e `avaliar --backend cpp` usam isso.
-- **`cpp/app`**: `LiveEngine` é o `AudioIODeviceCallback`. A entrada passa por ganho, por um passa-baixa FIR de 63 coeficientes e pela decimação; a cada 512 amostras chama `Processor::analyze`; a saída vem de `Processor::render` no tempo `amostras/taxa + latência` (o `lookahead`, igual ao app Python). A interface é a mesma `index.html`, servida pelo *resource provider* do WebView2: no app C++ ela usa `GET /api/<nome>?q=<json>` e consulta `/api/state` a cada 50 ms (no app Python: POST + SSE).
-- **Sessões**: mesmo formato do app Python (`config.json` traz também `sr`, `motor`, `driver`, `buffer`). Ao parar, o app chama `.venv/Scripts/python -m acompanhante.cli rodar --sessao <pasta> --saida <pasta>` para gerar o relatório.
+- **`cpp/app`**: `LiveEngine` é o `AudioIODeviceCallback`. A entrada passa por ganho, por um passa-baixa FIR de 63 coeficientes e pela decimação; a cada 512 amostras chama `Processor::analyze`; a saída vem de `Processor::render` no tempo `amostras/taxa + latência` (o `lookahead`). A interface é a `index.html`, servida pelo *resource provider* do WebView2: ela usa `GET /api/<nome>?q=<json>` e consulta `/api/state` a cada 50 ms.
+- **Compensação de latência (`lookahead`):** a latência informada pelo driver (entrada + saída) é passada ao `Processor`. O sintetizador renderiza esse tanto à frente; trocas previstas, fim do compasso, ataques do baixo e **cliques** são emitidos com esse adiantamento para soarem no tempo. Trocas reativas não têm como ser adiantadas.
+- **Clique:** agendado no tempo previsto do rastreador (mesmo mecanismo do baixo). Com BPM fixo + clique, a `FixedGrid` é ancorada no Iniciar (0,5 s + latência), e não na primeira palhetada, e mantém a fase entre músicas. "Fixar BPM" congela o `TempoTracker` (sem PLL nem ACF).
+- **Sessões**: o callback só enfileira; uma thread grava WAV, CSV e JSONL (`config.json` traz também `sr`, `motor`, `driver`, `buffer`; `session.py` descreve a pasta). Ao parar, o app chama `.venv/Scripts/python -m acompanhante.cli rodar --sessao <pasta> --saida <pasta>` para gerar o relatório.

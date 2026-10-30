@@ -46,7 +46,7 @@ def _norm_mag(x, win):
 
 
 class Processor:
-    """The whole system for one block at a time. Used by `run` (files) and by the live GUI (audio callback)."""
+    """The whole system for one block at a time. Used by `run` (files); the live app runs its C++ twin."""
 
     LOG_KEYS = ["t", "db", "flux", "onset", "bpm", "tempo_conf", "heard", "conf", "state", "level", "expr", "vel"]
 

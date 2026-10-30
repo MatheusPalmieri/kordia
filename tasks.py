@@ -1,4 +1,4 @@
-"""Executor de tarefas (substitui o make no Windows): python tasks.py build [--app]|interface|atalho|test|avaliar [versao]|gerar"""
+"""Executor de tarefas (substitui o make no Windows): python tasks.py build [--app]|atalho|test|avaliar [versao]|gerar"""
 import subprocess
 import sys
 
@@ -12,8 +12,6 @@ if cmd == "build":   # C++ core + Python module (+ JUCE app); needs Visual Studi
     ok = subprocess.call([cmake, "-S", "cpp", "-B", "cpp/build", "-G", "Visual Studio 17 2022", "-A", "x64",
                           f"-DKORDIA_APP={app}", f"-DPython_EXECUTABLE={py}"]) == 0
     sys.exit(0 if ok and subprocess.call([cmake, "--build", "cpp/build", "--config", "Release", "--parallel"]) == 0 else 1)
-if cmd == "interface":
-    sys.exit(subprocess.call([py, "-m", "acompanhante.app"]))
 if cmd == "atalho":   # a .bat cannot carry an icon, a shortcut can; it holds absolute paths, so it is generated, not committed
     from pathlib import Path
     root = Path(__file__).resolve().parent

@@ -155,11 +155,7 @@ def main(argv=None):
     o.add_argument("--variante", nargs="+", help="clique, tom_da_forma, livre, real_clique, real_livre; padrão: todas")
     o.add_argument("--versao", default="dev")
     o.add_argument("--backend", choices=["py", "cpp"], default="cpp")
-    sub.add_parser("interface", help="abre o app ao vivo (entrada de áudio -> baixo + pad)")
     a = p.parse_args(argv)
-    if a.cmd == "interface":
-        from .app import main as app_main
-        return app_main()
     if a.cmd == "rodar" and not (a.entrada or a.sessao):
         p.error("rodar: use --entrada ARQUIVO.wav ou --sessao PASTA")
     if a.cmd == "gerar" and not (a.todos or a.cenario):

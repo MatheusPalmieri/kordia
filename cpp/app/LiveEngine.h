@@ -1,6 +1,5 @@
 // Live engine: audio device + kordia::Processor + session recording. Everything the UI needs goes through
-// devices() / start() / stop() / setLive() / snapshot(), with the same JSON shapes as acompanhante/app.py,
-// so acompanhante/ui/index.html works unchanged on both.
+// devices() / start() / stop() / setLive() / snapshot(), as the JSON acompanhante/ui/index.html reads.
 #pragma once
 
 #include <juce_audio_devices/juce_audio_devices.h>

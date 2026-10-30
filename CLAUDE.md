@@ -16,14 +16,14 @@ Projeto: **Kordia** (o nome do produto), que **ouve o violão** e toca baixo + p
 
 - Documentação em português do Brasil; código e identificadores em inglês.
 - Todos os parâmetros numéricos em `acompanhante/params.py`, com unidade e motivo (é a especificação para o port em C++/JUCE).
-- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest, sounddevice; interface em HTML/CSS/JS puro (sem framework).
+- Algoritmos simples e explícitos; nada de excesso de engenharia. Dependências: numpy, scipy, soundfile, matplotlib, pytest; interface em HTML/CSS/JS puro (sem framework).
 - Commits pequenos, mensagens claras.
 
 ## Comandos
 
 ```bash
 python -m venv .venv && .venv/Scripts/pip install -e .   # ou .venv/bin/pip no Linux/macOS
-python -m acompanhante.app            # app ao vivo (ou o atalho Kordia.lnk / python tasks.py interface)
+Kordia.lnk                            # app ao vivo (assets/abrir.bat abre cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe)
 python tasks.py atalho                # cria Kordia.lnk (logo como ícone; chama assets/abrir.bat)
 python assets/gerar_icones.py         # regenera svg, png e ico da logo; depois: python tasks.py build --app
 python -m acompanhante.cli rodar --sessao sessoes/<pasta>   # reproduz uma sessão ao vivo exatamente
@@ -54,13 +54,14 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 
 ## Ao vivo × arquivo
 
-`pipeline.Processor` é o sistema inteiro bloco a bloco; `run()` (arquivos, métricas) e `app.py` (callback de áudio) usam o mesmo objeto. Nunca duplique lógica entre os dois. O callback de áudio não pode bloquear: nada de I/O, prints ou alocação grande lá dentro.
+`Processor` é o sistema inteiro bloco a bloco, em Python (`pipeline.py`) e em C++ (`cpp/core`). `run()` (arquivos, métricas) e o `LiveEngine` (callback de áudio) usam esse objeto; nunca duplique lógica fora dele. O callback de áudio não pode bloquear: nada de I/O, prints ou alocação grande lá dentro.
 
 ## Regras de trabalho combinadas com o Matheus
 
 - **A cada interação: commit e `git push origin main`** (repositório privado github.com/MatheusPalmieri/kordia). Sem branches nem PRs, salvo pedido.
 - **Documentação sempre completa e atual.** Toda mudança relevante atualiza README, docs/ e este arquivo na mesma rodada.
 - **Toda regra nova que ele disser vai para esta seção.**
+- **O app ao vivo é só C++** (`Kordia.exe`). Python é laboratório: não recrie um app ou caminho ao vivo em Python.
 - **Melhorar o harness junto com o código:** bug achado ao vivo vira cenário ou teste; sessões gravadas (`sessoes/`) são a fonte de verdade sobre o violão real.
 - **Linguagem não é dogma:** ele aceita C++, Rust ou C# se for melhor para latência e qualidade de som. Decisões de stack ficam registradas em `docs/decisoes.md` com números.
 - **Qualidade de produto:** interface moderna e apresentável (referência: apps da Apple), pad de worship (não órgão), volume alto o bastante.
@@ -68,9 +69,9 @@ python -m acompanhante.cli avaliar --todos [--versao v1]
 
 ## App ao vivo
 
-- `app.py`: servidor HTTP local (127.0.0.1) + fluxo de áudio duplex; `ui/index.html`: interface (HTML/CSS/JS sem dependências), aberta no Edge em modo app. A mesma interface poderá ser reaproveitada no port C++ (JUCE 8 tem WebView).
-- `session.py`: grava cada sessão; a escrita é numa thread, o callback só enfileira.
-- `?snapshot` na URL fecha o fluxo de eventos após a primeira atualização e pula a tela de entrada (para capturas headless).
+- `cpp/app`: `LiveEngine` (áudio e sessão) + WebView2 com `ui/index.html` (HTML/CSS/JS sem dependências), embutida no exe; mudou a interface, rode `python tasks.py build --app`.
+- A sessão é gravada numa thread, o callback só enfileira; `session.py` lê a pasta no laboratório. O relatório pós-sessão vem do laboratório (`rodar --sessao`) e precisa da `.venv`.
+- `?snapshot` na URL pula a tela de entrada (para capturas headless do layout).
 - **Logo:** K de neon branco, com vão entre a haste e o "<", em quadrado preto de cantos arredondados. A geometria mora em `assets/gerar_icones.py` e é repetida no `<g id="logo">` e no favicon de `ui/index.html` (que precisa ser um arquivo só: o JUCE embute só ele).
 
 ## Regra do port (Python × C++)

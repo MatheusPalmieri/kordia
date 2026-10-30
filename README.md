@@ -17,13 +17,13 @@ python tasks.py atalho                # cria Kordia.lnk na raiz, o atalho com a 
 
 O build C++ precisa do **Visual Studio 2022 Build Tools** com a carga "Desenvolvimento para desktop com C++" (o CMake vem junto). JUCE 8, pocketfft, pybind11 e o SDK do WebView2 são baixados pelo CMake na primeira configuração. `python tasks.py build` (sem `--app`) compila só o núcleo e o módulo `kordia_core` usado pelo laboratório.
 
-Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib, pytest, sounddevice (áudio ao vivo) e o Microsoft Edge (já vem no Windows) para a janela do app.
+Requer Python 3.11+ (testado com 3.15), numpy, scipy, soundfile, matplotlib e pytest para o laboratório. O app em si só precisa do WebView2, que já vem no Windows 11.
 
 ## Uso ao vivo (app)
 
-Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `python tasks.py atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre o app C++ (`cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe`) se estiver compilado; senão, o app Python (`python -m acompanhante.app`, mesma interface, latência maior). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
+Dê dois cliques no atalho **Kordia** (`Kordia.lnk`, criado por `python tasks.py atalho`; é um atalho porque `.bat` não aceita ícone). Ele chama `assets/abrir.bat`, que abre `cpp/build/app/KordiaApp_artefacts/Release/Kordia.exe` (compile com `python tasks.py build --app`). O app abre numa tela de entrada com a logo, que some quando os dispositivos de áudio estiverem listados.
 
-No app C++ aparecem também **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
+Em **Ajustes** aparecem **Driver** (padrão: *Windows Audio*, ~22 ms) e **Latência do driver** (padrão: ~10 ms). Use o padrão quando entrada e saída forem aparelhos diferentes (ex.: microfone USB + headset): o Windows compensa a diferença de relógio entre eles. *Windows Audio (Exclusive Mode)* só serve com uma interface de áudio única (entrada e saída no mesmo aparelho); com dois aparelhos a captura morre depois de ~15–20 s. Se algo der errado, a janela avisa no rodapé (sem sinal na entrada, rajada de falhas de áudio, entrada corrompida).
 
 Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automático* = ele descobre pelos acordes e mostra qual achou), **Iniciar**, o acorde, o cartão **Sinal** (violão entrando; baixo e teclado saindo, com as notas), o **Andamento**, o **Padrão** aprendido e o **Diário** de decisões. O resto fica em **Ajustes** (botão ao lado do estado):
 
@@ -39,7 +39,7 @@ Na tela principal ficam só o que você usa tocando: o **Tom** no topo (*Automá
 
 Cada Iniciar cria `sessoes/<data-hora>/` (fora do git) com a gravação da entrada, a configuração, uma linha por bloco de 23 ms (nível, acorde ouvido, confiança, estado, BPM, custo de processamento, falhas de áudio), todas as decisões com o motivo, um resumo e um **relatório visual** gerado ao parar. "Abrir pasta" no rodapé leva até ela.
 
-No app C++, o relatório é gerado chamando o laboratório Python ao parar (precisa da `.venv`). O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
+O relatório é gerado chamando o laboratório Python ao parar (precisa da `.venv`). O processamento é determinístico, então uma sessão pode ser reproduzida exatamente, offline:
 
 ```bash
 python -m acompanhante.cli rodar --sessao sessoes/2026-10-29_20-40-00
